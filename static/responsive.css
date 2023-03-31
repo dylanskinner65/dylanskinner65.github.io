@@ -1,0 +1,157 @@
+/*
+
+Template: Profyl - Personal Vcard Resume HTML Template
+Author: iqonicthemes.in
+Version: 1.0
+Design and Developed by: iqonicthemes.in
+
+
+
+*/
+
+/*****************
+================================================
+ (  Media Queries  )
+================================================
+ *******************/
+
+/* Displays/Screens (e.g. 24" WS @ 1920x1080) -------------- */
+@media
+only screen and (min-width:1890px) and (max-width:2529px) {
+	.iq-home { height: 710px; }
+	.inner-box { height: 870px; }
+	.full-screen .grid-item { width: 33.333%; }
+	.about-us .content-deta { padding-top: 0; }
+	.iq-contact iframe { height: 710px; }
+	.contact-info li { width: 100%; margin-bottom: 13px; }
+	.contact-info li:last-child { margin-bottom: 30px; }
+	.contact-form .section-field.textarea textarea { height: 250px; }
+}
+@media(max-width:1399px) {
+	.iq-home, .inner-box { height: 500px; }
+	.content-deta { padding: 30px 50px 0 40px; }
+	.home-deta.iq-mt-90 { margin-top: 40px; }
+	.iq-home.about-us .iq-mt-80 { margin-top: 30px; }
+	.contact-info li { margin-bottom: 12px; font-size: 16px; }
+	.interests li { width: 15.33%; }
+	.home-deta.iq-mt-80 { margin-top: 50px; }
+	.about-us .boder-img:before { bottom: -30px; }
+	.full-screen .grid-item { width: 33.3%; }
+}
+@media(max-width:1199px) {
+	header .navbar.navbar-light .navbar-nav .nav-link { font-size: 14px; padding: 8px 10px; }
+	header .navbar.navbar-light .navbar-brand img { height: 45px; }
+	.home-deta .content-deta h2 { font-size: 30px; }
+	.home-deta .content-deta h1 { font-size: 36px; }
+	.home-deta.iq-mt-90 { margin-top: 80px; }
+	.boder-img { width: 100%; }
+	.content-deta #typer { height: 50px; }
+	.about-us .content-deta { padding-top: 0; }
+	.content-deta { padding: 0px 25px 0 40px; }
+	.iq-home { height: 520px; }
+	.resume-deta.iq-plr-40 { padding: 0 15px; }
+	.iq-portfolio .iq-plr-40, .iq-blog .iq-plr-40, .iq-contact .iq-plr-40 { padding: 0 15px; }
+	.interests-deta.iq-pall-40.iq-mtb-50, .customers.iq-pall-40.iq-mtb-50, .clients.iq-pall-40.iq-mt-40, .customers-tab.iq-pall-40.iq-mtb-60 { margin: 30px 0px; padding: 40px 15px; }
+	.skills.iq-plr-40.iq-mt-80, .iq-counter-box.iq-pall-20 { margin-top: 30px; padding: 40px 15px; }
+	.inner-box { height: 520px; padding: 0; }
+	header .navbar.navbar-light .navbar-brand { padding: 15px 0 15px 15px; }
+	header .navbar.navbar-light .navbar-nav { padding-right: 15px; }
+	footer .footer-copyright { padding: 10px 0 10px 15px; }
+	footer .follow-us { padding: 10px 15px 10px 0 }
+	.contact-info li { font-size: 15px; margin-bottom: 8px; }
+	.interests li { width: 31.33%; }
+	.customers-tab .nav-tabs li a { font-size: 20px; padding: 25px; }
+	.counter i { font-size: 50px; }
+	.customers-tab .tab-content h4 { margin-top: 0; }
+	.contact-info li p { font-size: 14px; }
+	.iq-contact  .contact-info li { margin-bottom: 5px; }
+}
+@media(max-width:992px) {
+	.navbar-light .navbar-toggler { border-color: #31d181; color: #fff; background: black; float: right; outline: none; border-radius: 0; padding: 5px 10px; }
+	header .navbar.navbar-light .navbar-nav .nav-item.active .nav-link { background: black; background: -moz-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -webkit-gradient(left top, right top, color-stop(0%, rgba(28, 202, 162, 1)), color-stop(100%, rgba(49, 209, 129, 1))); background: -webkit-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -o-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -ms-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: linear-gradient(to right, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1ccaa2', endColorstr='#31d181', GradientType=1); }
+	.navbar-collapse { position: absolute; left: 15px; top: 55px; width: 98%; background: #fff; border: 1px solid #f1f1f1; }
+	.customers-tab .nav-tabs li a { font-size: 18px; padding: 20px 25px; }
+	.owl-carousel .owl-nav .owl-prev { right: 6%; }
+	.counter i { font-size: 40px; }
+	.counter span { font-size: 30px; }
+	.counter label { font-size: 16px; }
+	.customers-tab .tab-content h4 { margin-top: 20px; }
+	.full-screen .grid-item { width: 50%; }
+	.re9-mt30 { margin-top: 30px; }
+	.iq-post-sidebar { margin-top: 50px; }
+}
+@media(max-width:979px) {
+	.iq-home { margin-left: -200px; }
+	.home-deta .content-deta h2 { font-size: 26px; }
+	.home-deta .content-deta h1 { font-size: 30px; }
+	.content-deta #typer { height: 40px; }
+	.home-deta .content-deta .lead { font-size: 14px; line-height: 24px; }
+	.home-deta .content-deta .button.iq-mt-30 { margin-top: 15px; }
+	header .navbar.navbar-light .navbar-brand { padding: 15px 0 15px 0; }
+	header .navbar.navbar-light .navbar-nav { padding-right: 0; }
+	footer .footer-copyright { padding: 10px 0 10px 0; }
+	footer .follow-us { padding: 10px 0 10px 0 }
+	.follow-us li, .follow-us li a { font-size: 13px; }
+	.about-us .boder-img:before { display: none; }
+	.iq-home.about-us .content-deta { padding: 0 0 0 15px; }
+	.title { font-size: 26px; }
+	.interests li { width: 30.88%; }
+	.owl-carousel .owl-nav .owl-prev { right: 7%; }
+	.customers-tab .nav-tabs li a { font-size: 16px; padding: 20px 20px; }
+	.full-screen .grid-item { width: 100%; }
+	.contact-info li p { font-size: 12px; }
+}
+@media(max-width:767px) {
+	html { height: inherit; overflow: inherit; }
+	body { height: inherit; overflow: inherit; }
+	header .navbar.navbar-light { background: rgba(28, 202, 162, 1); background: -moz-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -webkit-gradient(left top, right top, color-stop(0%, rgba(28, 202, 162, 1)), color-stop(100%, rgba(49, 209, 129, 1))); background: -webkit-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -o-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: -ms-linear-gradient(left, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); background: linear-gradient(to right, rgba(28, 202, 162, 1) 0%, rgba(49, 209, 129, 1) 100%); filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1ccaa2', endColorstr='#31d181', GradientType=1); }
+	.resume-deta.iq-plr-40 { padding: 0; }
+	.re-mt30 { margin-top: 30px; }
+	.boder-img img { width: 100%; }
+	.navbar-light .navbar-toggler { position: absolute; top: -55px; right: 15px; border-color: #fff; color: black; background: #fff; }
+	footer { position: relative; bottom: inherit; left: inherit; padding-top: 50px; text-align: center; }
+	footer .col-sm-8 { position: absolute; top: 0; left: 0; }
+	footer .follow-us { float: none; display: inline-block; }
+	.contact-info li { display: inline-block; width: 100%; margin-bottom: 10px; }
+	.contact-info li:last-child { margin-bottom: 30px; }
+	.follow-us li, .follow-us li a { font-size: 16px; }
+	.iq-home, .inner-box { margin-left: 0; height: 100%; overflow: hidden; }
+	.inner-box { margin-top: 80px; border: none; padding: 0; }
+	.main-container .col-sm-4.purple-bg { display: none; }
+	.home-deta.iq-mt-80, .iq-home.about-us .home-deta.iq-mt-80 { margin-top: 80px; }
+	.content-deta h1.iq-font-purple { font-size: 36px; }
+	footer .footer-copyright { font-size: 12px; }
+	.boder-img { margin-bottom: 20px; }
+	.boder-img:before { top: 0; right: 0; z-index: 99; }
+	.content-deta { padding: 0px 15px 0 15px; }
+	.iq-home { padding: 0; }
+	.navbar-collapse { left: 0; top: 0; width: 100%; border: none; }
+	.interests-deta.iq-pall-40 { padding: 40px 15px; }
+	.interests li { width: 46.4%; }
+	.skills.iq-mt-80 { margin-top: 50px; padding: 0; }
+	.interests-deta.iq-pall-40.iq-mtb-50, .customers.iq-pall-40.iq-mtb-50, .clients.iq-pall-40.iq-mt-40, .customers-tab.iq-pall-40.iq-mtb-60 { padding: 20px 15px; }
+	.owl-carousel .owl-nav .owl-next { right: -3%; }
+	.customers-tab .nav-tabs li a { font-size: 0; padding: 20px 30px; }
+	.customers-tab .nav-tabs li a i { font-size: 30px; }
+	.skills.iq-plr-40.iq-mt-80, .iq-counter-box.iq-pall-20 { padding-bottom: 0px; }
+	.customers-tab .tab-content { margin-top: 20px; }
+	.iq-portfolio .iq-plr-40, .iq-blog .iq-plr-40, .iq-contact .iq-plr-40 { padding: 0; }
+	.iq-contact iframe { margin-bottom: 20px; }
+	.iq-blog .main-title.iq-mb-50 { margin-bottom: 20px; }
+	.iq-comment-list .media { display: inline-block; width: 100%; }
+}
+@media(max-width:479px) {
+	.home-deta .content-deta h2 { font-size: 20px; }
+	.home-deta .content-deta h1 { font-size: 26px; }
+	ul.education li { padding: 10px; }
+	.iq-home.about-us h6 { font-size: 16px; line-height: normal; }
+	.contact-info li { width: 100%; margin-bottom: 10px; }
+	.follow-us li, .follow-us li a { margin-left: 5px; }
+	.contact-info li:last-child { margin-bottom: 10px; }
+	.interests li { width: 100%; margin-right: 0; }
+	.iq-client { padding: 0 15px 15px; }
+	.customers-tab .nav-tabs li a { font-size: 0; padding: 10px 20px; }
+	.customers-tab .nav-tabs li a i { font-size: 20px; }
+	.owl-carousel .owl-nav { display: none; }
+	.isotope-filters  button { font-size: 14px; padding: 10px 7px; }
+}
