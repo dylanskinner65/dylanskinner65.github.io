@@ -72,53 +72,55 @@
                         <p>Everything I am doing in the following steps can be done in the terminal of R.</p>
                         <ol>
                             <li>The first thing we need to do is read in our data.</li>
-                            <code>
-                                Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
-
-                                Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
-
-                                Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
-                            </code>
+                            <pre>
+                                <code class="language-R">
+                                    Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
+                                    Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
+                                    Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
+                                </code>
+                            </pre>
 
                             <li>Next, we want to put these variables into a dataframe</li>
-                            <code>height_dataset <- data.frame(Control, Deficient, Slow_release)</code>
+                            <code class="language-R">height_dataset <- data.frame(Control, Deficient, Slow_release)</code>
                             <p>This will give us a nice data frame that looks like this:</p>
                             <img src="blog_files/creating_anova/height_dataset.png" />
 
-                            <li>To help prepare the data for the ANOVA table, we will want to stack the data together using the <code>stack()</code> function</li>
-                            <code>stack_height_dataset <- stack(height_dataset)</code>
+                            <li>To help prepare the data for the ANOVA table, we will want to stack the data together using the <code class="language-R">stack()</code> function</li>
+                            <code class="language-R">stack_height_dataset <- stack(height_dataset)</code>
                             <p>When we stack our dataset together, we see that our data frame turns into a two column frame where the first column has the heights, and the second column as the three types of fertilizer. But, the column headers do not fully represent this.</p>
                             <img src="blog_files/creating_anova/stack_height_dataset.png"/>
                             <figcaption>This data frame has 30 rows, but these 21 should help you get the idea.</figcaption>
 
                             <li>To make things easier for later, rename the column headers to accurately represent what the columns are showing.</li>
-                            <code>names(stack_height_dataset) <- c("Height", "Method")</code>
+                            <code class="language-R">names(stack_height_dataset) <- c("Height", "Method")</code>
                             <p>If we look at our data frame again, we will see that the column headers are renamed and accurately represent what we are looking at.</p>
                             <img src="blog_files/creating_anova/stack_height_dataset_renamed.png"/>
                             <figcaption>We see that the column headers are renamed.</figcaption>
 
-                            <li>With our renamed column headers, we will now want to turn our data frame into a linear model using the <code>lm()</code> function in R.</li>
-                            <code>height_fit <- lm(Height~Method, data=stack_height_dataset)</code>
+                            <li>With our renamed column headers, we will now want to turn our data frame into a linear model using the <code class="language-R">lm()</code> function in R.</li>
+                            <code class="language-R">height_fit <- lm(Height~Method, data=stack_height_dataset)</code>
                             <p>If you look at our newly created height_fit linear model, we see a few weird things. Do not worry too much about this. This is all information that our next step requires.</p>
                             <img src="blog_files/creating_anova/height_fit.png"/>
                             <figcaption>There is a lot of information here, but do not worry about it if you are new! It is not super important for you to understand right now.</figcaption>
 
-                            <li>Final step! All of our data preparation has brought us up to this point! All we need to do is pass our <code>height_fit</code> linear model into the <code>anova()</code> function that R provides.</li>
-                            <code>anova(height_fit)</code>
+                            <li>Final step! All of our data preparation has brought us up to this point! All we need to do is pass our <code class="language-R">height_fit</code> linear model into the <code class="language-R">anova()</code> function that R provides.</li>
+                            <code class="language-R">anova(height_fit)</code>
                             <p>When you run this function, R will automatically output the ANOVA table will all the information we need!</p>
-                            <code>
-                                Analysis of Variance Table
+                            <pre>
+                                <code class="language-R">
+                                    Analysis of Variance Table
 
-                                Response: Height
+                                    Response: Height
 
-                                          Df Sum Sq Mean Sq F value  Pr(>F)   
+                                            Df Sum Sq Mean Sq F value  Pr(>F)   
 
-                                Method     2 229.74 114.870  7.0587 0.00342 **
+                                    Method     2 229.74 114.870  7.0587 0.00342 **
 
-                                Residuals 27 439.39  16.274                   
-                                ---
-                                Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-                            </code>
+                                    Residuals 27 439.39  16.274                   
+                                    ---
+                                    Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                                </code>
+                            </pre>
                         </ol>
                             
                         <h4>Conclusion</h4>
@@ -131,31 +133,30 @@
                         <img href="blog_files/creating_anova/full_example_terminal.png" />
                         <figcaption>Here is a picture of the full code in an R console.</figcaption>
                         <p>Here is a code block of the full code in an R console.</p>
-                        <code>
-                            > Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
-
-                            > Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
-
-                            > Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
-
-                            > 
-                            
-                            > height_dataset <- data.frame(Control, Deficient, Slow_release)
-                            > View(height_dataset)
-                            > stack_height_dataset <- stack(height_dataset)
-                            > 
-                            > names(stack_height_dataset) <- c("Height", "Method")
-                            >
-                            > height_fit <- lm(Height~Method, data=stack_height_dataset)
-                            >
-                            > anova(height_fit)
-                            Analysis of Variance Table
-                            Response: Height
-                                      Df Sum Sq Mean Sq F value  Pr(>F)   
-                            Method     2 229.74 114.870  7.0587 0.00342 **
-                            Residuals 27 439.39  16.274                   
-                            ---
-                            Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</code>
+                        <pre>
+                            <code class="language-R">
+                                > Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
+                                > Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
+                                > Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
+                                > 
+                                > height_dataset <- data.frame(Control, Deficient, Slow_release)
+                                > View(height_dataset)
+                                > stack_height_dataset <- stack(height_dataset)
+                                > 
+                                > names(stack_height_dataset) <- c("Height", "Method")
+                                >
+                                > height_fit <- lm(Height~Method, data=stack_height_dataset)
+                                >
+                                > anova(height_fit)
+                                Analysis of Variance Table
+                                Response: Height
+                                        Df Sum Sq Mean Sq F value  Pr(>F)   
+                                Method     2 229.74 114.870  7.0587 0.00342 **
+                                Residuals 27 439.39  16.274                   
+                                ---
+                                Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            </code>
+                        </pre>
 
                     </div>
                 </section>
@@ -211,5 +212,6 @@
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
 
 </html>
