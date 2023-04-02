@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Convex Linear Optimization Using CVXPY</title>
+    <meta name="description" content="Convex linear optimization is a wonderful tool that allows businesses and people to find optimal solutions to their problems. This post gives a short tutorial on how to us the python convex optimization package CVXPY.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-02-24">24 February 2023</time> </span>
+                    <h2 class="post-title"><a href="/blog/convex_linear_opt_cvxpy.html">Convex Linear Optimization Using CVXPY</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"...in fact, the great watershed in optimization isn't between linearity and nonlinearity, but convexity and nonconvexity." </blockquote>
+                        <p>- R. Tyrrell Rockafellar</p>
+                        <p>CVXPY is a library in Python that contains a set of classes and functions designed for solving convex optimization problems. There are many different convex optimization problems we can solve using CVXPY, but today we are going to look at linear convex optimization problems.</p>
+                        
+                        <h4>Getting started</h4>
+                        <p>A linear convex optimization problem (sometimes called linear programming) is a linear constrained optimization problem. This means that the problem can be stated in a way similar to</p>
+                        <img src="blog_files/cvxpy_intro/convex_standard.png">
+                        <figcaption>This is the standard form of a linear convex optimization problem.</figcaption>
+                        <p>CVXPY accepts $\leq$, $\geq$, and $=$ in its constraints as long as the equations satisfy the convexity requirements. In our CVXPY problems, CVXPY accepts NumPy arrays and SciPy sparse matrices as constraints, but the variable x must be a CVXPY Variable.</p>
+                        
+                        <h4>Simple Example</h4>
+                        <p>Let's do a simple example to see how this works. Consider the following problem:</p>
+                        <img src="blog_files/cvxpy_intro/convex_simple.png">
+                        <p>How would we represent this using CVXPY? Here is the code to represent this problem. I will present the code and then break down each line.</p>
+                        <pre>
+                            <code class="language-python">
+# Import necessary libraries
+import cvxpy as cp
+
+# Initialize the variables
+x1, x2 = cp.Variable(nonneg=True), cp.Variable(nonneg=True)
+
+# Create objective function
+objective = cp.Minimize(-4*x1 - 5*x2)
+
+# Initialize constraints (must be a list)
+constraints = [x1 + 2*x2 <= 3,
+                2*x1 + x2 == 3]
+
+# Create our problem
+problem = cp.Problem(objective, constraints)
+
+# Solve our problem
+problem.solve()
+
+# Find out what the optimal values of x1 and x2 are, and what the answer
+    # our optimization problem is
+print(problem.value)
+print(x1.value, x2.value)
+                            </code>
+                        </pre>
+                        <p>There are more optimal ways to do the code above, and we will go over those potential improvements. Now, let's break down each line.</p>
+                        
+                        <p>First, we initialize the variables.</p>
+                        <pre>
+                            <code class="language-python">
+# Initialize the variables
+x1, x2 = cp.Variable(nonneg=True), cp.Variable(nonneg=True)
+                            </code>
+                        </pre>
+
+                        <p>Here we create the CVXPY Variables <code>x1</code> and <code>x2</code>. These are the variables we use to solve our problem. From our optimization constraints, we learn that both <code>x1</code> and <code>x2</code> must be greater than or equal to 0. So, by adding <code>nonneg=True</code> into the <code>cp.Variable()</code> declaration, CVXPY knows that these variables must be greater than or equal to 0. You could omit this function argument and instead put <code>x1 >= 0, x2 >= 0 </code>in the constraints list. Either way works. If, in your optimization problem, the variables <code>x1</code> and <code>x2</code> can take on negative values, then omit <code>nonneg=True</code> and do not include anything in your constraints list.</p>
+                        <p>Next, we create our objective function.</p>
+                        <pre>
+                            <code class="language-python">
+# Create objective function
+objective = cp.Minimize(-4*x1 - 5*x2)
+                            </code>
+                        </pre>
+                        <p>Creating the objective function in CVXPY is simple. If you wish to minimize your objective function, simply do <code>cp.Minimize()</code> with the problem inside the function--using the CVXPY variables you have already declared. If your problem involves maximization, simply do <code>cp.Maximize()</code> with the problem inside the function—again, using the CVXPY variables you have already declared.</p>
+                        <p>Moving on, we have our constraints.</p>
+                        <pre>
+                            <code class="language-python">
+# Initialize constraints (must be a list)
+constraints = [x1 + 2*x2 <= 3,
+                2*x1 + x2 == 3]
+                            </code>
+                        </pre>
+                        <p>The very first thing to mention is that our constraints must be in list form! CVXPY will not work otherwise. Even if you have only one constraint, that single constraint must be in a list. Otherwise, creating our constraints is simply encoding our constraints in Python!</p>
+                        <p>Now we create our problem.</p>
+                        <pre>
+                            <code class="language-python">
+# Create our problem
+problem = cp.Problem(objective, constraints)
+                            </code>
+                        </pre>
+                        <p>With this step, use <code>cp.Problem()</code> and put in the objective of the convex problem as the first argument, and the constraints as the second argument. Of course, if you desired, you could skip the steps of defining the objective function and constraints and do all of this inside <code>cp.Problem()</code>.</p>
+                        <p>Once we have our problem created, we solve our problem!</p>
+                        <pre>
+                            <code class="language-python">
+# Solve our problem
+problem.solve()
+                            </code>
+                        </pre>
+                        <p>I feel that this step is self-explanatory. Just type the above!</p>
+                        <p>That is it! If you find the run the code, you get:</p>
+                        <pre>
+                            <code class="language-python">
+problem.value -> -8.999999999850528
+x1.value -> 1.
+x2.value -> 1.
+                            </code>
+                        </pre>
+                        <p>And it is that easy! Now, let's do it with a different, more difficult example.</p>
+
+                        <h4>More Difficult Example</h4>
+                        <p>Consider the following network:</p>
+                        <img src="blog_files/cvxpy_intro/graph_network.png">
+                        <p>If we represent the edges between the nodes and their associated weights, we have:</p>
+                        <pre>
+                            <code class="language-python">
+From  To  Weight
+A     B     2
+A     D     5
+B     C     5
+B     D     2
+B     E     7
+B     F     9
+C     F     2
+D     E     4
+E     F     3
+                            </code>
+                        </pre>
+                        <p>Assume that the supply (or demand, depending on the sign) at the nodes is</p>
+                        <p>bA = 10, bB = 1, bC = -2, bD = -3, bE = 4, bF = -10</p>
+                        <p>and that the capacity of each edge is bounded by 6. Using this information, we can build a linear optimization problem whose solution we can find using CVXPY and will tell us the cheapest flow in this network with the above constraints. The first thing we need to do is build our linear optimization problem.</p>
+                        <p>We know that we want to find the most efficient way to distribute our supplies. There are 9 different routes to take (represented in the 9 different from-to pairs above), so we know that we will need 9 CVXPY variables (or, rather, one variable with 9 spots). If A is the matrix that represented the edges connecting different nodes, x is the vector representing the values we are trying to find, b represents the supply/demand of the nodes, and cost represents the weight of the edges in the from-to pairs above, we can structure our linear optimization problem as follows:</p>
+                        <img src="blog_files/cvxpy_intro/graph_problem.png">
+                        <p>In Python (and using NumPy), we can represent these variables as:</p>
+                        <pre>
+                            <code class="language-python">
+import numpy as np
+
+# How much it costs to go around the edges of our network 
+  # (the weight of each edge)
+cost = np.array([2, 5, 5, 2, 7, 9, 2, 4, 3])
+
+
+# Our matrix, representing the connections between the nodes.
+  # 1 for an edge going from the node, -1 for an edge going into the node.
+  # The rows represent the nodes, and the columns represent the connections
+    # associated with that node.
+  # So row 0 is node A, row 1 is node B, etc, and column 0 is the connection
+    # from A to B, column 1 is the connection from A to D, etc.
+A = np.array([[ 1,  1,  0,  0,  0,  0,  0,  0,  0],
+              [-1,  0,  1,  1,  1,  1,  0,  0,  0],
+              [ 0,  0, -1,  0,  0,  0,  1,  0,  0],
+              [ 0, -1,  0, -1,  0,  0,  0,  1,  0],
+              [ 0,  0,  0,  0, -1,  0,  0, -1,  1],
+              [ 0,  0,  0,  0,  0, -1, -1,  0, -1]])
+
+# Our b vector, which contains the information for bA to bF as seen above.
+b = np.array([10, 1, -2, -3, 4, -10])
+                            </code>
+                        </pre>
+                        <p>Now, in order to represent x, we will need to initialize a CVXPY variable.</p>
+                        <pre>
+                            <code class="language-python">
+# Instead of initializing x1, x2, ..., x9, we can instead initialize
+    # x to be a vector with 9 entries.
+x = cp.Variable((9), nonneg=True)
+                            </code>
+                        </pre>
+
+                        <p>Now that we have all of our variables ready and declared, we need to create our objective function,</p>
+                        <pre>
+                            <code class="language-python">
+# Similiar to NumPy, represent matrix multiplication in CVXPY with @
+objective = cp.Minimize(cost.T@x)
+                            </code>
+                        </pre>
+                        <p>and our constraints</p>
+                        <pre>
+                            <code class="language-python">
+# Remember: Constraints must be in list form!
+    # Additionally, since we said in the creation of the x-variable that
+        # it must be non-negative, the only constraint we need to include is that
+        # each value of x cannot be greater than 6.
+constraints = [A@x == b,
+               x <= 6]
+                            </code>
+                        </pre>
+                        <p>With our variables, objective function, and constraints all defined, it is time to solve our convex linear optimization problem using CVXPY! Try to do it on your own before looking at the provided code.</p>
+                        <pre>
+                            <code class="language-python">
+import cvxpy as cp
+import numpy as np
+
+# How much it costs to go around the edges of our network 
+    # (the weight of each edge)
+cost = np.array([2, 5, 5, 2, 7, 9, 2, 4, 3])
+
+# Our matrix, representing the connections between the nodes.
+    # 1 for an edge going from the node, -1 for an edge going into the node.
+    # The rows represent the nodes, and the columns represent the connections
+    # associated with that node.
+    # So row 0 is node A, row 1 is node B, etc, and column 0 is the connection
+    # from A to B, column 1 is the connection from A to D, etc.
+A = np.array([[ 1,  1,  0,  0,  0,  0,  0,  0,  0],
+                [-1,  0,  1,  1,  1,  1,  0,  0,  0],
+                [ 0,  0, -1,  0,  0,  0,  1,  0,  0],
+                [ 0, -1,  0, -1,  0,  0,  0,  1,  0],
+                [ 0,  0,  0,  0, -1,  0,  0, -1,  1],
+                [ 0,  0,  0,  0,  0, -1, -1,  0, -1]])
+
+# Our b vector, which contains the information for bA to bF as seen above.
+b = np.array([10, 1, -2, -3, 4, -10])
+
+# Instead of initializing x1, x2, ..., x9, we can instead initialize
+    # x to be a vector with 9 entries.
+x = cp.Variable((9), nonneg=True)
+
+# Similiar to NumPy, represent matrix multiplication in CVXPY with @
+objective = cp.Minimize(cost.T@x)
+
+# Remember: Constraints must be in list form!
+    # Additionally, since we said in the creation of the x-variable that
+    # it must be non-negative, the only constraint we need to include is that
+    # each value of x cannot be greater than 6.
+constraints = [A@x == b,
+                x <= 6]
+
+# Create and solve our convex linear optimization problem.
+problem = cp.Problem(objective, constraints)
+problem.solve()
+
+# See what our solution is:
+print(problem.value)
+print(x.value)
+                            </code>
+                        </pre>
+                        <p>The solution is:</p>
+                        <pre>
+                            <code class="language-python">
+problem.value -> 98.00000002103977
+x.value       -> [5.99999999 4.00000001 6.         0.31411362 0.00000001 0.68588636 4.         1.31411363 5.31411364]
+
+# After rounding...
+x.value       -> [6, 4, 6, 0, 0, 1, 4, 1, 5]
+                            </code>
+                        </pre>
+                        
+                        <h4>Conclusion</h4>
+                        <p>And there you have it! CVXPY is a great library that makes solving convex optimization problems a breeze! You can solve more than linear optimization problems, so keep searching to learn more!</p>
+                        
+                        <h4>Additional Resources</h4>
+                        <p>If you are interested in some additional resources, I would recommend the book <a href="https://web.stanford.edu/~boyd/cvxbook/">"Convex Optimization"</a> by <a href="https://web.stanford.edu/~boyd/">Stephen Boyd</a> and <a href="http://www.seas.ucla.edu/~vandenbe/">Lieven Vandenberghe</a>. It is a great, indepth look into the world of convex optimization, both linear and nonlinear.</p>
+                        <p>The book has lots of practice problems to try out, and even has a <a href="https://egrcc.github.io/docs/math/cvxbook-solutions.pdf">solution manual</a>. (If you are looking for a free pdf copy, you can find it <a href="https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf">here</a>.</p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2023</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2023<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-100415142-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-100415142-2');
+</script>
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
