@@ -74,9 +74,9 @@
                             <li>The first thing we need to do is read in our data.</li>
                             <pre>
                                 <code class="language-R">
-                                    Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
-                                    Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
-                                    Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
+Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
+Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
+Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
                                 </code>
                             </pre>
 
@@ -108,17 +108,17 @@
                             <p>When you run this function, R will automatically output the ANOVA table will all the information we need!</p>
                             <pre>
                                 <code class="language-R">
-                                    Analysis of Variance Table
+Analysis of Variance Table
 
-                                    Response: Height
+Response: Height
 
-                                            Df Sum Sq Mean Sq F value  Pr(>F)   
+        Df Sum Sq Mean Sq F value  Pr(>F)   
 
-                                    Method     2 229.74 114.870  7.0587 0.00342 **
+Method     2 229.74 114.870  7.0587 0.00342 **
 
-                                    Residuals 27 439.39  16.274                   
-                                    ---
-                                    Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Residuals 27 439.39  16.274                   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
                                 </code>
                             </pre>
                         </ol>
@@ -135,26 +135,26 @@
                         <p>Here is a code block of the full code in an R console.</p>
                         <pre>
                             <code class="language-R">
-                                > Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
-                                > Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
-                                > Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
-                                > 
-                                > height_dataset <- data.frame(Control, Deficient, Slow_release)
-                                > View(height_dataset)
-                                > stack_height_dataset <- stack(height_dataset)
-                                > 
-                                > names(stack_height_dataset) <- c("Height", "Method")
-                                >
-                                > height_fit <- lm(Height~Method, data=stack_height_dataset)
-                                >
-                                > anova(height_fit)
-                                Analysis of Variance Table
-                                Response: Height
-                                        Df Sum Sq Mean Sq F value  Pr(>F)   
-                                Method     2 229.74 114.870  7.0587 0.00342 **
-                                Residuals 27 439.39  16.274                   
-                                ---
-                                Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
+> Deficient <- c(7.0, 6.9, 13.3, 11.1, 11.0, 16.5, 12.7, 12.4, 17.1, 9.0)
+> Slow_release <- c(19.8, 20.3, 16.1, 17.9, 12.4, 12.5, 17.4, 19.9, 27.3, 14.4)
+> 
+> height_dataset <- data.frame(Control, Deficient, Slow_release)
+> View(height_dataset)
+> stack_height_dataset <- stack(height_dataset)
+> 
+> names(stack_height_dataset) <- c("Height", "Method")
+>
+> height_fit <- lm(Height~Method, data=stack_height_dataset)
+>
+> anova(height_fit)
+Analysis of Variance Table
+Response: Height
+        Df Sum Sq Mean Sq F value  Pr(>F)   
+Method     2 229.74 114.870  7.0587 0.00342 **
+Residuals 27 439.39  16.274                   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
                             </code>
                         </pre>
 
