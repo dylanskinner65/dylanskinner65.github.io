@@ -795,13 +795,16 @@
   .gs-promotion-image-box img.gs-promotion-image {
     border: 1px solid #e2e2e2;
     max-width: 60px; /* Small icons width. */
-    max-height: 120px;  /* Limit height too. */
-    /* IE-specific hack to simulate max-width and max-height. */
-    /* For IE, image size will be 105 because various default
-     * values for margins and borders are different.
-     */
-    width: expression(this.width > 64 ? '64px': true);
-    height: expression(this.height > 120 ? '120px': true);
+    max-height: 120px; /* Limit height too. */
+  }
+  
+  @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* For IE browsers */
+    .gs-web-image-box img.gs-image,
+    .gs-promotion-image-box img.gs-promotion-image {
+      width: 64px;
+      height: 120px;
+    }
   }
   
   div.gs-action {
