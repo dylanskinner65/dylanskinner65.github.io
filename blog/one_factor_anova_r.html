@@ -63,7 +63,7 @@
                         <p><bold>This article assumes you already know what ANOVA tables are. I will not be going into any of the math behind ANOVA tables.</bold></p>
                         <h4>Motivating Examples</h4>
                         <p>I want to start this off with an example from the article <a href="https://www.sciencedirect.com/science/article/pii/S0925857411000802">“Nutrient Deprivation Improves Field Performance of Woody Seedlings in a Degraded Semi-arid Shrubland” (R. Trubata, J. Cortina, and A. Vilagrosaa, Ecological Engineering, 2011:1164–1173)</a>. One part of this article looks at the effect of three different types of fertilizers on the height of a specific Mediterranean tree species. One experiment the group conducts takes three samples of 10 different trees, with each sample being grown with a different fertilizer. One group—the control group—was grown with a standard fertilizer, a second group was grown with a fertilizer that contained half the nutrients of the standard fertilizer, and the third group was grown using a commercial slow-release fertilizer. After one year, the heights of the trees were measured and are listed in the following table.</p>
-                        <img src="blog_files/tree_height_picture.png" />
+                        <img src="blog_files/creating_anova/tree_height_picture.png" />
                         <figcaption>Data table courtesy of <a href="https://www.mheducation.com/highered/product/statistics-engineers-scientists-navidi/M9781259717604.html">William Navidi, “Statistics for Engineers and Scientists,” 5th edition (page 688–9)</a>.</figcaption>
                         <p>This leads us to our research question: does fertilizer type affect the height of these Mediterranean trees?</p>
                         <p>One statistical tool we can use to analyze the data and figure out the answer to our research question is called <bold>An</bold>alysis <bold>o</bold>f <bold>Va</bold>riance (ANOVA). The idea being to use an ANOVA test is to compare the variance in means of level (fertilizer type), to the variance that occurs by change (variance of errors). Now, you can compute this ANOVA table by hand, but it is long, tedious, and simply unnessary. Instead, we can use R!</p>
@@ -78,21 +78,21 @@
                             <li>Next, we want to put these variables into a dataframe</li>
                             <code>height_dataset <- data.frame(Control, Deficient, Slow_release)</code>
                             <p>This will give us a nice data frame that looks like this:</p>
-                            <img src="blog_files/height_dataset.png" />
+                            <img src="blog_files/creating_anova/height_dataset.png" />
                             <li>To help prepare the data for the ANOVA table, we will want to stack the data together using the <code>stack()</code> function</li>
                             <code>stack_height_dataset <- stack(height_dataset)</code>
                             <p>When we stack our dataset together, we see that our data frame turns into a two column frame where the first column has the heights, and the second column as the three types of fertilizer. But, the column headers do not fully represent this.</p>
-                            <img src="blog_files/stack_height_dataset.png"/>
+                            <img src="blog_files/creating_anova/stack_height_dataset.png"/>
                             <figcaption>This data frame has 30 rows, but these 21 should help you get the idea.</figcaption>
                             <li>To make things easier for later, rename the column headers to accurately represent what the columns are showing.</li>
                             <code>names(stack_height_dataset) <- c("Height", "Method")</code>
                             <p>If we look at our data frame again, we will see that the column headers are renamed and accurately represent what we are looking at.</p>
-                            <img src="blog_files/stack_height_dataset_renamed.png"/>
+                            <img src="blog_files/creating_anova/stack_height_dataset_renamed.png"/>
                             <figcaption>We see that the column headers are renamed.</figcaption>
                             <li>With our renamed column headers, we will now want to turn our data frame into a linear model using the <code>lm()</code> function in R.</li>
                             <code>height_fit <- lm(Height~Method, data=stack_height_dataset)</code>
                             <p>If you look at our newly created height_fit linear model, we see a few weird things. Do not worry too much about this. This is all information that our next step requires.</p>
-                            <img src="blog_files/height_fit.png"/>
+                            <img src="blog_files/creating_anova/height_fit.png"/>
                             <figcaption>There is a lot of information here, but do not worry about it if you are new! It is not super important for you to understand right now.</figcaption>
                             <ol>Final step! All of our data preparation has brought us up to this point! All we need to do is pass our <code>height_fit</code> linear model into the <code>anova()</code> function that R provides.</ol>
                             <code>anova(height_fit)</code>
@@ -113,7 +113,7 @@
 
                         <h4>Example Fully Worked Out</h4>
                         <p>Here is a picture of the full code in an R console.</p>
-                        <img href="blog_files/full_example_terminal.png" />
+                        <img href="blog_files/creating_anova/full_example_terminal.png" />
                         <figcaption>Here is a picture of the full code in an R console.</figcaption>
                         <p>Here is a code block of the full code in an R console.</p>
                         <code>> Control <- c(17.9, 12.2, 14.9, 13.8, 26.1, 15.4, 20.3, 16.9, 20.8, 14.8)
