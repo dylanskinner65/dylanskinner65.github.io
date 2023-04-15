@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Prime Spiral in Python</title>
+    <meta name="description" content="A friend sent me a  3blue1brown video about what happens when you plot
+    prime numbers in polar coordinates. I thought the video was interesting and decided to code it up myself.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-04-15">15 April 2023</time> </span>
+                    <h2 class="post-title"><a href="/blog/prime_spiral.html">Prime Spiral in Python</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Mathematicians have tried in vain to this day to discover some order in the sequence of prime numbers, 
+                                    and we have reason to believe that it is a mystery into which the human mind will never penetrate."</blockquote>
+                        <p>- Leonhard Euler</p>
+
+                        <h4>Why I Tried This</h4>
+                        <p>I have always been fascinated with prime numbers. I was born on the 23rd (prime), in 1999 (prime) and have always been interested
+                            in some of the characteristics of primes and the weird things they do. I remember in high school, I
+                            bought a book called 'Prime Obsession' by John Derbyshire. It was a fascinating book about the history of prime numbers and
+                            the people who have studied them. I have always wanted to do something with prime numbers, but I never knew what.
+                        </p>
+
+                        <p>Yesterday, a friend of mine sent me a <a href="https://www.tiktok.com/t/ZTR3CuBua/">video</a> from the 3blue1brown tiktok account.
+                        After struggling mightly to get it to load (turns out you do nothing and it will start by itself), I was captivated. 
+                        This video showcased two things I really enjoy: primes, and data visualization.
+                        </p>
+
+                        <p>As soon as I watched this video I knew I wanted to try and create the prime spiral for myself.
+                            Thankfully, 3blue1brown described this phenomenon in enough detail that I knew how to proceed.
+                            It seemed simple enough, so I fired up an iPython notebook in VS code I got to it.
+                        </p>
+
+                        <h4>The Process</h4>
+
+                        <p>The first thing I new I needed to do was find a way to find the 
+                            first $n$ primes in a quick manner. I remember doing a <a href="https://acme.byu.edu/00000181-49cb-d0ac-abe9-efff44d90000/profiling">lab</a>
+                            in school where one of the problems was to write a function to find prime numbers as quick as possible.
+                            I went back, copied that code (thanks past me), and used it in my project. After testing it, my function
+                            could find the first 10000 times in about 0.07 seconds, and first 100000 primes in about 1.56 seconds. Sufficently fast for me.
+                        </p>
+
+                        <p>After I got my prime finder up and running, and started working on how I wanted to plot these spirals. I have recently been enjoying the
+                            Plotly library, so I started with that. After a few seconds of Googling, I found that Plotly had a very easy way to plot polar coordinates
+                            using <code>plotly.express.scatter_polar()</code>. I ran my prime finder, and plotted the first 1000 primes. I could see
+                            the spiral, but the graph was not as interactive as I wanted it to be. One of the key features of the 3blue1brown
+                            video is that if you zoomed in or out on the graph, the spiral would change. I could not do that with this plotting method, so
+                            I needed to change something.
+                        </p>
+
+                        <p>
+                            Eventually, after spending a few minutes getting my primes into their polar form, I got something to work using <code>plotly.express.scatter()</code>.
+                            It looked good and I was happy with it. After some reformating of the graph, I got something that looked like this:
+                        </p>
+
+                        <center><iframe src="/blog_files/prime_spiral/prime_spiral_graph.html" height="800" width="1200" frameBorder="0"></iframe></center>
+
+                        <p>Pretty neat!</p>
+
+                        <h4>Conclusion</h4>
+
+                        <p>This was not anything crazy, but something cool that I saw and wanted to share. The code I used to
+                            create this graph and find the primes is located on my <a href="https://github.com/dylanskinner65/Fun_math">Github</a>.</p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2023</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2023<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-100415142-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-100415142-2');
+</script>
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
