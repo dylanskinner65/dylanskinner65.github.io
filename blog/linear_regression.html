@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Linear Regression</title>
+    <meta name="description" content="This semester, I learned a lot about the math behind machine learning. Today,
+                        I wanted to put down what I learned about linear regression.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+    <!-- If you want links to open in a new tab, add target="_blank" rel="noopener noreferrer" to your <a> -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeta Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-04-15">21 December 2023</time> </span>
+                    <h2 class="post-title"><a href="/blog/linear_regression.html">Linear Regression</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>“You can do linear regression without thinking about whether the phenomenon you’re modeling 
+                            is actually close to linear. But you shouldn’t.”</blockquote>
+                        <p>- Jordan Ellenberg</p>
+
+                        <h4>Introduction</h4>
+                        <p>Linear regression, a fundamental concept in statistics and machine learning, 
+                            serves as a powerful tool for modeling and understanding the relationships between variables.
+                            At its core, linear regression explores the linear association between an independent variable
+                            (or multiple variables) and a dependent variable. This technique provides a systematic way to
+                            quantify and predict the impact of changes in one variable on another, making it a cornerstone 
+                            in the toolkit of data analysts and scientists. Whether predicting stock prices, analyzing 
+                            economic trends, or understanding the factors influencing house prices, 
+                            linear regression is a fundamental tool in statistical modeling. In this blog post, we'll delve into the principles of linear regression,
+                            model accuracy, and regularization.
+                        </p>
+
+                        <h4>What is Regression?</h4>
+
+                        <p>At its core, a <em>regression</em> problem is one where you have random variables $X=(X_1, X_2,\dots, X_n)\in\mathbb{R}^d$,
+                            $Y\in\mathbb{R}$, and $\varepsilon\in\mathbb{R}$, with the relationship $Y=f(X)+\varepsilon$, where $f$ is some unknown function.
+                            The goal of regression is to estimate $f$ using the data $\{(\bold{x}_1, y_1), (\bold{x}_2, y_2),\dots, (\bold{x}_n, y_n)\}$.
+                            In this situation, the variable $Y$ is the <em>dependent</em> or <em>target</em> variable, the variable $X$
+                            is the <em>independent</em> or <em>predictor</em> variable, and the individual components
+                            $X_1, X_2,\dots, X_n$ of $X$ are the <em>features</em> or <em>factors</em>. The variable $\varepsilon$ is the <em>error</em> term.
+
+                        </p>
+
+                        <p>In <em>linear regression</em>, we assume that the function $f$ takes the form of some linear or affine function, typically
+                            of the form $Y = \beta_0 + X^T\boldsymbol{\beta} + \varepsilon$, where $\boldsymbol{\beta}\in\mathbb{R}^d$, and
+                            $\beta_0\in\mathbb{R}$. This is often reformulated into the form $Y = \boldsymbol{\beta}^T\bold{x} + \varepsilon$,
+                            where $\bold{x} = (1, X_1, X_2,\dots, X_n)\in\mathbb{R}^{d+1}$, and $\boldsymbol{\beta} = (\beta_0, \beta_1, \beta_2,\dots, \beta_n)\in\mathbb{R}^{d+1}$.
+                        </p>
+
+                        <p>
+                            Here, $\boldsymbol{\beta}$ is unknown, so the goal of linear regression is to estimate $\boldsymbol{\beta}$ using the data
+                            $\{(\bold{x}_1, y_1), (\bold{x}_2, y_2),\dots, (\bold{x}_n, y_n)\}$. This is done by minimizing the <em>residual sum of squares</em> (RSS),
+                            which is defined as
+
+                            $$RSS= ||\boldsymbol{y} - \mathbb{X}\tilde{\boldsymbol{\beta}}||_2^2 =  \sum_{i=1}^n \tilde{\varepsilon}_i^2.$$
+
+                            where $\tilde{\varepsilon}_i$ is the <em>residuals</em> defined as the difference between the measured and predicted values, given by
+                            $$\widetilde{\varepsilon}_i = y_i - \tilde{y}_i,$$
+
+                            $\tilde{y}_i$ is the fitted or predicted values of $y_i$, defined as
+                            $$\tilde{y}_i = \boldsymbol{x}_i^T\tilde{\boldsymbol{\beta}} = (\mathbb{X}\tilde{\boldsymbol{\beta}})_i,$$
+
+                            and $\mathbb{X}$ is the <em>design matrix</em> defined as
+                            $$\mathbb{X} = \begin{bmatrix} 
+                                \boldsymbol{x}_1^T \\
+                                \boldsymbol{x}_2^T \\
+                                \vdots \\
+                                \boldsymbol{x}_n^T \\
+                            \end{bmatrix}
+                            =
+                            \begin{bmatrix}
+                                1 & x_{11} & x_{12} & \dots & x_{1d} \\
+                                1 & x_{21} & x_{22} & \dots & x_{2d} \\
+                                \vdots & \vdots & \vdots & \ddots & \vdots \\
+                                1 & x_{n1} & x_{n2} & \dots & x_{nd} \\
+                                \end{bmatrix}$$
+                        </p>
+
+                        <p>
+                            It should be known that the residual sum of squares is a pretty good choice for measuring the quality of our model. But,
+                            one of the best ways to estimate what our unknown $\boldsymbol{\beta}$ values are is to use the <em>ordinary least-squares (OLS)</em> method.
+                        </p>
+
+                        <p>
+                            The ordinary least-squares method is done by calculating
+
+                            $$\widehat{\boldsymbol{\beta}} = \text{argmin}_{\tilde{\boldsymbol{\beta}}}||y - \mathbb{X}\tilde{\boldsymbol{\beta}}||_2^2
+                            = \text{argmin}_{\tilde{\boldsymbol{\beta}}}\sum_{i=1}^n \tilde{\varepsilon}_i^2,$$
+
+                            and if $\mathbb{X}$ is of full rank (meaning its columns are linearly independent), then we can use the equation
+                            $$\mathbb{X}^T\mathbb{X}\widehat{\boldsymbol{\beta}} = \mathbb{X}^T\boldsymbol{y}$$
+                            
+                            to get the solution, given by
+                            $$\widehat{\boldsymbol{\beta}} = (\mathbb{X}^T\mathbb{X})^{-1}\mathbb{X}^T\boldsymbol{y}.$$
+
+                            Of course, in practice, you would never invert the matrix $\mathbb{X}^T\mathbb{X}$ because of its time complexity and stability, but instead use a more efficient method like QR decomposition.
+                        </p>
+
+                        <p>
+                            But what if your matrix $\mathbb{X}$ is not of full rank? There are two main ways to deal with this, the first one
+                            being to us the SVD of the matrix, which we will now describe.
+                        </p>
+
+                        <p>
+
+                            Recall that if $\mathbb{X}$ is of rank $r$, then we can write it as 
+                            $$\mathbb{X} = U\Sigma V^H,$$
+                            
+                            where $U\in M_{n\times r}, $V\in M_{r\times d}$, and $\Sigma\in M_{r\times r}.$ Recall that the matrices
+                            $U$ and $V$ are orthonormal, so we can solve the OLS problem by
+
+                            $$\widehat{\boldsymbol{\beta}} = V\Sigma^{-1}U^T\boldsymbol{y}.$$
+
+                            Not only will this product a solution in the rank deficient case (please note this is not a unique solution),
+                            but it also has several computational advantages over the method presented for the full-rank case. Thus,
+                            even if you have a full-rank matrix, it can often be helpful to use the SVD method because of its speed.
+                        </p>
+
+                        <h4>Python Example of OLS</h4>
+
+                        <p>Now that we mathematically understand how to solve linear regression problems using 
+                            the OLS method, let's see how we can implement this in Python. For this example, we will use randomly generated data.
+                        </p>
+
+                        <p>Let's begin by generating the data. To do that, we can use the following code:</p>
+
+                        <pre>
+                            <code class="language-python">
+# Import NumPy
+import numpy as np
+
+# Get the random data, first setting a random seed for reproducibility
+np.random.seed(100)
+n = 50  # Number of points
+X = np.linspace(0, 10, n)  # Generate n points between 0 and 10 for X 
+epsilon = np.random.uniform(-5, 3, size=(n, ))  # Noise for y coordinates
+y = 2 + 3*X + epsilon  # Generate y coordinates</code>
+                        </pre>
+
+                        <p>This code produces the following graph</p>
+
+                        <img src="blog_files/linear_regression/scatter.png" />
+
+                        <p>It is pretty easy to see the linear relationship between this data, but there is no clear linear line that best fits this.</p>
+
+                        <p>Now, let's implement the OLS method. To do this, we will use the following code:</p>
+
+                        <pre>
+                            <code class="language-python">
+def OLS(X, y):
+    """
+    Perform Ordinary Least Squares (OLS) linear regression.
+
+    Parameters:
+    - X (numpy.ndarray): Input feature matrix of shape (n_samples, n_features).
+    - y (numpy.ndarray): Target variable vector of shape (n_samples,).
+
+    Returns:
+    - numpy.ndarray: Coefficient vector beta, representing the solution to the OLS regression.
+    
+    This function fits a linear regression model using the Ordinary Least Squares method. It adds a column
+    of ones to the input feature matrix X to account for the intercept term (beta_0). The function then
+    calculates and returns the coefficient vector beta using the OLS formula: beta = (X^T * X)^(-1) * X^T * y.
+    """
+    # Add a column of ones to X (account for beta_0)
+    X = np.column_stack((np.ones_like(y), X))
+
+    # Return beta's
+    return np.linalg.solve(X.T @ X, X.T @ y)</code>
+                        </pre>
+                        
+                        <p>Running this code on our generated data, calculating the RSS, and plotting our results, we can visualize how well our OLS line fits the data.</p>
+
+                        <img src="blog_files/linear_regression/scatter_ols.png" />
+
+                        <p>Pretty good!</p>
+
+                        <p>Now, using the same data, let's code up an SVD solver, and see how well it does. We can code up the SVD solver using the following code.</p>
+
+                        <pre>
+                            <code class="language-python">
+def SVD_OLS(X, y):
+    """
+    Perform Ordinary Least Squares (OLS) linear regression using Singular Value Decomposition (SVD).
+
+    Parameters:
+    - X (numpy.ndarray): Input feature matrix of shape (n_samples, n_features).
+    - y (numpy.ndarray): Target variable vector of shape (n_samples,).
+
+    Returns:
+    - numpy.ndarray: Coefficient vector beta, representing the solution to the OLS regression.
+    
+    This function fits a linear regression model using the Ordinary Least Squares method with the help of
+    Singular Value Decomposition (SVD). It adds a column of ones to the input feature matrix X to account
+    for the intercept term (beta_0). The function then computes the SVD of X (X = U * Sigma * V^T), where U and
+    V are orthogonal matrices, and Sigma is a diagonal matrix of singular values. The OLS solution is obtained
+    using the SVD components: beta = V * diag(1/s) * U^T * y, where diag(1/s) represents the inverse of the
+    diagonal matrix of singular values.
+    """
+    # Add a column of ones to account for beta_0
+    X = np.column_stack((np.ones_like(y), X))
+
+    # Compute SVD of X
+    U, s, V = np.linalg.svd(X, full_matrices=False)
+
+    # Return OLS using SVD
+    return V.T @ np.diag(1/s) @ U.T @ y</code>
+                        </pre>
+
+                        <p>Running this code on our generated data, calculating the RSS, and plotting our results (along with the results from the OLS method),
+                            we can visualize how well our SVD line fits the data.</p>
+                        
+                        <img src="blog_files/linear_regression/scatter_ols_svd.png" />
+
+                        <p>As you can see, the lines are exactly the same with the exact same RSS score. Thus, either option is viable for our randomly generated data!</p>
+
+
+                        <h4>Regularization</h4>
+
+                        <p>Now that we have a basic understand of doing linear regression, let's explore the method of <em>regularization</em> and how it can improve our models.</p>
+
+
+                        <h5>Ridge Regression</h5>
+                        <p>The first form of regularization we want to look at is <em>Ridge</em> or $L^2$ regularization. Ridge regularization is a simple modification we 
+                        can make to our linear regression. We can implement ridge regression by modifying the OLS method as follows:
+                    
+                        $$\widehat{\boldsymbol{\beta}} = \text{argmin}_{\boldsymbol{\beta}}\frac{1}{n}||y - \mathbb{X}\boldsymbol{\beta}||_2^2 + \lambda||\boldsymbol{\beta}||_2^2$$
+                    
+                        In this case, $\lambda>0$ is a hyperparameter that you can tweek.</p>
+
+                        <p>In this formula, we include $\frac{1}{n}$ because the OLS term growing larger with more data, but the regularization term does not. Thus, scaling
+                            by a factor of $\frac{1}{n}$ ensures that things are kept proportional.
+                        
+                        It is also important to note that if $\lambda$ is very small, then our minimizer is essentially just the OLS solution and is potentially overfit, and if 
+                        $\lambda$ is very large, then our minimizer is close to $0$ and is potentially underfit. Thus, adding ridge regularization can allow our model to avoid over or underfitting our data.</p>
+
+                        <p>Another benefit of using ridge regression is that even if $\mathbb{X}^T\mathbb{X}$ is singular or nearly singular (i.e., not invertible), adding 
+                            this regularization term will make it invertible. Thus, ridge regression can be used to solve the problem of $\mathbb{X}^T\mathbb{X}$ being singular. We
+                        can find the unique minimizer of a problem using the following formula
+                    
+                        $$\widehat{\boldsymbol{\beta}} = (\mathbb{X}^T\mathbb{X} + n\lambda I)^{-1}\mathbb{X}^T\boldsymbol{y}$$
+
+                        where $I$ is simply an $(n\times n)$ identity matrix.
+                        </p>
+
+                        <p>One important thing to note about ridge regression is that it will rarely zero-out the $\beta$ coefficients. Instead,
+                            it makes unnecessary coefficients very small. This is nice if we do not care about model interpretability, but
+                            if understand more about the model is important, ridge regression makes it difficult. In this case, we can use <em>Lasso</em> or $L^1$ regularization.
+                        </p>
+
+                        <h5>Lasso Regression</h5>
+                        <p>Lasso regularization is very similar to ridge regularization, but instead of using the $L^2$ norm, we use the $L^1$ norm. Thus, we can implement lasso regression by modifying the OLS method as follows:
+
+                        $$\widehat{\boldsymbol{\beta}} = \text{argmin}_{\boldsymbol{\beta}}\frac{1}{n}||y - \mathbb{X}\boldsymbol{\beta}||_2^2 + \lambda||\boldsymbol{\beta}||_1$$</p>
+
+                        <p>As mentioned above, lasso regression will zero-out coefficients. This makes lasso regression extremely helpful for feature selection. In fact,
+                            lasso regression often out performs stepwise feature removal!
+
+                            A potential downside of lasso regression is that unlike ridge regression, it is not easily solved using standard techniques. This is because the loss function is not
+                            differentiable at every point. The loss function is convex, however, which means we can use standard convex optimization techniques to solve it.
+                        </p>
+
+                        <h5>Elastic Net Regularization</h5>
+                        <p>A final regularization technique to mention is <em>elastic net</em> regularization. Elastic net regularization is simply a combination of ridge and lasso regularization.
+                        This is beneficial because it combines the benefits of ridge regression (which often out performs lasso regression), but still encourages the sparsity that comes from 
+                        lasso regression. Elastic net regularization is given by:
+                    
+                        $$\widehat{\boldsymbol{\beta}} = \text{argmin}_{\boldsymbol{\beta}} \frac{1}{n}||y - \mathbb{X}\boldsymbol{\beta}||_2^2 + \lambda_2||\boldsymbol{\beta}||_2^2
+                                + \lambda_1 ||\boldsymbol{\beta}||_1,$$
+                            
+                            where $\lambda_1, \lambda_2\geq 0$. We can minimize this loss function using similar techniques for minimizing lasso regression.</p>
+
+
+                        <h4>Conclusion</h4>
+
+                        <p>Linear regression is a simple, yet powerful tool for analyzing data. It is a simple machine learning algorithm, but it is easy to understand and implement, making it a helpful
+                            first algorithm in a data scientist's toolkit.
+
+                            To see the code used in this blog post (including creating the images), checkout the file on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/linear_regression/linear_regression.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.</p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2023</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/" target="_blank" rel="noopener noreferrer">Dylan
+                        Skinner</a> © 2023<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-100415142-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-100415142-2');
+</script>
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
