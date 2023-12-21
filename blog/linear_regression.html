@@ -78,7 +78,7 @@
 
                         <p>At its core, a <em>regression</em> problem is one where you have random variables $X=(X_1, X_2,\dots, X_n)\in\mathbb{R}^d$,
                             $Y\in\mathbb{R}$, and $\varepsilon\in\mathbb{R}$, with the relationship $Y=f(X)+\varepsilon$, where $f$ is some unknown function.
-                            The goal of regression is to estimate $f$ using the data $\{(\bold{x}_1, y_1), (\bold{x}_2, y_2),\dots, (\bold{x}_n, y_n)\}$.
+                            The goal of regression is to estimate $f$ using the data $\{(\boldsymbol{x}_1, y_1), (\boldsymbol{x}_2, y_2),\dots, (\boldsymbol{x}_n, y_n)\}$.
                             In this situation, the variable $Y$ is the <em>dependent</em> or <em>target</em> variable, the variable $X$
                             is the <em>independent</em> or <em>predictor</em> variable, and the individual components
                             $X_1, X_2,\dots, X_n$ of $X$ are the <em>features</em> or <em>factors</em>. The variable $\varepsilon$ is the <em>error</em> term.
@@ -87,13 +87,13 @@
 
                         <p>In <em>linear regression</em>, we assume that the function $f$ takes the form of some linear or affine function, typically
                             of the form $Y = \beta_0 + X^T\boldsymbol{\beta} + \varepsilon$, where $\boldsymbol{\beta}\in\mathbb{R}^d$, and
-                            $\beta_0\in\mathbb{R}$. This is often reformulated into the form $Y = \boldsymbol{\beta}^T\bold{x} + \varepsilon$,
-                            where $\bold{x} = (1, X_1, X_2,\dots, X_n)\in\mathbb{R}^{d+1}$, and $\boldsymbol{\beta} = (\beta_0, \beta_1, \beta_2,\dots, \beta_n)\in\mathbb{R}^{d+1}$.
+                            $\beta_0\in\mathbb{R}$. This is often reformulated into the form $Y = \boldsymbol{\beta}^T\boldsymbol{x} + \varepsilon$,
+                            where $\boldsymbol{x} = (1, X_1, X_2,\dots, X_n)\in\mathbb{R}^{d+1}$, and $\boldsymbol{\beta} = (\beta_0, \beta_1, \beta_2,\dots, \beta_n)\in\mathbb{R}^{d+1}$.
                         </p>
 
                         <p>
                             Here, $\boldsymbol{\beta}$ is unknown, so the goal of linear regression is to estimate $\boldsymbol{\beta}$ using the data
-                            $\{(\bold{x}_1, y_1), (\bold{x}_2, y_2),\dots, (\bold{x}_n, y_n)\}$. This is done by minimizing the <em>residual sum of squares</em> (RSS),
+                            $\{(\boldsymbol{x}_1, y_1), (\boldsymbol{x}_2, y_2),\dots, (\boldsymbol{x}_n, y_n)\}$. This is done by minimizing the <em>residual sum of squares</em> (RSS),
                             which is defined as
 
                             $$RSS= ||\boldsymbol{y} - \mathbb{X}\tilde{\boldsymbol{\beta}}||_2^2 =  \sum_{i=1}^n \tilde{\varepsilon}_i^2.$$
@@ -150,7 +150,7 @@
                             Recall that if $\mathbb{X}$ is of rank $r$, then we can write it as 
                             $$\mathbb{X} = U\Sigma V^H,$$
                             
-                            where $U\in M_{n\times r}, $V\in M_{r\times d}$, and $\Sigma\in M_{r\times r}.$ Recall that the matrices
+                            where $U\in M_{n\times r}$, $V\in M_{r\times d}$, and $\Sigma\in M_{r\times r}.$ Recall that the matrices
                             $U$ and $V$ are orthonormal, so we can solve the OLS problem by
 
                             $$\widehat{\boldsymbol{\beta}} = V\Sigma^{-1}U^T\boldsymbol{y}.$$
