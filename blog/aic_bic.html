@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Akaike and Bayesian Information Criterion</title>
+    <meta name="description" content="Akaike information criterion (AIC) and Bayesian information criterion (BIC) are powerful tools for model selection and comparison in machine learning. In this article we will see what AIC and BIC are and how to use them.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-12-27">27 December 2023</time> </span>
+                    <h2 class="post-title"><a href="/blog/aic_big.html">Akaike and Bayesian Information Criterion</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"All models are wrong, but some are useful." </blockquote>
+                        <p>- George Box</p>
+
+                        <p>One of the key problems in machine learning is knowing which model to use. Akaike information criterion (AIC), and Bayesian information criterion (BIC) 
+                            are powerful tools used to perform model selection that can help us determine which model is best for our data. In this article we will see what AIC and BIC are and how to use them.</p>
+                        
+                        <h4>Important Background Information</h4>
+                        <p>Before diving into what AIC is, we must establish some foundational knowledge and terminology.</p>
+
+                        <p>First, consider a collection of models, given by
+                            $$\mathscr{M}_j = \{f_j(z | \boldsymbol{\theta})|\boldsymbol{\theta}\in \Theta_j \}.$$
+
+                            In this, we have that each model is parameterized by some set of distributions, $\boldsymbol{\theta}$.
+                            Let $\widehat{\boldsymbol{\theta}}$ be the maximum likelihood estimator for $\boldsymbol{\theta}$ in model $j$.
+                        </p>
+
+                        <p>
+                            It is important to note that the true distribution $f(z)$ for the data not might be in $\mathscr{M}_j$.
+                            In this case, we want to identify the model that is closest to the true distribution. If other model selection criteria do not apply
+                            (such as train-test split or cross validation), then we can use AIC and BIC to help us determine which model is best.
+                        </p>
+
+                        <h4>Akaike Information Criterion</h4>
+
+                        <p>
+                            THe main idea behind AIC is that we want to choose the MLE $\widehat{\boldsymbol{\theta}}$ for model $M_j$ that minimizes the relative entropy 
+                            (KL-divergence) between our selected distribution, and the true distribution $f(z)$.
+
+                            So, given some estimate $\widehat{\boldsymbol{\theta}_j}$ with $\widehat{f_j}(z) = f(z|\widehat{\boldsymbol{\theta}_j})$, we want to minimize
+
+                            $$\mathscr{D}_{\text{KL}}(f||\widehat{f}_j) = \int f(z)\log(f(z))dz - \int f(z)\log(\widehat{f}_j(z))dz.$$
+
+                            Note, the first integral is completely independent of $j$ and $\widehat{\boldsymbol{\theta}_j}$. This means
+                            that in order to effectively minimize the relative entropy with respect to $j$, we need to minimize the second integral, given by
+
+                            $$\widehat{K}_j = - \int f(z)\log(\widehat{f}_j(z))dz.$$
+
+                            Given this integral is intractable (and considering $f(z)$ is probably not known), we can instead use the following approximation:
+
+                            $$
+                            \widehat{K}_j \approx -\frac{1}{n}\sum_{i=1}^n\log(\widehat{f}_j(z_i)).$$
+                        </p>
+
+                        <p>
+                            Nice as this may seem, it is important to note that this estimator is biased. This is because the data 
+                            $z_1, \dots, z_n$ is used to estimate $\widehat{\boldsymbol{\theta}_j}$, which is then used to estimate $\widehat{K}_j$.
+                            But, Akaike found and <a href="https://ieeexplore.ieee.org/document/1100705" target="_blank" rel="noopener noreferrer">proved</a> 
+                            that the bias of this estimator is approximately $-\frac{k_j}{n}$, where $k_j$ is the dimension of the parameter space
+                            $\Theta_j$.
+
+                            So, we now have that the approximation for the unbiased estimator for $\widehat{K}_j$ is given by
+
+                            $$\widehat{K}_j \approx \frac{k_j}{n}-\frac{1}{n}\sum_{i=1}^n\log(\widehat{f}_j(z_i)).$$
+
+                            If we multiply by $2n$, this give us the AIC. 
+
+                            It is important to note that that the AIC is typically given by
+
+                            $$\text{AIC}(j) = 2k_j - 2\ell_j(\widehat{\boldsymbol{\theta}}_j)$$
+
+                            where $\ell_j(\widehat{\boldsymbol{\theta}}_j) = \sum_{i=1}^{n}\log(f_j(z_i|\widehat{\boldsymbol{\theta}}))$ is the MLE, and $k_j = \text{dim}(\Theta_j)$ is the dimension of the parameter space. Also, 
+                            it is important to know that the $2$ is present for historical reasons. Since we are minimizing the AIC, and constant really doesn't matter.
+                        </p>
+
+                        <h4>Bayesian Information Criterion</h4>
+
+                        <p>
+                            Next we talk about Bayesian Information Criterion (BIC). BIC is simply an alternative to the AIC and is similar in many ways. The key difference between AIC and BIC, however, 
+                            is that in BIC, instead of minimizing the relative entropy between the true distribution and the selected distribution, we instead maximize the posterior probability of a selected model. 
+                            Thus, we define the BIC to be
+
+                            $$\text{BIC}(j) = k_j \log(n) - 2\ell_j(\widehat{\boldsymbol{\theta}}_j),$$
+
+                            again, where $\ell_j(\widehat{\boldsymbol{\theta}}_j) = \sum_{i=1}^{n}\log(f_j(z_i|\widehat{\boldsymbol{\theta}}))$ is the MLE, and $k_j = \text{dim}(\Theta_j)$ is the dimension of the parameter space. In this case,
+                            $n$ is the number of data points.
+                            (For those interested in the derivation and proof of the BIC, you can find it <a href="https://statproofbook.github.io/P/bic-der.html" target="_blank" rel="noopener noreferrer">here</a>. Note the notational
+                            difference between the proof and the formula presented here.)
+                        </p>
+
+                        <h4>Differences Between AIC and BIC</h4>
+
+                        <p>
+                            It is easy to see that AIC and BIC only differ by the first term of their formula. AIC's first term is $2k_j$, and BIC's first term is $k_j \log(n)$. Since
+                            $n$ is typically large, this means that, generally, $\log(n) > 2$. This tells us that BIC will penalize models with more parameters more than AIC will. This means that BIC will tend to select simpler models than AIC.
+                            Thus, AIC is more likely to choose a model that is too complex, and BIC is more liekly to choose a model that is too simple. So, which one you choose to use is dependent entirely on your situation and what you are trying
+                            to accomplish. For example, if you think there are unnecessary parameters in your model, then BIC might be a better choice. If you think that there are important parameters that you do not want to leave out, then AIC might be a better choice.
+                        </p>
+
+                        <h4>A Quick Python Example</h4>
+
+                        <p>
+                            Now that we have seen what AIC and BIC are, let's see how we can use them in Python. For this example, we will use the <code>OLS</code> model from <code>statsmodels</code>, and the 
+                             <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_california_housing.html" target="_blank" rel="noopener noreferrer">California housing dataset</a> from scikit-learn.
+                        </p>
+
+                        <p>
+                            First, begin by importing the necessary libraries and loading in the data.
+                        </p>
+
+                        <pre>
+                            <code class="language-python"># Import all the necessary things from sklearn.
+from sklearn.datasets import fetch_california_housing
+import statsmodels.api as sm
+
+# Load in the data. Split into X and y, and make them Pandas dataframes.
+X, y = fetch_california_housing(return_X_y=True, as_frame=True)</code>
+                        </pre>
+
+                        <p>
+                            Briefly looking at the data, we see that there are 8 features, and 20,640 data points, with the $X$ looking like
+                        </p>
+
+                        <pre>
+                            <code class="language-python">X.head()
+   MedInc  HouseAge  AveRooms  AveBedrms  Population  AveOccup  Latitude  
+0  8.3252      41.0  6.984127   1.023810       322.0  2.555556     37.88   
+1  8.3014      21.0  6.238137   0.971880      2401.0  2.109842     37.86   
+2  7.2574      52.0  8.288136   1.073446       496.0  2.802260     37.85   
+3  5.6431      52.0  5.817352   1.073059       558.0  2.547945     37.85   
+4  3.8462      52.0  6.281853   1.081081       565.0  2.181467     37.85   
+                                
+   Longitude  
+0    -122.23  
+1    -122.22  
+2    -122.24  
+3    -122.25  
+4    -122.25  </code>
+                        </pre>
+
+                        <p>
+                            and the $y$ looking like
+                        </p>
+
+                        <pre>
+                            <code class="language-python">y.head()
+0    4.526
+1    3.585
+2    3.521
+3    3.413
+4    3.422
+Name: MedHouseVal, dtype: float64</code>
+                        </pre>
+
+                        <p>
+                            We now want to add a constant to the $X$ data (since <code>statsmodels</code> doesn't do that naturally), and then fit the model.
+                        </p>
+
+                        <pre>
+                            <code class="language-python"># Add a constant to the X matrix, as statsmodels doesn't do that by default.
+X_sm = sm.add_constant(X)
+
+# Initialize our OLS model, and fit the data.
+model_sm = sm.OLS(y, X_sm)
+results = model_sm.fit()</code>
+                        </pre>
+
+                        <p>
+                            Now that we have fit the model, we simply use the <code>aic</code> and <code>bic</code> attributes of the <code>results</code> object to get the AIC and BIC values.
+                        </p>
+
+                        <pre>
+                            <code class="language-python"># Get the AIC and BIC
+results.aic
+>>> 45265.54161
+results.bic
+>>> 45336.95649</code>
+                        </pre>
+
+                        <p>
+                            Now, these numbers by themselves are more or less meaningless. However, if we begin to perform model selection (such as stepwise feature removal), then we can use these numbers to help us determine which model is best.
+                        </p>
+
+                        
+                        
+                        <h4>Conclusion</h4>
+                        <p>And there you have it! AIC and BIC are powerful ideas that can help us build useful models for our data. I hope that you can now see how useful and important these ideas are and how they can help
+                            you with your next machine learning project. To see the code use in this article, you can find it 
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/ec4b663f532eaafd71172c3334de2b97610bb0d2/blog/blog_files/aic_bic/aic_bic.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+
+                            
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2023</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2023<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-100415142-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-100415142-2');
+</script>
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
