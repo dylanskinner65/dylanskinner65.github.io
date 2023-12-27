@@ -156,7 +156,8 @@
                         </p>
 
                         <pre>
-                            <code class="language-python"># Import all the necessary things from sklearn.
+                            <code class="language-python">
+# Import all the necessary things from sklearn.
 from sklearn.datasets import fetch_california_housing
 import statsmodels.api as sm
 
@@ -169,7 +170,8 @@ X, y = fetch_california_housing(return_X_y=True, as_frame=True)</code>
                         </p>
 
                         <pre>
-                            <code class="language-python">X.head()
+                            <code class="language-python">
+X.head()
    MedInc  HouseAge  AveRooms  AveBedrms  Population  AveOccup  Latitude  
 0  8.3252      41.0  6.984127   1.023810       322.0  2.555556     37.88   
 1  8.3014      21.0  6.238137   0.971880      2401.0  2.109842     37.86   
@@ -190,7 +192,8 @@ X, y = fetch_california_housing(return_X_y=True, as_frame=True)</code>
                         </p>
 
                         <pre>
-                            <code class="language-python">y.head()
+                            <code class="language-python">
+y.head()
 0    4.526
 1    3.585
 2    3.521
@@ -204,7 +207,8 @@ Name: MedHouseVal, dtype: float64</code>
                         </p>
 
                         <pre>
-                            <code class="language-python"># Add a constant to the X matrix, as statsmodels doesn't do that by default.
+                            <code class="language-python">
+# Add a constant to the X matrix, as statsmodels doesn't do that by default.
 X_sm = sm.add_constant(X)
 
 # Initialize our OLS model, and fit the data.
@@ -217,7 +221,8 @@ results = model_sm.fit()</code>
                         </p>
 
                         <pre>
-                            <code class="language-python"># Get the AIC and BIC
+                            <code class="language-python">
+# Get the AIC and BIC
 results.aic
 >>> 45265.54161
 results.bic
