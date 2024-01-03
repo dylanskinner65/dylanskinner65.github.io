@@ -112,14 +112,14 @@ from statsmodels.api import sm</code></pre>
                         </p>
 
                         <pre>
-                            <code class="language-python">!pip install ucimlrepo</code></pre>
+<code class="language-python">!pip install ucimlrepo</code></pre>
 
                         <p>
                             Then, we can load in the data by running
                         </p>
 
                         <pre>
-                            <code class="language-python"># Import the dataset
+<code class="language-python"># Import the dataset
 from ucimlrepo import fetch_ucirepo 
   
 # fetch dataset 
@@ -134,7 +134,7 @@ y = auto_mpg.data.targets</code></pre>
                         </p>
 
                         <pre>
-                            <code class="language-python">auto_mpg.variables
+<code class="language-python">auto_mpg.variables
 >>>        name     role         type   missing_values  
 0  displacement  Feature   Continuous               no
 1           mpg   Target   Continuous               no
@@ -163,7 +163,7 @@ y = auto_mpg.data.targets</code></pre>
                         </p>
 
                         <pre>
-                            <code class="language-python"># Change the values of the origin column to represent the country of origin as strings: 'US', 'Europe', and 'Asia'
+<code class="language-python"># Change the values of the origin column to represent the country of origin as strings: 'US', 'Europe', and 'Asia'
 X['origin'] = X['origin'].replace({1: 'US', 2: 'Europe', 3: 'Asia'})
 
 # One-hot encode the origin column
@@ -212,7 +212,7 @@ X = pd.get_dummies(X, columns=['origin'], drop_first=True)</code></pre>
                         </p>
 
                         <pre>
-                            <code class="language-python"># Fit the model
+<code class="language-python"># Fit the model
 model = sm.OLS(y, X).fit()</code></pre>
 
                         <p>
@@ -275,7 +275,7 @@ model = sm.OLS(y, X).fit()</code></pre>
                         </p>
 
                         <pre>
-                            <code class="language-python"># Perform train test split
+<code class="language-python"># Perform train test split
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=334)
 y_test = y_test.values
@@ -297,7 +297,8 @@ print(f'MSE when using only useful features: {mse}')</code></pre>
                         <p>
                             The output of this code is
                         </p>
-                        <pre><code class="language-python">>>> MSE when using all features:         99.67098477764772
+                        <pre>
+<code class="language-python">>>> MSE when using all features:         99.67098477764772
 >>> MSE when using only useful features: 98.94744747911336</code></pre>
 
                         <p>
@@ -311,7 +312,8 @@ print(f'MSE when using only useful features: {mse}')</code></pre>
                             To do this, we will be using the <code>LassoLarsIC</code> model from <code>sklearn.linear_model</code>, so make sure you import that.
                         </p>
 
-                        <pre><code class="language-python">from sklearn.linear_model import LassoLarsIC</code></pre>
+                        <pre>
+<code class="language-python">from sklearn.linear_model import LassoLarsIC</code></pre>
 
                         <p>
                             The <code>LassoLarsIC</code> function is a powerful tool for performing feature selection using $L^1$ regularization. 
@@ -328,7 +330,8 @@ print(f'MSE when using only useful features: {mse}')</code></pre>
                             Using <code>LassoLarsIC</code> is really quite simple. First, we need to create an instance of the model. We can do this by running
                         </p>
 
-                        <pre><code class="language-python">lars_model = LassoLarsIC(criterion='bic', normalize=False)</code></pre>
+                        <pre>
+<code class="language-python">lars_model = LassoLarsIC(criterion='bic', normalize=False)</code></pre>
 
                         <p>
                             Note that we are choosing to evaluate our model based on the BIC criterion. We could also choose to use the AIC criterion
@@ -340,7 +343,8 @@ print(f'MSE when using only useful features: {mse}')</code></pre>
                             compare the results with more accuracy.
                         </p>
 
-                        <pre><code class="language-python">lars_model.fit(X_train, y_train.values.reshape(1, -1)[0])</code></pre>
+                        <pre>
+<code class="language-python">lars_model.fit(X_train, y_train.values.reshape(1, -1)[0])</code></pre>
 
                         <p>
                             We see that instead of using <code>y_train</code> directly, we need to reshape it. This is because <code>y_train</code> is a pandas series 
@@ -352,7 +356,8 @@ print(f'MSE when using only useful features: {mse}')</code></pre>
                             Now that we have fit our model, we can see which values of $\alpha$ were used and the corresponding BIC values by running
                         </p>
 
-                        <pre><code class="language-python"># Get the results from the model
+                        <pre>
+<code class="language-python"># Get the results from the model
 results = pd.DataFrame(
     {
         "alphas": lars_model.alphas_,
@@ -365,7 +370,8 @@ print(results)</code></pre>
                             The output of this code is
                         </p>
 
-                        <pre><code class="language-python">             BIC criterion
+                        <pre>
+<code class="language-python">             BIC criterion
 alphas                    
 5791.332580    3181.170871
 23.835366      1837.591358
@@ -384,7 +390,8 @@ alphas
                             We can see which features the model kept by running <code>model.coef_</code>. This gives us
                         </p>
 
-                        <pre><code class="language-python">lasso_model = Lasso(alpha=0.033225).fit(X_train, y_train.values.reshape(1, -1)[0])
+                        <pre>
+<code class="language-python">lasso_model = Lasso(alpha=0.033225).fit(X_train, y_train.values.reshape(1, -1)[0])
 print(lars_model.coef_)
 >>> [ 0.02359115, -0.61367486, -0.01471611, -0.00695722,  0.04982891, 0.74492259,  0.        , -2.30763917]</code></pre>
 
@@ -394,7 +401,7 @@ print(lars_model.coef_)
                         </p>
 
                         <pre>
-                            <code class="language-python">from sklearn.linear_model import LinearRegression
+<code class="language-python">from sklearn.linear_model import LinearRegression
 lasso_no_alpha = LinearRegression().fit(X_train, y_train.values.reshape(1, -1)[0])
 
 # Get the MSE on the test set for each model
@@ -405,13 +412,13 @@ mse_no_alpha = np.mean((y_pred_no_alpha - y_test)**2)
 mse_opt_alpha = np.mean((y_pred_opt_alpha - y_test)**2)
 
 print(f'MSE when alpha=0:         {mse_no_alpha}')
-print(f'MSE when alpha=0.033225:  {mse_opt_alpha}')
-</code></pre>
+print(f'MSE when alpha=0.033225:  {mse_opt_alpha}')</code></pre>
 
                         <p>
                             The output of this code is
                         </p>
-                        <pre><code class="language-python">>>> MSE when alpha=0:         99.6709847776471
+                        <pre>
+<code class="language-python">>>> MSE when alpha=0:         99.6709847776471
 >>> MSE when alpha=0.033225:  98.75552193526808</code></pre>
                         
                         <p>
