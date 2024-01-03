@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Feature Selection Using $L^1$ Regularization and Stepwise Feature Removal</title>
+    <meta name="description" content="Feature selection is a very important part of machine learning. In this article, we will explore feature selection using $L^1$ regularization and stepwise feature removal, and talk about how $L^1$
+                                      regularization often outperforms stepwise feature removal.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-12-27">3 January 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/aic_big.html">Feature Selection Using $L^1$ Regularization and Stepwise Feature Removal</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"It's better to enjoy life - selection is a temporary thing." </blockquote>
+                        <p>- Shreyas Iyer</p>
+
+                        <p>The goal of machine learning is to find the best possible model for a specific problem. Typically, finding the best
+                            possible model for a specific problem ends up being nothing more than trying a bunch of different models, fiddling about
+                            with different hyperparameters, and seeing which performs the best. One additional tool that a data scientist can use
+                            to boost their model success is feature selection. In this article, we will explore two different ways to performs feature
+                            selection, namely using $L^1$ regularization and stepwise feature removal. We will also discuss how $L^1$ regularization
+                            often out performs stepwise feature removal.</p>
+
+                        <p>
+                            Note: In this article we will be using $L^1$ regularization for linear regression and the Akaike Information Criterion (AIC) and Bayesian Information Criterion (BIC)
+                             for stepwise feature removal. If these terms are unfamiliar to you, then I suggest you read my articles on linear regression and $L^1$ regularization found
+                            <a href="https://dylanskinner65.github.io/blog/linear_regression.html">here</a>, and my article on AIC and BIC found <a href="https://dylanskinner65.github.io/blog/aic_bic.html">here</a>.
+                        </p>
+                        
+                        <h4>What Is Feature Selection?</h4>
+
+                        <p>
+                            Before talking about <em>how</em> to perform feature selection, I feel it is important to talk about <em>what</em>
+                            feature selection is. Feature selection is the process of selecting a subset of features from a larger set of features
+                            to use in a model, noting that each of these feature subsets will give you a different model. We can use various measures of
+                            model performance to determine which feature subset is best.
+                        </p>
+                        <p>
+                            If the number of features in a dataset is small, we can simply try all possible subsets of features and choose the one that
+                            gives us the best model performance. However, if the number of features is large, then this becomes computationally infeasible since
+                            the number of feature subsets is $2^F$ where $F$ is the number of features.
+                        </p>
+                        <p>
+                            The ultimate goal of feature selection is to reduce the number of features used in a model (i.e., reduce model complexity),
+                            while still maintaining a high level of model performance. This is important because it can help us avoid overfitting, and can help us
+                            build models that are more interpretable, if that is important to you.
+                        </p>
+
+                        <h4>Example Data For This Tutorial</h4>
+
+                        <p>Before getting into the data, make sure you have the following libraries installed and loaded.</p>
+
+                        <pre>
+                            <code class="language-python">
+import pandas as pd
+import numpy as np
+from statsmodels.api import sm</code></pre>
+
+                        <p>
+                            In this tutorial, we will be using the <a href="https://archive.ics.uci.edu/dataset/9/auto+mpg" target="_blank" rel="noopener noreferrer">Auto MPG</a> from the UC Irvine
+                            machine learning repository. This dataset contains information about different cars, such as the number of cylinders, the weight, the horsepower, and we will use it to predict
+                            the miles per gallon (mpg) of the car.
+                        </p>
+
+                        <p>
+                            To load in this data in Python we first install the <code>ucimlrepo</code> library. To do this, first make sure it is installed by running
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+pip install ucimlrepo</code></pre>
+
+                        <p>
+                            Then, we can load in the data by running
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+# Import the dataset
+from ucimlrepo import fetch_ucirepo 
+  
+# fetch dataset 
+auto_mpg = fetch_ucirepo(id=9) 
+  
+# data (as pandas dataframes) 
+X = auto_mpg.data.features 
+y = auto_mpg.data.targets</code></pre>
+
+                        <p>
+                            By running <code>auto_mpg.variables</code>, we can get a quick look at the variables in this dataset.
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+auto_mpg.variables
+>>>        name     role         type   missing_values  
+0  displacement  Feature   Continuous               no
+1           mpg   Target   Continuous               no
+2     cylinders  Feature      Integer               no
+3    horsepower  Feature   Continuous              yes
+4        weight  Feature   Continuous               no
+5  acceleration  Feature   Continuous               no
+6    model_year  Feature      Integer               no
+7        origin  Feature      Integer               no
+8      car_name       ID  Categorical               no</code></pre>
+
+                        <p>
+                            Note: Running <code>auto_mpg.variables</code> will not give this exact output. I removed some of the columns I deemed unnecessary for the sake of brevity.
+                        </p>
+
+                        <p>
+                            (All of this is taken from the <a href="https://archive.ics.uci.edu/dataset/9/auto+mpg" target="_blank" rel="noopener noreferrer">Import In Python</a> button found on UC Irvine's page
+                            for the auto-mpg dataset.)
+                        </p>
+
+                        <p>
+                            Now that we have the data loaded in, we also need to perform a little bit of feature engineering. Firstly, we notice that the <code>origin</code>
+                            column is an integer, but when you look at the data, it is actually a categorical variable with integer values, specifically taking on the values
+                            of $1$, $2$, and $3$, where $1$ is the US, $2$ is Europe, and $3$ is Asia. It is important that we one-hot encode this to avoid our model taking
+                             the numerical proxy of the origin as anything other that nominal data. Here is the code that will do that.
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+# Change the values of the origin column to represent the country of origin as strings: 'US', 'Europe', and 'Asia'
+X['origin'] = X['origin'].replace({1: 'US', 2: 'Europe', 3: 'Asia'})
+
+# One-hot encode the origin column
+X = pd.get_dummies(X, columns=['origin'], drop_first=True)</code></pre>
+                        
+                        <p>
+                            Remember to use <code>drop_first=True</code> to avoid creating any sort of linear dependence in the data.
+                        </p>
+
+                        <p>
+                            We also see that the <code>horsepower</code> column is missing some values. Running <code>X['horsepower'].isna().sum()</code>, we get that there are
+                            $6$ missing values. Since this is a small number of missing values, we can simply drop these rows. Before doing that, we need to get the rows that have the missing values, so we can
+                            make sure to drop them from $y$. We can do this by running <code>nan_indices = X[X.horsepower.isna()].index</code>. Once that is done, we can drop those rows from $X$ and $y$ by running
+                            <code>X = X.dropna()</code>, and <code>y = y.drop(nan_indices)</code>.
+                        </p>
+
+                        <p>
+                            The model we will be using for this article will be a simple linear regression model from <code>statsmodels</code>. Recall that when using
+                            <code>statsmodels</code> for linear regression, we need to add a constant column manually. We can do this by running <code>X = sm.add_constant(X)</code>.
+                        </p>
+
+                        <p>
+                            Now that any necessary feature engineering is complete, we will now begin feature selection.
+                        </p>
+
+                        <h4>Stepwise Feature Removal</h4>
+
+                        <p>
+                            Stepwise feature removal is a simple, yet effective, way to perform feature selection. The idea is to start with all of the features, 
+                            and then remove one feature at a time, each time fitting a model and evaluating the model performance. We then choose the model that
+                            gives us the best performance. To do this, follow these simple steps:
+                        </p>
+
+                        <ol>
+                            <li>Fit a model using all of the features.</li>
+                            <li>Compute the AIC and/or BIC.</li>
+                            <li>Identify a feature with a high p-value and a $95\%$ confidence interval that contains $0$.</li>
+                            <li>Drop the feature.</li>
+                            <li>Refit the model without the feature and recompute the AIC and/or BIC.</li>
+                            <li>If the AIC and/or BIC has dropped significantly, permanently drop the feature. Otherwise, add the feature back in and go back to step 3.</li>
+                            <li>Repeat steps $3-6$ until the AIC/BIC stops improving or there are no other features with a large p-value.</li>
+                        </ol>
+
+                        <p>
+                            With this process now defined, let's see how we can implement it in Python. First, we need to define a function that will fit a model by doing
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+# Fit the model
+model = sm.OLS(y, X).fit()</code></pre>
+
+                        <p>
+                            Once our model is fitted, we can use the <code>.summary()</code> method to get all the information we need to perform steps $3-6$ of stepwise feature removal.
+                            Running <code>model.summary()</code> gives us the following output.
+                        </p>
+                        
+                        <img src="blog_files/feature_selection_l1_aic/model_summary_result_1.png" alt="Initial Result of model.summary()" width="100%" height="100%">
+
+                        <p>
+                            First, note the AIC and BIC. We see that they have values of $2059$ and $2095$, respectively. These are the values we will use to compare models.
+                            Next, looking at the <code>P>|t|</code> column, we see that the <code>origin_Europe</code> feature has a p-value of $0.694$ and contains $0$
+                            in its $95\%$ confidence interval. This means that we can drop this feature. To do this, we simply run <code>X1 = X.drop('origin_Europe', axis=1)</code>.
+                            (Note, we set this operation equal to <code>X1</code> so we do not overwrite the original <code>X</code> dataframe.)
+                        </p>
+
+                        <p>
+                            Once we have dropped the feature, we can refit the model and call <code>model.summmary()</code> again (remember to use <code>X1</code> instead of <code>X</code>).
+                            This yields
+                        </p>
+
+                        <img src="blog_files/feature_selection_l1_aic/model_summary_result_2.png" alt="Second Result of model.summary()" width="100%" height="100%">
+
+                        <p>
+                            We note that the AIC and BIC have decreased from $2059$ and $2095$ to $2057$ and $2089$, respectively. 
+                            This means that we have improved our model by dropping the <code>origin_Europe</code> feature, so we will not add it back in.
+                        </p>
+
+                        <p>
+                            We now select the next feature to drop. Looking at the <code>P>|t|</code> column, we see that the <code>acceleration</code> feature has a p-value of $0.421$ and contains $0$
+                            in its $95\%$ confidence interval. This means that we can drop this feature. To do this, we simply run <code>X2 = X1.drop('acceleration', axis=1)</code>. Refitting and calling
+                            <code>model.summary()</code> again yields
+                        </p>
+
+                        <img src="blog_files/feature_selection_l1_aic/model_summary_result_3.png" alt="Third Result of model.summary()" width="100%" height="100%">
+
+                        <p>
+                            Since the AIC and BIC have decreased from $2057$ and $2089$ to $2056$ and $2084$, respectively, we have improved our model by dropping the <code>acceleration</code> feature, so we will not add it back in.
+                            However, we notice that the decrease in AIC and BIC is less than the previous decrease. This means that we are not improving our model as much as we were before. This is a sign that we are nearing the end of our feature selection.
+                        </p>
+
+                        <p>
+                            Finally, we select the next feature to drop. Looking at the <code>P>|t|</code> column, we see that the <code>cylinders</code> feature has a p-value of $0.122$ and contains $0$
+                            in its $95\%$ confidence interval. This means that we can drop this feature. To do this, we simply run <code>X3 = X2.drop('cylinders', axis=1)</code>. Refitting and calling
+                            <code>model.summary()</code> again yields
+                        </p>
+
+                        <img src="blog_files/feature_selection_l1_aic/model_summary_result_4.png" alt="Fourth Result of model.summary()" width="100%" height="100%">
+
+                        <p>
+                            We can see that the AIC has not changed, and the BIC has decreased from $2084$ to $2080$. This is not a very significant change, especially when
+                            you remember that BIC penalizes model complexity more than AIC, so it makes sense that removing a feature (i.e., reducing model complexity) would
+                            have a larger effect on BIC than AIC. This tells us that removing the <code>cylinders</code> feature is up to us. If we want a simpler model, then we can remove it. 
+                            If we want a more complex model, then we can keep it. In our case we will keep it.
+                        </p>
+
+                        <p>
+                            Now that we have gone through the process of stepwise feature removal, we can calculate the mean-squared error (MSE) of our final model and compare it with
+                            the MSE of the inital model. To do this, we first create a <code>train_test_split</code> of our data and then fit the initial model and the final model.
+                        </p>
+
+                        <pre>
+                            <code class="language-python">
+# Perform train test split
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=334)
+y_test = y_test.values
+
+# Train the first model, and get the MSE on the test set
+model = sm.OLS(y_train, X_train).fit()
+y_pred = model.predict(X_test).values
+mse = np.mean((y_pred - y_test)**2)
+print(f'MSE when using all features:         {mse}')
+
+# Now, remove the features we decided weren't useful through stepwise feature removal, and get the MSE on the test set
+X_train = X_train.drop(['origin_Europe', 'acceleration', 'cylinders'], axis=1)
+X_test = X_test.drop(['origin_Europe', 'acceleration', 'cylinders'], axis=1)
+model = sm.OLS(y_train, X_train).fit()
+y_pred = model.predict(X_test).values
+mse = np.mean((y_pred - y_test)**2)
+print(f'MSE when using only useful features: {mse}')</code></pre>
+
+                        <p>
+                            The output of this code is
+                        </p>
+                        <pre><code class="language-python">
+>>> MSE when using all features:         99.67098477764772
+>>> MSE when using only useful features: 98.94744747911336</code></pre>
+
+                        <p>
+                            Thus, we can see that our final model performs slightly better than our initial model. This is a good sign that our feature selection was successful!
+                        </p>
+
+                        <h4>$L^1$ Regularization Feature Selection</h4>
+
+                        <p>
+                            Now that we have seen how to perform feature selection using stepwise feature removal, let's see how to perform feature selection using $L^1$ regularization.
+                            To do this, we will be using the <code>LassoLarsIC</code> model from <code>sklearn.linear_model</code>, so make sure you import that.
+                        </p>
+
+                        <pre><code class="language-python">
+from sklearn.linear_model import LassoLarsIC</code></pre>
+
+                        <p>
+                            The <code>LassoLarsIC</code> function is a powerful tool for performing feature selection using $L^1$ regularization. 
+                            Recall that $L^1$ regularization introduces a penalty term based on the absolute values of the regression coefficients, 
+                            encouraging sparsity in the model by driving some coefficients to exactly zero. <code>LassoLarsIC</code>, short for Least 
+                            Angle Regression with AIC/BIC criterion, combines the LARS (Least Angle Regression) algorithm with the AIC or BIC, which, as we know help in 
+                            selecting the optimal subset of features by balancing model complexity and goodness of fit. <code>LassoLarsIC</code> sequentially adds features 
+                            to the model, monitoring the AIC/BIC at each step, and stops when the chosen criterion is optimized. This makes it an effective method 
+                            for automatic feature selection, especially in high-dimensional datasets where the number of features is large relative to the number 
+                            of observations.
+                        </p>
+
+                        <p>
+                            Using <code>LassoLarsIC</code> is really quite simple. First, we need to create an instance of the model. We can do this by running
+                        </p>
+
+                        <pre><code class="language-python">
+lars_model = LassoLarsIC(criterion='bic', normalize=False)</code></pre>
+
+                        <p>
+                            Note that we are choosing to evaluate our model based on the BIC criterion. We could also choose to use the AIC criterion
+                            by simply replacing <code>'bic'</code> with <code>'aic'</code>.
+                        </p>
+
+                        <p>
+                            Next, we fit our model. We will fit it with the same <code>X_train</code> and <code>y_train</code> that we used for stepwise feature removal so we can
+                            compare the results with more accuracy.
+                        </p>
+
+                        <pre><code class="language-python">
+lars_model.fit(X_train, y_train.values.reshape(1, -1)[0])</code></pre>
+
+                        <p>
+                            We see that instead of using <code>y_train</code> directly, we need to reshape it. This is because <code>y_train</code> is a pandas series 
+                            (and therefore a column vector), and <code>LassoLarsIC</code> expects a row vector. Using <code>y_train.reshape(1, -1)[0]</code> will convert
+                            the column vector to a row vector.
+                        </p>
+
+                        <p>
+                            Now that we have fit our model, we can see which values of $\alpha$ were used and the corresponding BIC values by running
+                        </p>
+
+                        <pre><code class="language-python">
+# Get the results from the model
+results = pd.DataFrame(
+    {
+        "alphas": lars_model.alphas_,
+        "BIC criterion": lars_model.criterion_,
+    }
+).set_index("alphas")
+print(results)</code></pre>
+
+                        <p>
+                            The output of this code is
+                        </p>
+
+                        <pre><code class="language-python">
+             BIC criterion
+alphas                    
+5791.332580    3181.170871
+23.835366      1837.591358
+15.655978      1838.232508
+8.145562       1831.269152
+2.384037       1674.376395
+0.663504       1660.903465
+0.295187       1665.666492
+0.232070       1662.522325
+0.188430       1663.228888
+0.033225       1655.087183
+0.000000       1659.478067</code></pre>
+
+                        <p>
+                            Now, in our case we see that the optimal value of $\alpha$, according to the BIC, is $0.033225$.
+                            We can see which features the model kept by running <code>model.coef_</code>. This gives us
+                        </p>
+
+                        <pre><code class="language-python">
+lasso_model = Lasso(alpha=0.033225).fit(X_train, y_train.values.reshape(1, -1)[0])
+print(lars_model.coef_)
+>>> [ 0.02359115, -0.61367486, -0.01471611, -0.00695722,  0.04982891, 0.74492259,  0.        , -2.30763917]</code></pre>
+
+                        <p>
+                            This tells us that the seventh features was dropped (<code>origin_Europe</code>), and the remaining features were kept. If we
+                            compute the MSE of this model and a regular linear regression model, we get
+                        </p>
+
+                        <pre>
+                            <code class="language-python">from sklearn.linear_model import LinearRegression
+lasso_no_alpha = LinearRegression().fit(X_train, y_train.values.reshape(1, -1)[0])
+
+# Get the MSE on the test set for each model
+y_pred_no_alpha = lasso_no_alpha.predict(X_test)
+y_pred_opt_alpha = lars_model.predict(X_test)
+
+mse_no_alpha = np.mean((y_pred_no_alpha - y_test)**2)
+mse_opt_alpha = np.mean((y_pred_opt_alpha - y_test)**2)
+
+print(f'MSE when alpha=0:         {mse_no_alpha}')
+print(f'MSE when alpha=0.033225:  {mse_opt_alpha}')
+</code></pre>
+
+                        <p>
+                            The output of this code is
+                        </p>
+                        <pre><code class="language-python">>>> MSE when alpha=0:         99.6709847776471
+>>> MSE when alpha=0.033225:  98.75552193526808</code></pre>
+                        
+                        <p>
+                            If we recall, the MSE of our stepwise feature removal model was $98.94744747911336$. This means that our $L^1$ regularization model
+                            performs slightly better than our stepwise feature removal model.
+                        </p>
+
+                        <p>
+                            This brings up an important point. In general, $L^1$ regularization often outperforms stepwise feature removal in linear regression 
+                            due to its automatic and continuous shrinkage of less important features. $L^1$ regularization optimizes the model globally, 
+                            providing a more robust approach to feature selection by considering all features simultaneously. It effectively reduces overfitting, 
+                            handles multicollinearity better, and leads to sparser models with better generalization performance compared to the stepwise feature removal method.
+                        </p>
+
+                        <h4>Conclusion</h4>
+                        <p>
+                            In this article, we explored two different ways to perform feature selection, namely using $L^1$ regularization and stepwise feature removal.
+                            We also discussed how $L^1$ regularization often out performs stepwise feature removal. My hope is that you now understand how you can improve your
+                            machine learning models by performing feature selection, specifically using $L^1$ regularization.
+                            If you want to see the code used in this article, you can find it
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/feature_selection_l1_aic/feature_selection_l1_aic.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+                            If you want to read a paper that me and some of my friend wrote that used $L^1$ regularization for feature selection, you can find it
+                            <a href="https://github.com/jeffxhansen/NYC_Taxi_Trip_Duration/blob/main/NYC%20Taxi%20Duration%20Prediction.ipynb" target="_blank" rel="noopener noreferrer">here</a>.
+
+                            
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2023</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2023<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-100415142-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-100415142-2');
+</script>
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
