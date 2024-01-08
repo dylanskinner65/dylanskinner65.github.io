@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Decision Trees for Classification</title>
+    <meta name="description" content="Decision trees for classification are foundational for many popular machine learning algorithms such as random forests and XGBoost. In this article,
+                                        we learn the math behind decision trees and construct an example tree using the Gini index.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-01-10">10 January 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/feature_selection_l1_aic.html">Decision Trees for Classification</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"This oak tree and me, we're made of the same stuff." </blockquote>
+                        <p>- Carl Sagan</p>
+
+                        <p>In the vast world of machine learning, decision trees are like the Swiss Army knives - 
+                            versatile and surprisingly straightforward. These nifty tools mimic the way humans make decisions, 
+                            breaking down big problems into smaller, more manageable chunks.
+                            In this blog post, we break down how decision trees work for classification, how the Gini index plays a cruitial role in constructing
+                            decision trees, and we work through an example of building a decision tree using the Gini index.</p>
+
+                        <h4>Classification Trees</h4>
+
+                        <p>
+                            At the heart of it, a classification tree is some classifier $f: \mathscr{X}\to\mathscr{Y} that takes in some input $x\in\mathscr{X}$ 
+                            and outputs a class $y\in\mathscr{Y}$. In order to arrive at $y$, the data is passed through a series of if-else decision nodes which, when visualized,
+                            look similar to the branches of a tree. Ultimately, when data is passed through the tree and goes through enough branches,
+                             it ends up at a leaf node, which is the class that is output.
+                        </p>
+
+                        <p>
+                            One of the benefits of decision trees is that they are pretty inexpensive to construct, and incredibly easy to interpret! Additionally, they work for
+                            categorical or numerical data, can handle missing data with easy, and can handle irrelevant features. However, they are prone to overfitting, and
+                            are not very robust. This is where random forests come in, but that is a topic for another blog post.
+                        </p>
+                        
+                        <h4>
+                            Building a Decision Tree
+                        </h4>
+
+                        <p>
+                            Constructing a decision tree that is optimal for a given dataset is a computationally expensive task (in fact, it is an NP-hard problem). However, the
+                            greedy algorithm we will discuss here is a good approximation of the optimal decision tree and actually works really well in practice.
+                        </p>
+
+                        <p>
+                            The process for using the greedy algorithm to build a decision tree is a recursive process. 
+                            We start with the root node and use the Gini index to determine which feature to split on. Once that is done, do that for each branch until we reach a leaf node.
+                            Before we work through an example of this recursive process, let's first talk about the Gini index.
+                        </p>
+
+                        <h4>Gini Index</h4>
+
+                        <p>
+                            In order to determine which feature to split on, we need to be able to measure how well a feature splits the data. This means we want to figure out 
+                            how much each leaf constributes to the loss function. To do this, we will use the Gini index. The Gini index for approximating the entropy of each leaf is defined as follows:
+                        </p>
+
+                        $$ G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\mathscr{Y}}\widehat{\pi}_{\ell,c}^2$$
+
+                        <p>
+                            Where $\ell$ is a given tree leaf, $\mathbb{D}_{\ell} is the set of training points $(\mathbf{x}_i, y_i)$ where $\mathbf{x}_i$
+                            is assigned to leaf $\ell$, $c\in\mathscr{Y}$ are the possible classes, and $\widehat{\pi}_{\ell,c}$ is the proportion of 
+                            training points in $\mathbb{D}_{\ell}$ that are class $c$, defined as 
+                        </p>
+
+                        $$\widehat{\pi}_{\ell,c} = \frac{1}{N_{\ell}}\sum_{(\mathbf{x}_i, y_i)\in\mathbb{D}_{\ell}}\mathbb{I}_{(y_i=c)}$$
+
+                        <p>
+                            Where $\mathbb{I}$ is the indicator function.
+                        </p>
+
+                        <p>
+                            In the case of most classification trees, we only need to consider two classes at a time while looking at a given leaf
+                            $\ell$: it is either class $c$ or it is not class $c$. Thus, calculating the total cost to the to our classification
+                            function $f_{\ell}$ on leaf $\ell$ is given by
+                        </p>
+
+                        $$\text{cost}_{\ell} = \frac{N_+}{N}G_{\mathbb{D}_{\ell_+}} + \frac{N_-}{N}G_{\mathbb{D}_{\ell_-}}$$
+
+                        <p>
+                            where $N_{+}$ is the number of points in the 'yes' node, $G_{\mathbb{D}_{\ell_+}} is the Gini index for the 'yes' node, $N_-$ is the number of points in the 'no' node,
+                             and $G_{\mathbb{D}_{\ell_-}}$ is the Gini index for the 'no' node.
+                        </p>
+                        <p>
+                            To see how this works, let's look at an example.
+                        </p>
+
+                        <h4>Building a Decision Tree</h4>
+
+                        <p>
+                            Let's say we have the following dataset,
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            and we want to predict whether or not a patient will have a heart attack. The first thing we need to do is determine what the first split of the tree will be, i.e., what will the root node be.
+                        </p>
+
+                        <p>
+                            Let's first consider the <code>Chest Pain</code> feature. We can split the data into two groups: those who have chest pain and those who do not.
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr class="color1">
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Above, I have highlighted the rows that have chest pain. We can see that there are $3$ patients who have chest pain, and $3$ patients who do not. Now, we build a mini tree 
+                            for each of these groups to help keep track of who did and who did not have a heart attack based off chest pain.
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_pain_1.png" alt="Decision Tree 1" width="100%" height="100%">
+
+                        <p>
+                            Looking patient 1, we see that they do have chest pain, and did have a heart attack. We take that information, follow the branches of the tree, and end up with the following tree.
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_pain_2.png" alt="Decision Tree 2" width="100%" height="100%">
+                        
+                        <p>
+                            Looking at patient 2, we again see that they do have chest pain, and did have a heart attack. We take that information, follow the branches of the tree, and end up with the following tree.
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_pain_3.png" alt="Decision Tree 3" width="100%" height="100%">
+
+                        <p>
+                            Now, moving on to patient 3, we see that they did not have chest pain, and did have a heart attack.
+                            Taking that information, we follow the branches of the tree, and end up with the following tree.
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_pain_4.png" alt="Decision Tree 4" width="100%" height="100%">
+
+                        <p>
+                            Continuing this process all the way through for each patient, we end up with the following tree.
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_pain_final.png" alt="Decision Tree 5" width="100%" height="100%">
+
+                        <p>
+                            With these data points sorted out, we now calculate the Gini index for each leaf. For the leaf with chest pain, we have
+                        </p>
+
+                        $$ \begin{aligned}G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\{\text{Yes}, \text{ No}\}} \widehat{\pi}_{\ell, c}^2 &= 1 - \left[\left(\frac{3}{3}\right)^2 + \left(\frac{0}{3}\right)^2 \right] \\
+                        &= 1 - [1^2] \\
+                        &= 0\end{aligned}$$
+
+                        <p>
+                            The first time I saw this solution, I did not understand where these numbers came from, so let's break them down. First, we have
+                            $\left(\frac{3}{3}\right)$. This is the proportion of patients who had chest pain and had a heart attack ($3$ people with chest pain had a heart attack so that is the numerator,
+                            $3$ people had chest pain so that is the denominator). Next, we have $\left(\frac{0}{3}\right)$. This is the proportion of patients who had chest pain and did not have a heart attack
+                            ($0$ people with chest pain did not have a heart attack so that is the numerator, $3$ people had chest pain so that is the denominator). Thus, the Gini index for
+                            the leaf with chest pain is $0$.
+                        </p>
+
+                        <p>
+                            Now, let's calculate the Gini index for the leaf without chest pain. We have
+                        </p>
+
+                        $$ \begin{aligned}G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\{\text{Yes}, \text{ No}\}} \widehat{\pi}_{\ell, c}^2 &= 1 - \left[\left(\frac{1}{3}\right)^2 + \left(\frac{2}{3}\right)^2\right] \\
+                         &= 1 - \left[\frac{1}{9} + \frac{4}{9} \right] \\
+                         &= 1 - \left[ \frac{5}{9} \right] \\
+                         &= \frac{4}{9}\end{aligned}$$
+
+                        <p>
+                            Thus, the Gini index for the leaf without chest pain is $\frac{4}{9}$.
+                        </p>
+
+                        <p>
+                            Now that we have the Gini index for each leaf, we can now calculate the total cost to our classification for this split. 
+                        </p>
+
+                        $$\begin{aligned}\text{cost}_{\ell} = \frac{N_+}{N}G_{\mathbb{D}_{\ell_+}} + \frac{N_-}{N}G_{\mathbb{D}_{\ell_-}} &= \left(\frac{3}{6}\right)(0) + \left(\frac{3}{6}\right)\left(\frac{4}{9}\right) \\
+                        &= (0) + \left(\frac{2}{9}\right) \\
+                        &= \frac{2}{9} \end{aligned}$$
+
+                        <p>
+                            Thus, we have that the total cost to split our tree on the <code>Chest Pain</code> feature is $\frac{2}{9}$.
+                        </p>
+
+                        <p>
+                            We now repeat this process for each feature, and choose the feature that has the lowest cost. Consider next the <code>Male</code> feature. Looking at our table we have
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr class="color1">
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                         Building our tree for this feature (filling in all the values), we get
+                        </p>
+
+                        <img src="blog_files/decision_trees/male_final.png" alt="Decision Tree 6" width="100%" height="100%">
+
+                        <p>
+                            Calculating the Gini index for each leaf (using the exact same process as above), we get the Gini index for male is $\frac{1}{2}$, and
+                            the Gini index for female is $0$.
+                        </p>
+
+                        <p>
+                            Calculating the total cost to our classification for this split, we get (again, using the exact same process as above) $\frac{1}{3}$. Thus, our total cost to split
+                            our tree on the <code>Male</code> feature is $\frac{1}{3}$.
+                        </p>
+
+                        <p>
+                            Next, we consider the <code>Smokes</code> feature. Our tables looks like:
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+                        
+                        <p>
+                            Building our tree for this feature (filling in all the values), we get
+                        </p>
+
+                        <img src="blog_files/decision_trees/smokes_final.png" alt="Decision Tree 7" width="100%" height="100%">
+
+                        <p>
+                            Calculating the Gini index for each leaf we get the Gini index for smokes is $\frac{3}{8}$, and the Gini index for does not smoke is $\frac{1}{2}$. Calculating
+                            the total cost to our classification for this split, we get $\frac{5}{12}$. Thus, our total cost to split our tree on the <code>Smokes</code> feature is $\frac{5}{12}$.
+                        </p>
+
+                        <p>
+                            Finally, we consider the <code>Exercises</code> feature. Our tables looks like
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr class="color1">
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+                        
+                        <p>
+                            Building our tree for this feature (filling in all the values), we get
+                        </p>
+
+                        <img src="blog_files/decision_trees/exercises_final.png" alt="Decision Tree 8" width="100%" height="100%">
+
+                        <p>
+                            Calculating the Gini index for each leaf we get the Gini index for exercises is $\frac{1}{2}$, and the Gini index for does not exercise is $0$. Calculating
+                            the total cost to our classification for this split, we get $\frac{1}{3}$. Thus, our total cost to split our tree on the <code>Exercises</code> feature is $\frac{1}{3}$.
+                        </p>
+
+                        <p>
+                            Comparing our total costs for each feature, we see that the <code>Chest Pain</code> feature has the lowest cost, so we split our tree on that feature. Thus, our root node is the <code>Chest Pain</code> feature.
+                        </p>
+
+                        <p>
+                            Now, we repeat this process for each branch of the tree. Luckily for us, in this case, the split on 'yes' for <code>Chest Pain</code> is a <em>pure</em> split. This means that all the patients who had chest pain had a heart attack. So, if a data point ends up
+                            in this leaf, we will classify the person as having a heart attack. Thus, we do not need to split that branch any further.
+                        </p>
+
+                        <p>
+                            This means that the only branch we need to split is the 'no' branch. Our tree now looks like this:
+                        </p>
+
+                        <img src="blog_files/decision_trees/first_split_tree.png" alt="Decision Tree 9" width="100%" height="100%">
+
+                        <p>
+                            We now begin the same process as splitting the root node. We consider each feature, and calculate the total cost to our classification for each feature.
+                        </p>
+
+                        <p>
+                            We first consider <code>Male</code>. Our table looks like
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Where the green rows are people who do not have chest pain and are male, and the yellow rows are people who do not have chest pain and are female. Looking at our tree, we have
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_male_final.png" alt="Decision Tree 9" width="100%" height="100%">
+
+                        <p>
+                            We see that both of these leafs are pure splits. A pure split gives a Gini index of 0, and having both leaves have Gini index of $0$ gives a
+                            total cost to our classification of $0$. This is wonderful news and is an ideal split. While we would typically stop here, we will continue on for the sake of the
+                            tutorial.
+                        </p>
+
+                        <p>
+                            Continuing on, we now look at the <code>Smokes</code> feature. Looking at our table, we see
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Where the green rows are people who do not have chest pain and do smoke, and the yellow rows are people who do not have chest pain and do not smoke. 
+                            Looking at our tree, we have
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_smokes_final.png" alt="Decision Tree 9" width="100%" height="100%">
+
+                        <p>
+                            Calculating the Gini index for each leaf we get the Gini index for does not have chest pain and does smoke is $\frac{1}{2}$, and the Gini index for does not have chest pain
+                            and does not smoke is $0$. Calculating the total cost to our classification for this split, we get $\frac{1}{3}$. 
+                            Thus, our total cost to split our tree on the <code>Smokes</code> feature is $\frac{1}{6}$.
+                        </p>
+
+                        <p>
+                            Finally, looking <code>Exercises</code> feature, our table is
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color1">
+                                <td>3</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>4</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr class="color2">
+                                <td>6</td>
+                                <td>No</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>Yes</td>
+                                <td>No</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Where the green rows are people who do not have chest pain and do exercise, and the yellow rows are people who do not have chest pain and do not exercise. 
+                            Looking at our tree, we have
+                        </p>
+
+                        <img src="blog_files/decision_trees/chest_exercises_final.png" alt="Decision Tree 9" width="100%" height="100%">
+
+                        <p>
+                            Parallel to the split made by the <code>Male</code> feature, this split is completely pure, again giving us a total cost to our classification of $0$. This tells us that making a
+                            split on <code>Male</code> or <code>Exercises</code> will yield the same results. Without loss of generality, we decide to split on <code>Exercises</code>. Thus, our final
+                            decision tree is
+                        </p>
+
+                        <img src="blog_files/decision_trees/final_tree.png" alt="Final Classification Tree" width="100%" height="100%">
+
+                        <p>
+                            Thus, if we are given a new piece of data to classify, say
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Chest Pain</th>
+                                <th>Male</th>
+                                <th>Smokes</th>
+                                <th>Exercises</th>
+                                <th>Heart Attack</th>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>No</td>
+                                <td>?</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            We can run this individual through our decision tree
+                        </p>
+
+                        <img src="blog_files/decision_trees/new_classification.png" alt="Final Classification Tree" width="100%" height="100%">
+
+                        <p>
+                            And would classify them as having a heart attack!
+                        </p>
+
+                        <h4>Avoiding Overfitting in Decision Trees</h4>
+
+                        <p>
+                            One big thing to point out is that decision trees can <b>easily</b> overfit on the data. In our toy example, the maximum number of samples we had per
+                            leaf is $3$, and one leaf had only $1$ sample in it. This is a dangerous way to classify because that $1$ sample could very easily be an outlier
+                            that would completely throw off future predictions. To avoid overfitting in decision trees, there are a few things we can do.
+                        </p>
+
+                        <p>
+                            One of the first things we can do is set a minimum number of samples per leaf. This means that in order for a split to happen, there must be at least $n$ samples
+                            present. This enables our decision tree to be a little more robust against outliers and avoid overfitting on a rabbit-hole-like part of our data. In our case, if
+                            we set the minimum number of samples per leaf to be $3$, we would have stopped at the <code>Chest Pain</code> split.
+                        </p>
+
+                        <p>
+                            Another way to avoid overfitting is setting a maximum depth of our decision tree. In our toy example, we arrived at pure splits pretty early, but if our data has
+                            more data points and more features, that is not always the case. Allowing the decision tree to continue splitting for as long as it wants can lead to severe overfitting.
+                            Thus, setting a maximum depth will overcome this.
+                        </p>
+
+                        <p>
+                            There are additional ways to avoid overfitting in our decision trees, but we stop here for now.
+                        </p>
+                        
+                        <h4>Quick Example in Python</h4>
+
+                        <p>
+                            While knowing how to build decision trees by hand is nice, you will never actually do that in practice. We will now go over a quick tutorial of building a classification
+                            decision tree using <code>sklearn</code>. The data we will be using to fit this tree is the data we used in this example. We will then plot the tree (visualize its branches
+                            and leaves) and see that we build the exact same tree when we did it by hand!
+                        </p>
+
+                        <p>
+                            Firstly, here are our necessary imports.
+                        </p>
+
+                        <pre>
+<code class="language-python"># Necessary Imports
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier, plot_tree</code></pre>
+
+                        <p>
+                            Now that we have everything imported, we will want to create our data frame.
+                        </p>
+
+                        <pre>
+<code class="language-python"># Load in our data
+df = pd.DataFrame({
+    'Patient ID': [1, 2, 3, 4, 5, 6],
+    "Chest Pain": [True, True, False, False, True, False],
+    'Male': [True, True, False, True, False, True],
+    'Exercises': [True, False, False, True, True, True],
+    'Heart Attack': [True, True, True, False, True, False]  
+})</code></pre>
+
+                        <p>
+                            Once we have our data loaded in, we now need to create our <code>DecisionTreeClassifier</code>, specifying <code>criterion='gini'</code>
+                            so we insure that this tree will be built the same way we built our tree.
+                        </p>
+
+<pre><code class="language-python"># Create our decision tree model
+dtc = DecisionTreeClassifier(criterion='gini')</code></pre>
+
+                        <p>
+                            Now that this is done, we need to create our <code>X</code> and <code>y</code> dataframes. This is essentially for us to fit our model.
+                        </p>
+
+<pre><code class="language-python"># Separate our data into X and y
+X = df.drop(columns=['Patient ID', 'Heart Attack'])
+y = df['Heart Attack']</code></pre>
+
+                        <p>
+                            With our <code>X</code> and <code>y</code> dataframes created, we can now fit our <code>DecisionTreeClassifier</code>.
+                        </p>
+
+<pre><code class="language-python"># Fit our model
+dtc.fit(X, y)</code></pre>
+
+                        <p>
+                            Our tree is now fit! (Remarkably faster than it took us to 'fit' our tree.)
+                        </p>
+
+                        <p>
+                            With our newly fit tree, we can now use <code>sklearn</code>'s nifty function <code>plot_tree</code> to see what our decision tree looks like!
+                            Running it is quite simple.
+                        </p>
+
+<pre><code class="language-python"># Plot our tree to see what it looks like.
+plot_tree(dtc, feature_names=['Chest Pain', 'Male', 'Exercises'])</code></pre>
+
+                        <p>
+                            This produces this tree!
+                        </p>
+
+                        <img src="blog_files/decision_trees/decision_tree_image.png" alt="Final Classification Tree" width="100%" height="100%">
+
+                        <p>
+                            As we can see, the columns it split on the same features as our tree, and the Gini index for each split is the same as what we calculated! How neat!
+                        </p>
+
+                        <h4>Conclusion</h4>
+                        <p>
+                            In this article, we explored how to build decision trees for classification. We discussed the Gini index, and even created our own decision tree with a toy example!
+                            I hope that through this article, you now understand how to build your own decision trees by hand. Also, I hope you now understand how you might code them up!
+                            If you want to see the code used in this article, you can find it
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/decision_trees/decision_trees.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
