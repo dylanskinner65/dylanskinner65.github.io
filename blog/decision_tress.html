@@ -96,7 +96,7 @@
                         <h4>Classification Trees</h4>
 
                         <p>
-                            At the heart of it, a classification tree is some classifier $f: \mathscr{X}\to\mathscr{Y} that takes in some input $x\in\mathscr{X}$ 
+                            At the heart of it, a classification tree is some classifier $f: \mathscr{X}\to\mathscr{Y}$ that takes in some input $x\in\mathscr{X}$ 
                             and outputs a class $y\in\mathscr{Y}$. In order to arrive at $y$, the data is passed through a series of if-else decision nodes which, when visualized,
                             look similar to the branches of a tree. Ultimately, when data is passed through the tree and goes through enough branches,
                              it ends up at a leaf node, which is the class that is output.
@@ -109,7 +109,7 @@
                         </p>
                         
                         <h4>
-                            Building a Decision Tree
+                            Building a Decision Tree - Theory
                         </h4>
 
                         <p>
@@ -133,7 +133,7 @@
                         $$ G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\mathscr{Y}}\widehat{\pi}_{\ell,c}^2$$
 
                         <p>
-                            Where $\ell$ is a given tree leaf, $\mathbb{D}_{\ell} is the set of training points $(\mathbf{x}_i, y_i)$ where $\mathbf{x}_i$
+                            Where $\ell$ is a given tree leaf, $\mathbb{D}_{\ell}$ is the set of training points $(\mathbf{x}_i, y_i)$ where $\mathbf{x}_i$
                             is assigned to leaf $\ell$, $c\in\mathscr{Y}$ are the possible classes, and $\widehat{\pi}_{\ell,c}$ is the proportion of 
                             training points in $\mathbb{D}_{\ell}$ that are class $c$, defined as 
                         </p>
@@ -153,14 +153,14 @@
                         $$\text{cost}_{\ell} = \frac{N_+}{N}G_{\mathbb{D}_{\ell_+}} + \frac{N_-}{N}G_{\mathbb{D}_{\ell_-}}$$
 
                         <p>
-                            where $N_{+}$ is the number of points in the 'yes' node, $G_{\mathbb{D}_{\ell_+}} is the Gini index for the 'yes' node, $N_-$ is the number of points in the 'no' node,
+                            where $N_{+}$ is the number of points in the 'yes' node, $G_{\mathbb{D}_{\ell_+}}$ is the Gini index for the 'yes' node, $N_-$ is the number of points in the 'no' node,
                              and $G_{\mathbb{D}_{\ell_-}}$ is the Gini index for the 'no' node.
                         </p>
                         <p>
                             To see how this works, let's look at an example.
                         </p>
 
-                        <h4>Building a Decision Tree</h4>
+                        <h4>Building a Decision Tree - Practice</h4>
 
                         <p>
                             Let's say we have the following dataset,
@@ -297,7 +297,7 @@
                             for each of these groups to help keep track of who did and who did not have a heart attack based off chest pain.
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_pain_1.png" alt="Decision Tree 1" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_pain_1.png" alt="Decision Tree 1" width="80%" height="80%">
 
                         <p>
                             Looking patient 1, we see that they do have chest pain, and did have a heart attack. We take that information, follow the branches of the tree, and end up with the following tree.
