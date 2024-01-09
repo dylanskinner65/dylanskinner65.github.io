@@ -303,26 +303,26 @@
                             Looking patient 1, we see that they do have chest pain, and did have a heart attack. We take that information, follow the branches of the tree, and end up with the following tree.
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_pain_2.png" alt="Decision Tree 2" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_pain_2.png" alt="Decision Tree 2" width="80%" height="80%">
                         
                         <p>
                             Looking at patient 2, we again see that they do have chest pain, and did have a heart attack. We take that information, follow the branches of the tree, and end up with the following tree.
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_pain_3.png" alt="Decision Tree 3" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_pain_3.png" alt="Decision Tree 3" width="80%" height="80%">
 
                         <p>
                             Now, moving on to patient 3, we see that they did not have chest pain, and did have a heart attack.
                             Taking that information, we follow the branches of the tree, and end up with the following tree.
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_pain_4.png" alt="Decision Tree 4" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_pain_4.png" alt="Decision Tree 4" width="80%" height="80%">
 
                         <p>
                             Continuing this process all the way through for each patient, we end up with the following tree.
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_pain_final.png" alt="Decision Tree 5" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_pain_final.png" alt="Decision Tree 5" width="80%" height="80%">
 
                         <p>
                             With these data points sorted out, we now calculate the Gini index for each leaf. For the leaf with chest pain, we have
@@ -432,7 +432,7 @@
                          Building our tree for this feature (filling in all the values), we get
                         </p>
 
-                        <img src="blog_files/decision_trees/male_final.png" alt="Decision Tree 6" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/male_final.png" alt="Decision Tree 6" width="80%" height="80%">
 
                         <p>
                             Calculating the Gini index for each leaf (using the exact same process as above), we get the Gini index for male is $\frac{1}{2}$, and
@@ -511,7 +511,7 @@
                             Building our tree for this feature (filling in all the values), we get
                         </p>
 
-                        <img src="blog_files/decision_trees/smokes_final.png" alt="Decision Tree 7" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/smokes_final.png" alt="Decision Tree 7" width="80%" height="80%">
 
                         <p>
                             Calculating the Gini index for each leaf we get the Gini index for smokes is $\frac{3}{8}$, and the Gini index for does not smoke is $\frac{1}{2}$. Calculating
@@ -585,7 +585,7 @@
                             Building our tree for this feature (filling in all the values), we get
                         </p>
 
-                        <img src="blog_files/decision_trees/exercises_final.png" alt="Decision Tree 8" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/exercises_final.png" alt="Decision Tree 8" width="80%" height="80%">
 
                         <p>
                             Calculating the Gini index for each leaf we get the Gini index for exercises is $\frac{1}{2}$, and the Gini index for does not exercise is $0$. Calculating
@@ -605,7 +605,7 @@
                             This means that the only branch we need to split is the 'no' branch. Our tree now looks like this:
                         </p>
 
-                        <img src="blog_files/decision_trees/first_split_tree.png" alt="Decision Tree 9" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/first_split_tree.png" alt="Decision Tree 9" width="80%" height="80%">
 
                         <p>
                             We now begin the same process as splitting the root node. We consider each feature, and calculate the total cost to our classification for each feature.
@@ -678,7 +678,7 @@
                             Where the green rows are people who do not have chest pain and are male, and the yellow rows are people who do not have chest pain and are female. Looking at our tree, we have
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_male_final.png" alt="Decision Tree 9" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_male_final.png" alt="Decision Tree 9" width="80%" height="80%">
 
                         <p>
                             We see that both of these leafs are pure splits. A pure split gives a Gini index of 0, and having both leaves have Gini index of $0$ gives a
@@ -754,7 +754,7 @@
                             Looking at our tree, we have
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_smokes_final.png" alt="Decision Tree 9" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_smokes_final.png" alt="Decision Tree 9" width="80%" height="80%">
 
                         <p>
                             Calculating the Gini index for each leaf we get the Gini index for does not have chest pain and does smoke is $\frac{1}{2}$, and the Gini index for does not have chest pain
@@ -830,7 +830,7 @@
                             Looking at our tree, we have
                         </p>
 
-                        <img src="blog_files/decision_trees/chest_exercises_final.png" alt="Decision Tree 9" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/chest_exercises_final.png" alt="Decision Tree 9" width="80%" height="80%">
 
                         <p>
                             Parallel to the split made by the <code>Male</code> feature, this split is completely pure, again giving us a total cost to our classification of $0$. This tells us that making a
@@ -838,7 +838,7 @@
                             decision tree is
                         </p>
 
-                        <img src="blog_files/decision_trees/final_tree.png" alt="Final Classification Tree" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/final_tree.png" alt="Final Classification Tree" width="80%" height="80%">
 
                         <p>
                             Thus, if we are given a new piece of data to classify, say
@@ -867,7 +867,7 @@
                             We can run this individual through our decision tree
                         </p>
 
-                        <img src="blog_files/decision_trees/new_classification.png" alt="Final Classification Tree" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/new_classification.png" alt="Final Classification Tree" width="80%" height="80%">
 
                         <p>
                             And would classify them as having a heart attack!
@@ -967,7 +967,7 @@ plot_tree(dtc, feature_names=['Chest Pain', 'Male', 'Exercises'])</code></pre>
                             This produces this tree!
                         </p>
 
-                        <img src="blog_files/decision_trees/decision_tree_image.png" alt="Final Classification Tree" width="100%" height="100%">
+                        <img src="blog_files/decision_trees/decision_tree_image.png" alt="Final Classification Tree" width="80%" height="80%">
 
                         <p>
                             As we can see, the columns it split on the same features as our tree, and the Gini index for each split is the same as what we calculated! How neat!
