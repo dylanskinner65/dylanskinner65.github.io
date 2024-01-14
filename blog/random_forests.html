@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Random Forests for Classification</title>
+    <meta name="description" content="Random forests are a powerful machine learning tool that can be used for classification and regression. 
+    In this blog post, we will discuss how random forests work for classification, and we will work through an example of building a random forest for classification.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-01-17">17 January 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/random_forests.html">Random Forests for Classification</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Sadly, it's much easier to create a desert than a forest." </blockquote>
+                        <p>- James Lovelock</p>
+
+                        <p>
+                            Random forests is a powerful machine learning algorithm with a foundation in decision trees.
+                            In this blog post, we will discuss how random forests work for classification, and we will work through an example of building a random forest for classification
+                            using the Python library <code>sklearn</code>.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/random_forests/forest_image.jpg" alt="Cool forest." width="90%" height="90%">
+                            <figcaption text-align=center>Photo by <a href="https://unsplash.com/@jplenio?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Johannes Plenio</a> on <a href="https://unsplash.com/photos/green-grass-field-with-trees-during-daytime-Z6E4rJemy24?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+                            </figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            TL;DR
+                        </h4>
+
+                        <p>
+                            In a <a href="https://dylanskinner65.github.io/blog/decision_tress.html" target="_blank" rel="noopener noreferrer">previous blog post</a>, we talked
+                            about decision trees. While decision trees are helpful, they are what we call a <em>weak classifier</em>. A weak classifier is a model that often performs slightly 
+                            better than random chance. This is not ideal, so we want to find a way to improve our decision trees. This is where random forests come in.
+                            Random forests are an extension of decision trees that help to reduce overfitting. Random forests are a collection of decision trees that are trained on
+                            different subsets of the data. Each tree in a random forest is typically trained on a different subset of the data (<em>bootstrap aggregation</em> or <em>bagging</em>),
+                            and each tree is trained on a different subset of the features (<em>attribute bagging</em>).
+                        </p>
+
+                        <p>
+                            Ultimately, our goal with random forests is to create a set of independent decision trees, creating with both bagging and attribute bagging, that when combined,
+                            create a strong classifier. We will discuss how to do this in more detail below.
+                        </p>
+
+                        <h4>Bootstrap Aggregation or Bagging</h4>
+
+                        <p>
+                            One important aspect of random forests is that we are trying to create a set of independent decision trees. One problem with this, is we are trying to create
+                            this set of independent decision trees from a single dataset. This means that each tree will be trained on the same data, and thus, will be very similar. One of the
+                            ways to encourage independence in our decision trees is through bootstrap aggregation or bagging (the names can be used interchangably).
+                        </p>
+
+                        <p>
+                            Recall from the TLDR section that bagging is when we train each tree on a different subset of the data. The naïve way to do this is to simply
+                            remove $p$ data points from the dataset, and use the remaining $n-p$ points to train our decision tree. (This can actually be very helpful because we can use
+                            the $p$ points not used to train the tree to test the tree and get error estimation.) But finding the optimal $p$ is tricky. If we make $p$ too small, then our trees
+                            will be trained on a majority of the same data and thus be highly correlated. If we make $p$ too large, then our trees will be trained on very small subsets of
+                            the data which will produce trees with high bias on the full training set (i.e., the trees will not generalize well to the full data set). The solution to this problem
+                            is bagging!
+                        </p>
+
+                        <p>
+                            The idea of bagging is repeatively sample $n$ data points from our dataset (with replacement), and training a decision tree based on this sample.
+                            We can then do this processes $B$ times to create $B$ decision trees trained on a different subset of the data. This is bagging!
+                        </p>
+
+                        <p>
+                            Some advantages of bagging are that it reduces variances, is robust against outliers, and is easy to parallelize. One problem it presents, however, is that
+                            it might not use all the data. But, as mentioned above, every data point that is not used to train a tree can be used to test the tree! (This is called <em>out-of-bag</em> or <em>OoB</em> error estimation.)
+                        </p>
+
+                        <p>
+                            In general, the probabilty of a point in our data NOT being selected to be used in a specific tree is $(1- 1/N)^n$, where $n$ is the number
+                            of points we are using to train our tree. If $n=N$ (so the number of points used to train our tree is the size of our dataset), we now have the
+                            probability of a point in our data NOT being selected to be used in a specific tree is
+                        </p>
+
+                        $$\left(1 - \frac{1}{N} \right)^N \to \frac{1}{e} \approx 36\%$$
+
+                        <p>
+                            as $N\to\infty$. Thus, on average, $36\%$ of our data will not be used in a given tree. This might be confusing. After all, we are taking $N$ points
+                            from our dataset of size $N$ to train the tree. Remember: we are selecting point <em>with</em> replacement. This means that we can select the same point
+                            multiple times! Thus, it is quite likely that some data will be left out of any given tree.
+                        </p>
+
+                        <p>
+                            Note: just because we are creating $B$ decision trees based on different subsets of data, that does not mean our trees are immune from 
+                            high correlation. If we have one feature that is a pretty heavy predictor of the target variable, then it is likely that our $B$ trees will all split
+                            on that feature. This can still give us highly correlated trees, which weakens our ensemble classifier.
+                        </p>
+
+                        <p>
+                            This is where attribute bagging comes in.
+                        </p>
+
+                        <h4>Attribute Bagging</h4>
+
+                        <p>
+                            In order to reduce the correlation between our trees, we can train each tree on a different subset of features. This is called attribute bagging.
+                        </p>
+
+                        <p>
+                            Initially proposed in 1996 by <a href="https://galton.uchicago.edu/~amit/Papers/shape_rec.pdf" target="_blank" rel="noopener noreferrer">Yali Amit and Donald Geeman</a>,
+                            attribute bagging is very similar to bagging, only instead of randomly selecting $n$ data points from our dataset for each tree, we randomly select $m$ features from our dataset
+                            for each <em>node</em>. Thus, each node in our tree is trained on a different subset of features. This can not only greatly reduce the correlation between our trees, it also 
+                            can reduce the computational and temporal cost of building our trees. If we have $M$ features to consider with $M$ being quite later, reducing that to $m < M$ features
+                            allows us to build our trees much faster! 
+                        </p>
+
+                        <h4>Random Forest Classifier</h4>
+
+                        <p>
+                            Now that we have discussed bagging and attribute bagging, we can now discuss random forests. Very simply, a random forest is a collection of decision trees
+                            built with both bagging and attribute bagging. The combination of these two ideas allow us to create decision trees that are even more independent of each other, compared
+                            with decision trees built for bagging or attribute bagging alone. Because of this reason, random forests often outperform trees that <em>are</em> built with bagging or 
+                            attribute bagging alone.
+                        </p>
+
+                        <p>Here is the main idea of the random forests algorithm:</p>
+
+                        <p>
+                            Start by determining to build $B$ trees and select $m$ features for each node in our tree.
+                            Select $n$ data points from our dataset (with replacement) to train our tree on. Start at the root node. Select $m$ features from our dataset (without replacement) to train our node on.
+                            Split our node on the feature that minimizes our spliting criterion index. Repeat this process for each node until we reach a leaf node. Repeat this process $B$ times.
+                            When we want to predict a new data point, run the data point through each tree in our forest, and take the majority vote of the predictions.
+                        </p>
+
+                        <p>
+                            One very nice thing about decision trees is that both the strength $s$ and average correlation $\bar{\rho}$ go down when the number of 
+                            features we select at each node $m$ goes down. In this case, we define the average correction to be
+                        </p>
+
+                        $$\bar{\rho} = \frac{\sum_{i,j}\text{Cov}(Z_i, Z_j)}{\sum_{i,j}\sqrt{\text{Var}(Z_i)\text{Var}(Z_j)}}.$$
+
+                        <p>
+                            Where $Z_k$ is tree $k$, and the strength $s$ is defined to be
+                        </p>
+
+                        $$s = \mathbb{E}[\bar{Z}],$$
+                        
+                        <p>
+                            where $\bar{Z} = \frac{1}{B}\sum_{i=1}^B Z_i$ (simply the average value of the $Z_i$). This is wonderful news because it tells us that the generalization
+                            error of our random forest classifier is low! We can verify that is true
+                            by using the Breiman bound defined as
+                        </p>
+
+                        $$P(F(X) \not= Y)\leq \bar{\rho}\left(\frac{1 - s^2}{s^2} \right).$$
+
+                        <h4>Error Estimation Using the Out of Bag Estimate</h4>
+
+                        <p>
+                            As mentioned above, we can use the points <em>not</em> used to create a tree to evaluate how well the tree predicts our data, producing the OoB error estimate.
+                            Let's talk real quick about how we might do this.
+                        </p>
+
+                        <p>
+                            Once we train our random forest algorithm, we get our ensamble classifier $F$. To get our OoB estimate, we start by looking at tree $1$ in the forest. Get every data point
+                            $\{\textbf{x}_i\}_{i=1}^n$ that was <em>not</em> used to train tree $1$. Run each data point through tree $1$ and get the prediction $\hat{y}_i$ for each data point.
+                            Use those predictions and the actual values $\{y_i\}_{i=1}^n$ to calculate the error estimate for tree $1$ using whichever error function you desire. Continue this process
+                            iteratively for each tree in the forest. Once you have the error estimate for each tree, average them together to get the OoB error estimate for the random forest. 
+                        </p>
+
+                        <p>
+                            Another way to think about this (with more mathematical notation), if $i$ represents the index of a data point, let OoB$(i)$ represent the set of tree that did not
+                            use data point $\boldsymbol{x}_i$ to train. We can calculate the error estimate for data point $\textbf{x}_i$ as
+                        </p>
+
+                        \[
+                        \text{OoBErr}(i) = \frac{1}{|\text{OoB}(i)|}\sum_{\phi\in\text{OoB}(i)}\mathscr{L}(\phi(\textbf{x}_i), y_i),
+                        \]
+
+                        <p>
+                            Where $\mathscr{L}$ is our loss function. We can then calculate the OoB error estimate for the entire forest as
+                        </p>
+
+                        \[
+                            \text{OoBErr} = \frac{1}{B}\sum_{i=1}^B\text{OoBErr}(i).
+                        \]
+
+                        <p>
+                            Aside from being computational efficient, the OoB error estimate typically has small bias (i.e., the forest has a lower lever of underfitting), and is approximately as accurate as cross
+                            validation while being much faster to compute. This is because using OoB estimates requires us to build one forest, while $k$-fold cross validation requires us to build $k$ forests.
+                        </p>
+
+                        <h4>Downsides to Random Forests</h4>
+
+                        <p>
+                            One of the biggest strengths of decision trees is their interpretability. It is very easy to take a new piece of data to a decision tree, run it through the tree, and understand how it got
+                            to the prediction that it did. This is not the case with random forests. Even though random forests are simply an ensemble of decision trees, because of the use of bagging and attribute bagging
+                            to build those trees, interpretability is not a simple as looking at each tree individually and deducing a prediction from that. This, however, should not be a reason to not use random forests. Random forests are still a very powerful tool despite their lack of interpretability!
+                        </p>
+
+                        <p>
+                            Another downside to random forests is that despite using bagging and attribute bagging to create 'independent' trees, it is still very easy for these trees to overfit the data. This, of course,
+                            is not a problem unique to random forests. To combat this, there are several hyperparameters we can tune to help reduce overfitting. We will discuss these hyperparameters below.
+                        </p>
+
+                        <h4>Reducing Overfitting in Random Forests</h4>
+
+                        <p>
+                            Most of the ways to reduce overfitting in random forests are the same as the ways to reduce overfitting in decision trees. This includes setting a maximum depth of each tree, setting a minimum number of samples per split and/or a minimum
+                            number of samples per leaf. We can choose a maximum number of trees to build, and we can choose a maximum number of features to consider at each node. If time allows, performing a grid search to find the optimal hyperparameters
+                            is a great way to reduce overfitting!
+                        </p>
+
+                        <h4>Building a Random Forest in Python</h4>
+
+
+                        <p>
+                            Now that we have discussed the theory behind random forests, we will now work through an example of building a random forest in Python.
+                            To do this, we will be utilizing the <code>RandomForestClassification</code> function from the <code>sklearn</code> library, using the <code>mnist</code> dataset.
+                        </p>
+
+                        <p>
+                            Start by loading the necessary libraries and the data.
+                        </p>
+
+<pre><code class="language-python">from sklearn.ensemble import RandomForestClassification
+from sklearn.datasets import load_digits</code></pre>
+
+                        <p>
+                            We can look at a few of the images in the dataset to get a feel for what we are working with.
+                        </p>
+
+                        <img src="blog_files/random_forests/sample_digits.png" alt="MNIST images" width="90%" height="90%">
+
+                        <p>
+                            The images are quite grainy (they are only $8\times 8$ pixels), but we can still make out the numbers. Let's see how well a random forest can classify these images.
+                        </p>
+
+                        <p>
+                            First, we need to load in and split our data into training and testing sets. We will use $80\%$ of the data to train our model, and $20\%$ to test our model.
+                        </p>
+<pre><code class="language-python"># Load in the data
+digits_X, digits_y = load_digits(return_X_y=True, as_frame=True)
+
+# Train/test split the data
+X_train, X_test, y_train, y_test = train_test_split(digits_X, digits_y, test_size=0.2, random_state=1)</code></pre>
+
+                        <p>
+                            Now that we have our data, we can build our random forest. Let's load in our classifier. We will just use a basic tree, making sure 
+                            we set up our classifier to use bootstrapping and OoB error estimation.
+                        </p>
+
+<pre><code class="language-python"># Load in the classifier
+rf = RandomForestClassifier(random_state=1, bootstrap=True, oob_score=True)</code></pre>
+
+                        <p>
+                            Now that we have our classifier, we can train it on our training data (keeping track of how long it takes to train).
+                        </p>
+                
+<pre><code class="language-python">%%timeit
+rf.fit(X_train, y_train)
+>>> 223 ms ± 679 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)</code></pre>
+
+                        <p>
+                            Now that we have trained our classifier, we can see the <code>oob_score</code> of our classifier.
+                        </p>
+
+<pre><code class="language-python">rf.oob_score_
+>>> 0.9721642310368824</code></pre>
+
+                        <p>
+                            This is a pretty good score! This means that our classifier correctly predicted the class of $97\%$ of the data points it did not use to train the model.
+                            Let's see how well our classifier does on the test data.
+                        </p>
+
+<pre><code class="language-python">rf.score(X_test, y_test)
+>>> 0.9833333333333333</code></pre>
+
+                        <p>
+                            98.3% accuracy! Not bad! We can visualize the confusion matrix to see how well our classifier did on each class.
+                        </p>
+
+                        <img src="blog_files/random_forests/confusion_matrix.png" alt="Confusion matrix" width="90%" height="90%">
+
+                        <p>
+                            From our confusion matrix, we cannot really see any classes that our classifier struggled with. It appears that 
+                            our classifier did incorrectly predict a few $0$'s as $4$'s, and we can see where the comes from. But overall, our classifier did a pretty good job,
+                            especially considering how random forests does not seem like it would work for classifying images!
+                        </p>
+
+                        <h4>Conclusion</h4>
+                        <p>
+                            In this article, we talked about Random Forests, and how they can be used for classification. 
+                            We discussed the improvements random forests have over decision trees, including bagging and attribute bagging, and we discussed how to build a random forest
+                            to classify digits in python!
+                            I hope that through this article, you now understand the power of random forests and will consider using them in your next project
+                            before you reach for a neural network.
+                            If you want to see the code used in this article, you can find it
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/random_forests/random_forests.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
