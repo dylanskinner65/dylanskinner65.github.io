@@ -196,7 +196,7 @@
 
                         <p>
                             AdaBoost is an example of using gradient boosting for classification. The idea behind AdaBoost is that we have a set of data $\mathbb{D} = \{(\textbf{x}_1, y_1), \dots, (\textbf{x}_N, y_N) \}$,
-                            where $y_i\in\{-1, 1\}$ (not $\{0,1\}), and a loss function $\mathscr{L}(f(\textbf{x}), y) = e^{-yf(\textbf{x})}$ (which is the exponential loss function).
+                            where $y_i\in\{-1, 1\}$ (not $\{0,1\}$), and a loss function $\mathscr{L}(f(\textbf{x}), y) = e^{-yf(\textbf{x})}$ (which is the exponential loss function).
                             We can then define $T$ to be (where $f_k(\textbf{x}_i) = \hat{y}_i$)
                         </p>
 
@@ -209,7 +209,7 @@
                         $$-\alpha_k D_{\hat{y}_i}T = -y_i\exp(-\hat{y}_iy_i).$$
 
                         <p>
-                            Once this step is performed, we find the $t_k \approx y_i\exp(-\wide{y}_iy_i)$.  We can then create a new tree $t_{k+1}\mathscr{F}$ based on the data 
+                            Once this step is performed, we find the $t_k \approx y_i\exp(-\widehat{y}_iy_i)$.  We can then create a new tree $t_{k+1}\mathscr{F}$ based on the data 
                             $\{(\textbf{x}_i, y_i^{k+1}) \}_{i=1}^N = \{(\textbf{x}_i, -\alpha_k D_{\hat{y}_i}T) \}_{i=1}^N = \{(\textbf{x}_i, y_i\exp(-\hat{y}_i^k y_i)) \}_{i=1}^N$
                             where $\hat{y}_i^{k} = f_k(\textbf{x}_i)$. Now, updating our tree, we have
                         </p>
