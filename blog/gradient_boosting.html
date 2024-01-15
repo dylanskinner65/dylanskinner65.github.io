@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Gradient Boosting in Machine Learning</title>
+    <meta name="description" content="Gradient boosting is a clever way to improve classification and regression tasks. The main idea is to perform
+                                      gradient descent to minimize the loss function of our problem. In this post, we will discuss the math behind
+                                      gradient boosting and work through an example comparing gradient boosting and random forests.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-01-24">24 January 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/gradient_boosting.html">Gradient Boosting in Machine Learning</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Nature abhors a gradient." </blockquote>
+                        <p>- Eric Schneider</p>
+
+                        <p>
+                            Gradient Boosting, a powerful ensemble learning technique, is an important topic in machine learning and is the foundation of several powerful models.
+                            This sophisticated method combines the strengths of decision trees with a meticulous optimization process, leveraging the principles of boosting to 
+                            sequentially improve the accuracy of weak learners. In this blog post, we'll discuss the math of gradient boosting, exploring its inner workings and 
+                            understanding how it stands out among ensemble methods. We'll also shed light on AdaBoost, a version of gradient boosting, and draw comparisons between gradient boosting
+                            and random forests through a practical Python example. By the end of this journey, you'll gain a deeper insight into the mechanics of gradient boosting and its practical implications.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_boosting/agif13.gif" alt="Vector field fun." width="90%" height="90%">
+                            <figcaption text-align=center>Gif acquired from <a href="https://necessarydisorder.wordpress.com/2017/09/04/animated-gifs-from-vector-fields-as-force-fields/">necessary-disorder tutorials</a>. 
+                                Vector fields are a great way to visualize gradients, but I mainly just think this gif is cool.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Why Boosting
+                        </h4>
+
+                        <p>
+                            In my previous blog post about <a href="https://dylanskinner65.github.io/blog/decision_tress.html" target="_blank" rel="noopener noreferrer">decision trees</a>, I
+                            mentioned the building an optimal decision tree is an NP-hard problem and how using the standard greedy method of building trees can easily overfit the data. One solution
+                            to improving decision trees is by combining bagging and attribute bagging in
+                            <a href="https://dylanskinner65.github.io/blog/random_forests.html" target="_blank" rel="noopener noreferrer">random forests</a>. While incredibly powerful,
+                            random forests can still overfit the data and are not always the best choice for classification tasks. This is where boosting comes in.
+                        </p>
+
+                        <h4>The Basic Idea Behind Boosting</h4>
+
+                        <p>
+                            Let's say we have a set of data $\mathbb{D} = \{(\textbf{x}_1, y_1), \dots, (\textbf{x}_N, y_N) \}$ and a weak learner (function) $f$ that
+                            is built to hopefully produce $f(\textbf{x}_i) \approx y_i$ for each data point $\textbf{x}_i$. However, $f$ is actually not that good and 
+                            rarely produces the correct output. One thing we can do is get another weak learner $g_1$ such that $f(\textbf{x}_i) + g_1(\textbf{x}_i)$ produces
+                            a better answer $y_i$ than just $f$ alone. This means that $|y_i - f(\textbf{x}_i) - g_1(\textbf{x}_i)| < |y_i - f(\textbf{x}_i)|$.
+                        </p>
+
+                        <p>
+                            For this to be done, after finding $f$, we need to produce a new dataset $\mathbb{D}_1 = \{(\textbf{x}_1, y_1 - f(\textbf{x}_1)), \dots, (\textbf{x}_N, y_N - f(\textbf{x}_N)) \}$.
+                            Once that new dataset is created, we can train $g_1$ on $\mathbb{D}_1$. If $g_1$ is fit well, then $f + g_1$ will be a better approximation of the data $\mathbb{D}$ than $f$ alone.
+                            We can repeat this process to get $g_2, g_3, \dots, g_M$ (creating $\mathbb{D}_2, \mathbb{D}_3, \dots, \mathbb{D}_M$ along the way) to get a final function 
+                            $f_M = f + g_1 + g_2 + \dots + g_M$ that will hopefully produce $f_M(\textbf{x}_i)=y_i$ for all $i$.
+                        </p>
+
+                        <p>
+                            This is the idea behind boosting. We are trying to boost the performance of a weak learner by adding more weak learners to it that are trained on the residuals
+                            of the previous iteration.
+                        </p>
+
+                        <h4>Gradient Boosting</h4>
+
+                        <p>
+                            To set the scene, let's define a few things. We will let $\mathscr{X}\times\mathscr{Y}$ be a probability space that our data is drawn from. Let
+                            $\mathscr{L}$ be some fixed loss function, and let $\mathscr{F}$ be a set of functions $f:\mathscr{X}\to\mathscr{Y}$ that meet our criteria. Our ultimate goal
+                            is to find
+                        </p>
+
+                        $$f^* = \text{argmin}_{f\in\mathscr{F}}\mathbb{E}_{(\textbf{x}, y)\sim\mathscr{X}\times\mathscr{Y}}[\mathscr{L}(f(\textbf{x}), y)].$$
+
+                        <p>
+                            Now, this is an unrealistic idea. We cannot possibly expect to find the optimal function $f^*$ considering how large $\mathscr{F}$ is. 
+                            So we need to find a function $f$ that is close to $f^*$, and we will do this through approximation.
+                        </p>
+
+                        <p>
+                            Let's say we have a sample $\mathbb{D} = \{(\textbf{x}_1, y_1), \dots, (\textbf{x}_N, y_N) \}$ drawn from $\mathscr{X}\times\mathscr{Y}$. We can compute
+                            the expectation $\mathbb{E}_{(\textbf{x}, y)\sim\mathscr{X}\times\mathscr{Y}}[\mathscr{L}(f(\textbf{x}), y)]$ by taking the average of the loss function
+                            $T(f) = \frac{1}{N}\sum_{i=1}^N \mathscr{L}(f(\textbf{x}_i), y_i)$. Thus, we have
+                        </p>
+
+                        $$f^* \approx \text{argmin}_{f\in\mathscr{F}}T(f) = \text{argmin}_{f\in\mathscr{F}}\frac{1}{N}\sum_{i=1}^{N}\mathscr{L}(f(\textbf{x}_i), y_i).$$
+
+                        <p>
+                            With gradient boosting, what gradient descent does it it takes our current $f_k\in\mathscr{F}$ that tries to approximate $f^*$,
+                            and finds the next $f_{k+1}$ by 
+                        </p>
+
+                        $$f_{k+1} = f_k - \alpha_k DT(f_k)^T,$$
+
+                        <p>
+                            where $DT(f_k)$ is the derivative of $T$ with respect to $f_k$, and $\alpha_k > 0$ is the learning rate. This is the gradient descent step.
+                        </p>
+
+                        <p>
+                            Now, as mentioned above, finding $f^*$ is virtually impossible because $\mathscr{F}$ is infinite dimensional. However,
+                            since we are only looking in $\mathscr{F}$ at the points $\mathbb{D}$, we can reduce the dimensions of $\mathscr{F}$ from infinite to $N$. So,
+                            if $(\hat{y}_1, \dots, \hat{y}_N) = (f(\textbf{x}_1), \dots, f(\textbf{x}_N))$, $T$ is now a function of $(\hat{y}_1, \dots, \hat{y}_N)$, which 
+                            means that $DT$ is a function of $(\hat{y}_1, \dots, \hat{y}_N)$ as well.  Now, $-\alpha_k DT(f_k)^T$ might not be in $\mathscr{F}$, 
+                            so we simply use some $t_k\in\mathscr{F}$ that works as a good approximation for $t_k \approx - \alpha_k DT(f_k)^T$.
+                        </p>
+
+                        <p>
+                            In my blog post about random forests, I mentioned how we can use bagging and attribute bagging to create a set of independent decision trees.
+                            With gradient boosting, our $-\alpha_k DT(f_k)^T$ is not even close to independent.
+                        </p>
+
+                        <h4>AdaBoost</h4>
+
+                        <p>
+                            AdaBoost is an example of using gradient boosting for classification. The idea behind AdaBoost is that we have a set of data $\mathbb{D} = \{(\textbf{x}_1, y_1), \dots, (\textbf{x}_N, y_N) \}$,
+                            where $y_i\in\{-1, 1\}$ (not $\{0,1\}), and a loss function $\mathscr{L}(f(\textbf{x}), y) = e^{-yf(\textbf{x})}$ (which is the exponential loss function).
+                            We can then define $T$ to be (where $f_k(\textbf{x}_i) = \hat{y}_i$)
+                        </p>
+
+                        $$T(f_k) = \frac{1}{N}\sum_{i=1}^N \mathscr{L}(f_k(\textbf{x}_i), y_i) =  \frac{1}{N}\sum_{i=1}^N \mathscr{L}(\hat{y}_i, y_i) = \frac{1}{N}\sum_{i=1}^N \exp(-\hat{y}_i y_i)$$
+
+                        <p>
+                            Thus, for whatever our $\alpha_k$ is, our gradient descent step in the $\hat{y}_i$ direction will be
+                        </p>
+
+                        $$-\alpha_k D_{\hat{y}_i}T = -y_i\exp(-\hat{y}_iy_i).$$
+
+                        <p>
+                            Once this step is performed, we find the $t_k \approx y_i\exp(-\wide{y}_iy_i)$.  We can then create a new tree $t_{k+1}\mathscr{F}$ based on the data 
+                            $\{(\textbf{x}_i, y_i^{k+1}) \}_{i=1}^N = \{(\textbf{x}_i, -\alpha_k D_{\hat{y}_i}T) \}_{i=1}^N = \{(\textbf{x}_i, y_i\exp(-\hat{y}_i^k y_i)) \}_{i=1}^N$
+                            where $\hat{y}_i^{k} = f_k(\textbf{x}_i)$. Now, updating our tree, we have
+                        </p>
+
+                        $$f_{k+1} = f_k + t_{k+1}.$$
+
+                        <p>
+                            We can repeat this process until we have a good approximation of $f^*$.
+                        </p>
+
+                        <h4>Gradient Boosting vs Random Forests in Python</h4>
+
+                        <p>
+                            Now with this understand of gradient boosting and AdaBoost, let's compare gradient boosting to random forests in python. Let's begin by importing the necessary libraries.
+                        </p>
+            
+<pre><code class="language-python">from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier</code></pre>
+
+                        <p>
+                            For this example, we will use the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_olivetti_faces.html#sklearn.datasets.fetch_olivetti_faces" target="_blank" rel="noopener noreferrer">Olivetti faces dataset</a> from sklearn.
+                            So let's load this dataset in and visualize a few of the faces.
+                        </p>
+                    
+<pre><code class="language-python">from sklearn.datasets import fetch_olivetti_faces
+import matplotlib.pyplot as plt
+
+# Load in the data
+faces_X, faces_y = fetch_olivetti_faces(return_X_y=True, shuffle=True, random_state=1)
+
+# Visualize the first 4 faces
+fig, axes = plt.subplots(1, 4, figsize=(10, 5), dpi=100)
+for i, ax in enumerate(axes):
+    ax.imshow(faces_X[i].reshape(64, 64), cmap='gray')
+    ax.set_title(f'Person {faces_y[i]}')
+    ax.axis('off')
+plt.show()</code></pre>
+
+                        <figure>
+                            <img src="blog_files/gradient_boosting/few_faces.png" alt="The first 4 faces in the Olivetti faces dataset." width="90%" height="90%">
+                            <figcaption text-align=center>The first 4 faces in our shuffled Olivetti faces dataset.</figcaption>
+                        </figure>
+
+                        <p>
+                            Now that we have our data loaded in, let's split it into training and testing sets.
+                        </p>
+                
+<pre><code class="language-python">from sklearn.model_selection import train_test_split
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(faces_X, faces_y, test_size=0.2, random_state=1)</code></pre>
+
+                        <p>
+                            We can now initialize our two and fit our two models. We will use 100 trees for both models and default parameters otherwise for both models, timing
+                            how long it takes to fit each model. Starting with initialization,
+                        </p>
+
+<pre><code class="language-python"># Initialize the models
+gbc = GradientBoostingClassifier(n_estimators=100, random_state=1)
+rf = RandomForestClassifier(n_estimators=100, random_state=1)</code></pre>
+
+                        <p>
+                            Now, let's fit our models and time how long it takes to fit each model, starting with the gradient boosting model.
+                        </p>
+                
+<pre><code class="language-python">%%timeit
+gbc.fit(X_train, y_train)
+>>> 10min 36s ± 1.89 s per loop (mean ± std. dev. of 7 runs, 1 loop each)</code></pre>
+
+                        <p>
+                            Now, let's fit our random forest model and time how long it takes to fit.
+                        </p>
+
+<pre><code class="language-python">%%timeit
+rf.fit(X_train, y_train)
+>>> 1.36 s ± 4.24 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)</code></pre>
+
+                        <p>
+                            As we can see, the random forest models took <em><b>significantly</b></em> less time to train than the gradient boosting model. It took
+                            88 minutes and 12 seconds to fit the gradient boosted model, and 10.9 seconds to fit the random forest model. 
+                            Now, just because training the random forest took less time does not mean the random forest model is better than the gradient boosting model.
+                            So let's see how well each model performs on the test set. We have
+                        </p>
+                    
+<pre><code class="language-python">gbc.score(X_test, y_test)
+>>> 0.5375</code></pre>
+
+<pre><code class="language-python">rf.score(X_test, y_test)
+>>> 0.9125</code></pre>
+
+                        <p>
+                            Now, this is interesting. The random forest model took significantly less time to train, and it performed better on the test set.
+                            This is not to say that gradient boosting is bad. In fact, gradient boosting is a very powerful technique. However, it is important to
+                            understand that gradient boosting is not always the best choice for classification tasks. In this case, random forests outperformed gradient boosting.
+                            In other cases (such as one the fashion mnist dataset), I have seen gradient boosting outperform random forests. Gradient boosting should
+                            simply be another tool in your toolbox that you can use when you need it!
+                        </p>
+
+                        <p>
+                            Also, gradient boosting is pretty obsolete now. It was a great technique when it was first introduced, but now algorithms such as
+                            XGBoost and LightGMB are much better and faster than gradient boosting. I will write a blog post about XGBoost and LightGBM in the future.
+                        </p>
+
+                        <h4>Conclusion</h4>
+                        <p>
+                            In this article, we talked about the math behind gradient boosting and talked a bit about using AdaBoost for classification. 
+                            We discussed the why boosting is a good idea, and compared gradient boosting and random forests in Python!
+                            I hope that through this article, you now understand gradient boosting especially because of its importance in laying the foundation
+                            for other boosting algorithms.
+                            If you want to see the code used in this article, you can find it
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/gradient_boosting/gradient_boosting.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+                            I hope you delve deeper into gradient boosting on your data science and machine learning journey!
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
