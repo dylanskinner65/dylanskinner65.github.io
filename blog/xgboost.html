@@ -210,7 +210,7 @@
                         $$\small{\mathscr{L}(f(\textbf{x}_i), y_i) = \exp(-y_i f(\textbf{x}_i)).}$$
 
                         <p>
-                            Replacing $f(\textbf{x}_i)$ with $f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i)$, we geT
+                            Replacing $f(\textbf{x}_i)$ with $f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i)$, we get
                         </p>
 
                         $$\small{\begin{align}\mathscr{L}(f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i), y_i) &= \exp(-y_i (f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i))) \\
@@ -270,7 +270,7 @@
                         </p>
 
                         <p>
-                            Now, we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                            Now, we can rewrite our quadratic approximation of $\widetilde{T}$ as
                         </p>
 
                         $$\small{\begin{align}
@@ -279,7 +279,7 @@
 
                         <p>
                             For each of our leaves $\ell \in L$, we can define the set $I_{\ell} = \{i \;|\; q(\textbf{x}_i = \ell)\}$ be the set indices $i$ where $\textbf{x}_i$ falls into leaf $\ell$ in tree $t_{k+1}$.
-                            We can now rewrite our quadratic approximation of $\mathscr{T}$ as
+                            We can now rewrite our quadratic approximation of $\widetilde{T}$ as
                         </p>
 
                         $$\small{\begin{align}
@@ -288,17 +288,17 @@
                           \end{align}}$$
 
                         <p>
-                            This can "simply", however, into
+                            This can "simplify", however, into
                         </p>
 
                         $$\small{\begin{align}
                                     \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L} \left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\right)w_{\ell}
                         + \frac{1}{2}\sum_{\ell\in L}\left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i)\right)w_{\ell}^2 + \gamma|L| + \frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2
-                            \end{align}}$$
+                            \end{align}}.$$
                         
                         <p>
                             This is because we can group the terms by leaf $\ell$ and then sum over all the leaves. But, if 
-                            we look at the terms inside the parentheses, only one term is dependent on $i$ and the other is not. This means we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                            we look at the terms inside the parentheses, only one term is dependent on $i$ and the other is not. This means we can rewrite our quadratic approximation of $\widetilde{T}$ as
                         </p>
 
                         $$\small{\begin{align}
@@ -307,7 +307,7 @@
                             \end{align}}$$
 
                         <p>
-                            If we let $$F_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)$$ and $$S_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i),$$ we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                            If we let $$F_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)$$ and $$S_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i),$$ we can rewrite our quadratic approximation of $\widetilde{T}$ as
                         </p>
 
                         $$\small{\begin{align}
@@ -318,7 +318,7 @@
                         <h4>Finding the Optimal Weights and Objective</h4>
 
                         <p>
-                            With this notation down, we now seek to find the optimal weights $\textbf{w}^*$ that minimize our quadratic approximation of $\mathscr{T}$ derived above.
+                            With this notation down, we now seek to find the optimal weights $\textbf{w}^*$ that minimize our quadratic approximation of $\widetilde{T}$ derived above.
                             We will do this by utilizing the most simple minimization technique: taking the derivative and setting it equal to zero.
                         </p>
 
@@ -343,7 +343,7 @@
 
                             $$\small{w_{\ell}^* = \frac{-F_{\ell}}{H_{\ell} + \lambda}}.$$
 
-                            Now, we can plug this back into our quadratic approximation of $\mathscr{T}$ to get
+                            Now, we can plug this back into our quadratic approximation of $\widetilde{T}$ to get
 
                             $$\small{\begin{align}
                                 \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L}\left({\color{red}w_{\ell}} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda){\color{red}w_{\ell}}^2\right) + \gamma|L| \\
