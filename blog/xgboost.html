@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>A Gentle Introduction and Mathematical Foundations of XGBoost</title>
+    <meta name="description" content="XGBoost is a powerful machine learning algorithm that is used in many data science competitions, combining ideas from
+                                      gradient boosting, random forests, and other important topics.
+                                      In this blog post, we'll discuss the math behind XGBoost, exploring its inner workings and understanding 
+                                      how it stands out among other machine learning algorithms. We'll also shed light on the importance of 
+                                      regularization and draw comparisons between XGBoost and random forests through a practical Python example.">
+    ">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-01-31">31 January 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/xgboost.html">A Gentle Introduction and Mathematical Foundations of XGBoost</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"XGBoost" </blockquote>
+                        <p>- Bojan Tunguz</p>
+
+                        <p>
+                            When it comes to the current machine learning landscape, XGBoost is king. If you look at the tops solutions for just about any Kaggle
+                            competition, the winner will most likely be using XGBoost. XGBoost is a powerful machine learning algorithm that combines ideas from
+                            gradient boosting, random forests, and other important topics. In this blog post, we'll discuss the math behind XGBoost, exploring its inner workings and understanding
+                            how it stands out among other machine learning algorithms. We'll also shed light on the importance of
+                            regularization and draw comparisons between XGBoost, gradient boosting, and random forests through a practical Python example.
+                        </p>
+
+                        <p>
+                            Note, this blog post builds off of my previous blog posts about <a href="https://dylanskinner65.github.io/blog/decision_tress.html" target="_blank" rel="noopener noreferrer">decision trees</a>, <a href="https://dylanskinner65.github.io/blog/random_forests.html" target="_blank" rel="noopener noreferrer">random forests</a>,
+                            and <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosting</a>. If you are unfamiliar with these topics, I recommend reading those blog posts first.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/xgboost/XGBoost_logo.png" alt="XGBoost logo." width="90%" height="90%">
+                            <figcaption text-align=center></figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Newton Boosted Trees
+                        </h4>
+
+                        <p>
+                            To begin, let's talk about Newton boosted trees. Newton boosted trees are a special case of gradient boosted trees that use Newton's method to
+                            find the optimal weights for each tree. This is the main idea behind XGBoost.
+                        </p>
+
+                        <p>
+                            The main idea of XGBoost is to use the idea of Newton's method to express the objective function $T$ in terms of a sum over the leaves of the trees. Note, 
+                            we will actually be getting the quadratic approximation of $T$ instead of the actual $T$ itself. This is because the quadratic approximation of $T$ is much easier to work with.
+                            We will see this come into play, especially in the proofs.
+                        </p>
+
+                        <p>
+                            Recall in my blog post about <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosted trees</a>, we use gradient descent to find the optimal tree $t_k$ that minimizes the loss function $T$. With Newton
+                            boosting, we instead use a quadratic approximation of our objective function $T$ to find the optimal tree $t_k$. Since the quadratic approximation is
+                            a key idea in Newton's method, we call this Newton boosted trees.
+                        </p>
+
+                        <p>
+                            Now, using Newton's method has some pros and cons. One pro is that Newton's method can be much faster than gradient descent. Newton's method converges
+                            quadratically while gradient descent converges linearly, thus a quicker conversion rate. However, Newton's method also
+                            requires computing the Hessian matrix ($2^{\text{nd}}$ derivative matrix), which can be very expensive ($O(n^3)$, in fact). So, while Newton's method can converge faster, it can also be much expensive to compute,
+                            causing Newton's method to be slower than gradient descent in some cases.
+                        </p>
+
+                        <p>
+                            Since Newton's method is $O(n^3)$ and our parameter space is determined by the values $\textbf{x}_1, \dots, \textbf{x}_N$, Newton's method is not feasible for large datasets.
+                            The nice thing, however, is we can use the idea of approximating the objective with a quadratic function and minimizing that
+                            without ever computing the Hessian! Let's dive into that, reviewing first a few important pieces of terminology.
+                        </p>
+
+                        <h4>Minimizing Quadratics Without the Hessian</h4>
+
+                        <p>
+                            Recall that our updated function is $f_{k+1} = f_k + t_{k+1}$, where $f_k$ is sum of previous trees $\sum_{i=1}^k t_i$
+                            and $t_{k+1}$ is our new tree. When evalauted at some specific datapoint $\textbf{x}_i$, we have
+                            $f_{k+1}(\textbf{x}_i) = \hat{y}_i^{k+1} = \hat{y}_i^k + t_{k+1}(\textbf{x}_i)$. 
+                        </p>
+
+                        <p>
+                            To minimize our quadratic function without the Hessian, we need to take the quadratic approximation of our loss function
+                            $\mathscr{L}((f_k + t_{k+1})(\textbf{x}_i), y_i)$. The best way to do this is to use a Taylor series expansion around $t_{k+1}(\textbf{x}_i) = 0$
+                            to get a resulting polynomial of degree 2. This will result in
+                        </p>
+
+                        $$\small{\begin{align}\mathscr{L}(\hat{y}_i^k + t_{k+1}(\textbf{x}_i), y_i) \approx \mathscr{L}(\hat{y}_i^k + 0, y_i)(t_{k+1}(\textbf{x}_i))^0 &+ \mathscr{L}^{\prime}(\hat{y}_i^k + 0, y_i)(t_{k+1}(\textbf{x}_i))^1 \\
+                                                                                      &+ \frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}(t_{k+1}(\textbf{x}_i))^2\end{align}}$$
+
+
+                        <p>
+                            While this looks quite messy, it is simply the Taylor expansion learned about in calc 2. If this is unfamiliar to you,
+                            I recommend checking out <a href="https://math.libretexts.org/Bookshelves/Calculus/Calculus_3e_(Apex)/08%3A_Sequences_and_Series/8.08%3A_Taylor_Series" target="_blank" rel="noopener noreferrer">this blog post</a> on Taylor/Maclaurin series.
+                        </p>
+
+                        <p>
+                            Since we are minimizing this objective function, we do not care about any constant terms, so we can drop them. This leaves us with
+                        </p>
+
+                        $$\small{\mathscr{L}^{\prime}(\hat{y}_i^k + 0, y_i)(t_{k+1}(\textbf{x}_i))^1
+                        + \frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}(t_{k+1}(\textbf{x}_i))^2}$$
+
+                        <p>
+                            Now, don't let notation fool you. $t_{k+1}(\textbf{x}_i)$ is a <em>variable</em>, the same as $x$ is a variable in $f(x) = x^2$. 
+                        
+                        </p>
+                        
+                        <p>
+                            With this in mind,
+                            instead of computing the Hessian of the objective function $T$ and minimizing that, we instead are trying to find the tree $t_{k+1}$ that takes
+                            in points $\textbf{x}_1, \dots, \textbf{x}_N$ and outputs the values $t_{k+1}(\textbf{x}_1), \dots, t_{k+1}(\textbf{x}_N)$ and now try to minimize
+                        </p>
+
+                        $$\small{\begin{align}\widetilde{T} &= \sum_{i}^{N} \mathscr{L}^{\prime}(\hat{y}_i^k + 0, y_i)\cdot(t_{k+1}(\textbf{x}_i))^1
+                        + \frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}\cdot(t_{k+1}(\textbf{x}_i))^2 + R(t_{k+1})\end{align}}$$
+
+                        <p>
+                            Where $R(t_{k+1})$ is the contribution of tree $t_{k+1}$ to our regularization term.
+                        </p>
+                        
+                        <h4>Example of Quadratic Approximation: Exponential Loss</h4>
+
+                        <p>
+                            Let's work through an example of the math shown above using the exponential loss function
+                        </p>
+
+                        $$\small{\mathscr{L}(f(\textbf{x}_i), y_i) = \exp(-y_i f(\textbf{x}_i)).}$$
+
+                        <p>
+                            Replacing $f(\textbf{x}_i)$ with $f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i)$, we geT
+                        </p>
+
+                        $$\small{\begin{align}\mathscr{L}(f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i), y_i) &= \exp(-y_i (f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i))) \\
+                                                                                              &= \exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i))\end{align}}$$
+
+                        <p>
+                            Before getting the Taylor series expansion, let's first compute the first and second derivatives of $\mathscr{L}$. The first derivative is given by
+                        </p>
+
+                        $$\small{\begin{align} 
+                            \frac{d}{dt_{k+1}}\mathscr{L}(f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i), y_i) &= \exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i)) \\
+                             &= -y_i\exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i)) \\
+                        \end{align}}$$
+
+                        <p>
+                            Evaluating this derivative at $t_{k+1}(\textbf{x}_i) = 0$, we get
+                        </p>
+
+                        $$\small{\begin{align} 
+                            -y_i\exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i))|_{t_{k+1}(\textbf{x}_i) = 0} &=   -y_i\exp(-y_i f_k(\textbf{x}_i) -y_i (0))\\
+                             &= -y_i\exp(-y_i f_k(\textbf{x}_i)) \\\end{align}}$$
+
+                        
+                        <p>
+                            Similarly, taking the second derivative of $\mathscr{L}$, we get
+                        </p>
+
+                        $$\small{\begin{align} 
+                            \frac{d^2}{dt_{k+1}^2}\mathscr{L}(f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i), y_i) &= \frac{d}{dt_{k+1}}(-y_i\exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i))) \\
+                             &= y_i^2\exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i)) \\
+                        \end{align}}$$
+
+                        <p>
+                            Evaluating this derivative at $t_{k+1}(\textbf{x}_i) = 0$, we get
+                        </p>
+
+                        $$\small{\begin{align} 
+                            y_i^2\exp(-y_i f_k(\textbf{x}_i) -y_i t_{k+1}(\textbf{x}_i))|_{t_{k+1}(\textbf{x}_i) = 0} &=   y_i^2\exp(-y_i f_k(\textbf{x}_i) -y_i (0))\\
+                             &= y_i^2\exp(-y_i f_k(\textbf{x}_i)) \\\end{align}}$$
+
+                        <p>
+                            We can now easily express our quadratic approximation of $\mathscr{L}$ as
+                        </p>
+
+                        $$\small{\begin{align}
+                                \widetilde{T}(t_{k+1}) = \sum_{i=1}^{N}&-y_i\exp(-y_i f_k(\textbf{x}_i))\cdot(t_{k+1}(\textbf{x}_i))^1 \\
+                                &+\frac{y_i^2\exp(-y_i f_k(\textbf{x}_i))}{2!}\cdot(t_{k+1}(\textbf{x}_i))^2 + R(t_{k+1})
+                        \end{align}}$$
+
+                        <h4>Writing this in Terms of Tree Leaves</h4>
+
+                        <p>
+                            Now, we want to write this in terms of the leaves of the tree. Let's define a few functions real quick.
+                            Let $q:\mathbb{R}^d\to L$ be a function that maps a point $\textbf{x}_i$ to the leaf $L$ that it falls into, and 
+                            let $\textbf{w}:L\to\mathbb{R}$ be a function that maps a leaf $L$ to a weight $w$.
+                            With these new functions, we can write $t_{k+1}(\textbf{x}_i)$ as $\textbf{w}(q(\textbf{x}_i))$.
+                        </p>
+
+                        <p>
+                            Now, we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                        </p>
+
+                        $$\small{\begin{align}
+                                \widetilde{T}(t_{k+1}(\textbf{x}_i)) = \sum_{i=1}^{N}&\mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\cdot w(q(\textbf{x}_i))^1 \\
+                                &+\frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}\cdot w(q(\textbf{x}_i))^2 + R(t_{k+1})\end{align}}$$
+
+                        <p>
+                            For each of our leaves $\ell \in L$, we can define the set $I_{\ell} = \{i \;|\; q(\textbf{x}_i = \ell)\}$ be the set indices $i$ where $\textbf{x}_i$ falls into leaf $\ell$ in tree $t_{k+1}$.
+                            We can now rewrite our quadratic approximation of $\mathscr{T}$ as
+                        </p>
+
+                        $$\small{\begin{align}
+                                    \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{i}^{N} \left[\mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\cdot w(q(\textbf{x}_i))^1
+                        + \frac{1}{2}\mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i)\cdot w(q(\textbf{x}_i))^2\right] + \gamma|L| + \frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2 \\
+                          \end{align}}$$
+
+                        <p>
+                            This can "simply", however, into
+                        </p>
+
+                        $$\small{\begin{align}
+                                    \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L} \left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\right)w_{\ell}
+                        + \frac{1}{2}\sum_{\ell\in L}\left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i)\right)w_{\ell}^2 + \gamma|L| + \frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2
+                            \end{align}}$$
+                        
+                        <p>
+                            This is because we can group the terms by leaf $\ell$ and then sum over all the leaves. But, if 
+                            we look at the terms inside the parentheses, only one term is dependent on $i$ and the other is not. This means we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                        </p>
+
+                        $$\small{\begin{align}
+                                    \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L}w_{\ell} \left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\right)
+                        + \frac{1}{2}\sum_{\ell\in L}w_{\ell}^2\left(\sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i)\right) + \gamma|L| + \frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2
+                            \end{align}}$$
+
+                        <p>
+                            If we let $$F_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime}(\hat{y}_i^k, y_i)$$ and $$S_{\ell} = \sum_{i\in I_{\ell}} \mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i),$$ we can rewrite our quadratic approximation of $\mathscr{T}$ as
+                        </p>
+
+                        $$\small{\begin{align}
+                                    \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L}\left(w_{\ell} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda)w_{\ell}^2\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left(w_{\ell} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda)w_{\ell}^2 + \gamma\right)
+                            \end{align}}$$
+                        
+                        <h4>Finding the Optimal Weights and Objective</h4>
+
+                        <p>
+                            With this notation down, we now seek to find the optimal weights $\textbf{w}^*$ that minimize our quadratic approximation of $\mathscr{T}$ derived above.
+                            We will do this by utilizing the most simple minimization technique: taking the derivative and setting it equal to zero.
+                        </p>
+
+                        <p>
+                            Taking $$ \small{\widetilde{T}(t_{k+1}(\textbf{x}_i)) = \sum_{\ell\in L}\left(w_{\ell} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda)w_{\ell}^2\right) + \gamma|L|}$$
+                            and taking the derivative with respect to $w_{\ell}$, we get
+
+                            $$\small{\begin{align}
+                                \frac{d}{dw_{\ell}}(\widetilde{T}(t_{k+1}(\textbf{x}_i))) &= \frac{d}{dw_{\ell}}\left(\sum_{\ell\in L}\left(w_{\ell} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda)w_{\ell}^2\right) + \gamma|L|\right) \\
+                                                                                          &= F_{\ell} + (H_{\ell} + \lambda)w_{\ell} \\
+                              \end{align}} $$
+
+                            Setting this equal to zero and solving for $w_{\ell}$, we get
+
+                            $$\small{\begin{align}
+                                F_{\ell} + (H_{\ell} + \lambda)w_{\ell} &= 0 \\
+                                (H_{\ell} + \lambda)w_{\ell} &= -F_{\ell} \\
+                                w_{\ell} &= \frac{-F_{\ell}}{H_{\ell} + \lambda} \\
+                              \end{align}} $$
+
+                            This gives us that our optimal weights are given by
+
+                            $$\small{w_{\ell}^* = \frac{-F_{\ell}}{H_{\ell} + \lambda}}.$$
+
+                            Now, we can plug this back into our quadratic approximation of $\mathscr{T}$ to get
+
+                            $$\small{\begin{align}
+                                \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L}\left({\color{red}w_{\ell}} F_{\ell} + \frac{1}{2}(H_{\ell} + \lambda){\color{red}w_{\ell}}^2\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left({\color{red}\frac{-F_{\ell}^2}{H_{\ell} + \lambda}} + \frac{1}{2}(H_{\ell} + \lambda)\left({\color{red}\frac{-F_{\ell}}{H_{\ell} + \lambda}}\right)^2\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left(\frac{-F_{\ell}^2}{H_{\ell} + \lambda} + \frac{1}{2}\cancel{(H_{\ell} + \lambda)}\frac{F_{\ell}^2}{(H_{\ell} + \lambda)^{\cancel{2}}}\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left(\frac{-F_{\ell}^2}{H_{\ell} + \lambda} + \frac{1}{2}\frac{F_{\ell}^2}{H_{\ell} + \lambda}\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left(\frac{-F_{\ell}^2}{2(H_{\ell} + \lambda)}\right) + \gamma|L| \\
+                                                                         &= \sum_{\ell\in L}\left(\gamma - \frac{F_{\ell}^2}{2(H_{\ell} + \lambda)}\right) \\
+                                                                            \end{align}}$$
+                        
+                            Where the last step comes because  $$\sum_{\ell\in L}\gamma = \gamma|L|. $$                                              
+                        </p>
+
+                        <p>
+                            Thus our optimal weights are given by $$\small{w_{\ell}^* = \frac{-F_{\ell}}{H_{\ell} + \lambda}}$$ and our optimal tree is given by
+
+                            $$\small{\begin{align}
+                                \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{\ell\in L}\left(\gamma - \frac{F_{\ell}^2}{2(H_{\ell} + \lambda)}\right) \\
+                                                                            \end{align}}.$$
+                        </p>
+
+                        <p>
+                            Another interesting thing about this optimal tree is we can see how much each leaf $\ell\in L$ contributes to our objective! It is simply the term
+                            inside the summation, $$\gamma - \frac{F_{\ell}^2}{2(H_{\ell} + \lambda)}.$$ This is important because it allows us to see not only which leaves are contributing the most to our objective function,
+                            but also what the cost of splitting a leaf is.
+                        </p>
+
+                        <p>
+                            If we were to split leaf $\ell$, we would have to add two new leaves to our tree. This results in 
+
+                            $$\small{2\gamma - \frac{1}{2}\left(\frac{F_{\ell_+}^2}{H_{\ell_+} + \lambda} + \frac{F_{\ell_-}^2}{H_{\ell_-} + \lambda}  \right)}.$$
+
+                            However, our old leaf does not contribute to the objective anymore, so we subtract that out, resulting in our total cost of splitting leaf $\ell$ as
+
+                            $$\small{\gamma - \frac{1}{2}\left(\frac{F_{\ell_+}^2}{H_{\ell_+} + \lambda} + \frac{F_{\ell_-}^2}{H_{\ell_-} + \lambda} - \frac{F_{\ell}^2}{H_{\ell}+\lambda}  \right)}.$$
+                        </p>
+
+                        <p>
+                            When building our trees in XGBoost, instead of using a cost function such as the Gini index or entropy, we instead us the above cost function!
+                            This cost function has several benefits. Firstly, it will give much faster convergence than gradient descent without using the Hessian (which is a <b>huge</b> plus),
+                            regularization is built into the cost function which reduces overfitting!
+                        </p>
+
+                        <p>
+                            Now that we have a better grip behind the math of XGBoost, let's go through an exmaple implementing XGBoost in Python and compare it to random forests and normal gradient boosting!
+                        </p>
+
+                        <h4>Python Example</h4>
+
+                        <p>
+                            For this example, we will be using the same dataset that we used in my blog post about <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosting</a>,
+                            the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_olivetti_faces.html#sklearn.datasets.fetch_olivetti_faces" target="_blank" rel="noopener noreferrer">Olivetti Faces data</a>.
+                            Let's start off by importing XGBoost and this dataset.
+                        </p>
+
+<pre><code class="language-python">import xgboost as xgb
+from sklearn.datasets import fetch_olivetti_faces</code></pre>
+
+                        <p>
+                            Now, let's load in the data and split it into training and testing sets.
+                        </p>
+
+<pre><code class="language-python"># Import train test split
+from sklearn.model_selection import train_test_split
+
+# Load in the data
+faces_X, faces_y = fetch_olivetti_faces(return_X_y=True, shuffle=True, random_state=1)
+
+# Perform train test split
+X_train, X_test, y_train, y_test = train_test_split(faces_X, faces_y, test_size=0.20, random_state=1)</code></pre>
+
+                        <p>
+                            Now, let's create our XGBoost model. We will use the <code>xgb.XGBClassifier()</code> class to create our model.
+                            We will use the default parameters, but do specify <code>objective="multi:softmax"</code> (because this
+                            is a multiclass classification problem).
+                        </p>
+
+<pre><code class="language-python"># Create the model
+xgb_classifier = xgb.XGBClassifier(objective="multi:softmax", random_state=1)</code></pre>
+
+                        <p>
+                            Just like we did in the <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosting</a> article,
+                            we will fit our model, timing how long it takes to train.
+                        </p>
+
+<pre><code class="language-python">%%timeit
+xgb_classifier.fit(X_train, y_train)
+>>> 15.1 s ± 708 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)</code></pre>
+
+                        <p>
+                            We see it took 2 minutes and 1.1 seconds. Now, we will evaluate our model on the test set.
+                        </p>
+
+<pre><code class="language-python"># Evaluate the model
+xgb_classifier.score(X_test, y_test)
+>>> 0.7625</code></pre>
+
+                        <p>
+                            Looking at a table comparing the results of XGBoost, gradient boosting, and random forests, we have
+                        </p>
+
+                        <table>
+                            <tr>
+                                <th>Model</th>
+                                <th>Time to Train</th>
+                                <th>Accuracy</th>
+                            </tr>
+                            <tr>
+                                <td>XGBoost</td>
+                                <td>2 minutes, 1.1 seconds</td>
+                                <td>76.25%</td>
+                            </tr>
+                            <tr>
+                                <td>Gradient Boosting</td>
+                                <td>88 minutes, 12 seconds</td>
+                                <td>53.75%</td>
+                            </tr>
+                            <tr>
+                                <td>Random Forests</td>
+                                <td>10.9 seconds</td>
+                                <td>91.25%</td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Clearly Random Forests is the best option, which is a bit of a surprise! This is not always the case.
+                        </p>
+
+                        <p>
+                            In a previous project I participated in where we tried to <a href="https://github.com/jeffxhansen/NYC_Taxi_Trip_Duration/blob/main/NYC%20Taxi%20Duration%20Prediction.ipynb" target="_blank" rel="noopener noreferrer">predict taxi duration times</a>, 
+                            we found that XGBoost was the best model and random forests was second best. Thus, it is important to try different models and different model parameters
+                            to find the best model for your data!
+                        </p>
+
+
+                        <h4>Conclusion</h4>
+                        <p>
+                            In this article, we went deep into the math behind newton boosted trees, the backbone of XGBoost. We discussed how to find
+                            the optimal cost function for our trees without the Hessian, and how avoiding overfitting is built into the cost function.
+                            We then went through an example of implementing XGBoost in Python and compared it to gradient boosting and random forests.
+                            I hope that through this article, you now understand XGBoost especially why it is so successful (which most people don't)!
+                            If you want to see the code used in this article, you can find it
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/xgboost/xgboost.ipynb" target="_blank" rel="noopener noreferrer">Github</a>.
+                            I hope that you choose to try out XGBoost in your next project!
+                        </p>
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
