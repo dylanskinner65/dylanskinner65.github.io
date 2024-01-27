@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Kernel Density Estimation</title>
+    <meta name="description" content="Kernel Density Estimators (KDEs) are statistical tools used for 
+                                      estimating the probability density function (PDF) of a continuous 
+                                      random variable. They provide a smooth, non-parametric representation 
+                                      of the underlying distribution of data by placing a kernel (smooth, symmetric function)
+                                    at each data point and summing up these kernels to form a continuous probability density 
+                                    estimate. KDEs are particularly useful in exploratory data analysis and visualizing the 
+                                    distribution of data without making assumptions about the underlying parametric form.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-02-07">07 February 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/gradient_boosting.html">Kernel Density Estimation</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Must is a hard nut to crack, but it has a sweet kernel."</blockquote>
+                        <p>- Charles Spurgeon</p>
+
+                        <p>
+                           In the realm of statistics and data analysis, understanding the distribution of data is paramount. This is where
+                           kernel density estimators (KDEs) come into play! Unlike traditional parametric methods that make assumptions about 
+                           the shape of the underlying distribution, KDEs offer a flexible and non-parametric approach to estimating probability density functions.
+                           KDEs allow you to transform a scattered set of data points into a smooth, continuous curve, revealing the inherent structure and tendencies of your dataset.
+                           In this blog post, we delve into the world of KDEs, exploring their principles, applications, and the invaluable insights they offer in uncovering the inherent nature of data.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_boosting/agif13.gif" alt="Vector field fun." width="90%" height="90%">
+                            <figcaption text-align=center>Gif acquired from <a href="https://necessarydisorder.wordpress.com/2017/09/04/animated-gifs-from-vector-fields-as-force-fields/">necessary-disorder tutorials</a>. 
+                                Vector fields are a great way to visualize gradients, but I mainly just think this gif is cool.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            The Math Behind Histograms
+                        </h4>
+
+                        <p>
+                            Before getting into KDEs, it's important to first understand histograms and the math behind them.
+                        </p>
+
+                        <p>
+                            Let's say we have a set of data $\mathbb{D} = \{x_1, \dots, x_N\}$ that we want to visualize. These data points 
+                            are drawn from some unknown probability distribution $X$ with probability density function (PDF) $f_X(x)$. We want a way
+                            to both visualize and estimate $f_X(x)$ from our data $\mathbb{D}$. We can do this by creating a histogram of the data.
+                        </p>
+
+                        <p>
+                            To build a histogram we need a couple things. If we know that our data lives in some interval $I=[a,b]$. We can define the
+                            <em>bin width</em> of the histogram to be $h = \frac{b-a}{m}$, where $m\in\mathbb{Z}^+$ is the number of bins we want in our histogram
+                            (some positive integer). The bin width is exactly what it sounds like it should be: the width of each bin in the histogram. We can now
+                            use this bin width to mathematically define the bins in our histogram.
+                        </p>
+
+                        <p>
+                            We can define the $i$th bin in our histogram to be the interval
+
+                            $$B_i = (a + (i-1)h, a+ih].$$
+
+                            Thus, we can get the starting and ending locations of each bin! Now, we need to figure out how many data points fall into each bin. More specifically
+                            we want to find the percentage of points that fall into each bin.
+                        </p>
+
+                        <p>
+                            We can do this by simply getting the average number of points that fall into each bin, defined as 
+
+                            $$\widehat{p}_i = \frac{1}{n}\sum_{m=1}^{n}\Bbb{I}_{B_i}(x_m)$$
+
+                            where $\mathbb{I}$ is the indicator function.
+                        </p>
+
+                        <p>
+                            With all of this, we can now define our histogram to be the function
+
+                            $$ \widehat{f}_n(x) = \sum_{i=1}^m \widehat{p}_i\mathbb{I}_{B_i}(x).$$
+
+                            How fun! I bet you've never thought about histograms this way before!
+                        </p>
+
+                        <p>
+                            One of the main problems with histograms is that they are very sensitive to the bin width $h$. If $h$ is too small, then the histogram will be very
+                            noisy and will not give us a good idea of the underlying distribution. If $h$ is too large, then the histogram will be too smooth and will <em>also</em> not give us
+                            a good idea of the underlying distribution. So, how do we choose the right bin width? One method is by using the <em>Freedman-Diaconis rule</em> which is
+                            defined as
+
+                            $$ \text{Bin Width} = 2\frac{\text{IQR}(x)}{\sqrt[3]{n}}$$
+
+                            where IQR$(x)$ is the interquartile range of the data $x$ and $n$ is the number of points in our data set.
+
+                            Let's go ahead and visualize this idea!
+                        </p>
+
+                        <p>
+                            Let's start off by generating some data. We will generate data that represents a trimodal distribution. We can do
+                            this by generating data sets three normal distributions with different means and concatenate them together.
+                        </p>
+
+<pre><code class="language-python">import numpy as np
+np.random.seed(70)  # For reproducibility
+x1 = np.random.normal(1, 1.11, 400) + np.random.beta(2, 5, 400)
+x2 = np.random.normal(10, .5, 400)
+x3 = np.random.normal(5, 1, 400)
+x = np.concatenate((x1, x2, x3))</code></pre>
+
+                        <p>
+                            Before plotting this data, let's first calculate the optimal bin width using the Freedman-Diaconis rule.
+                        </p>
+
+<pre><code class="language-python"># Get optimal binwidth
+opt_bins = 2 * (np.quantile(x, .75) - np.quantile(x, .25))/np.cbrt(len(x))
+opt_bins
+>>> 1.4303876051024769</code></pre>
+
+                        <p>
+                            Now that we have our optimal bin width, we can now calculate the optimal number of bins to use.
+                        </p>
+
+<pre><code class="language-python"># Get optimal number of bins
+opt_bins = round(max(x) - min(x)/int(opt_bin_width))
+opt_bins
+>>> 14</code></pre>
+
+                        <p>
+                            So we know that our optimal number of bins is 14! Let's plot our histogram with a various number of bins
+                            (including 14) and see how that impacts our graphs!
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/bincomparison.png" alt="Histograms with various bin widths." width="90%" height="90%">
+
+                        <p>
+                            As you can see, there is a fine line between having too many and too few bins. Ultimately, the number of bins you choose
+                            is up to you and what you are trying to visualize. However, the Freedman-Diaconis rule is a great place to start!
+                        </p>
+
+
+                        <h4>Kernel Density Estimators</h4>
+
+                        <p>
+                            Histograms are great, but there are some inherent problems with them, with the most obvious being that they are discontinuous.
+                            This is a problem because the underlying data is, more than likely, continuous. Additionally, if we do not know the underlying distribution
+                            of the data, histograms do not give us any information about that distribution in a continuous sense. This is where kernel density estimators
+                            come into play! Let's first start off by defining what a kernel is.
+                        </p>
+
+                        <p>
+                            A nonnegative, integrable function $K:\mathbb{R}\to[0,\infty)$ is called a <em>kernel</em> if
+                            
+                            <ol type="i">
+                                <li>$\int_{\mathbb{R}}K(x)dx = 1$</li>
+                                <li>$\int_{\mathbb{R}}x K(x)dx = 0$</li>
+                                <li>$\int_{\mathbb{R}} x^2 K(x)dx > 0$.</li>
+                            </ol>
+
+                            All this is saying is that the area under the curve of the kernel is equal to 1 (it is a proper pdf), 
+                            the mean of the kernel is 0, and the variance of the kernel is positive! It is important to note that
+                            any pdf that has mean 0 and positive variance is kernel. But, not every kernel is continuous!
+                        </p>
+
+                        <p>
+                            There are four main kernels that are used in practice: the uniform kernel, the triangular kernel, the Epanechnikov kernel, and the Gaussian kernel.
+                        </p>
+
+                        <p>
+                            The uniform kernel is given by
+
+                            $$K(x) = \frac{1}{2}\mathbb{I}_{[-1,1]}(x),$$
+
+                            the triangular kernel is given by
+
+                            $$K(x) = (1-|x|)\mathbb{I}_{[-1,1]}(x),$$
+
+                            the Epanechnikov kernel is given by
+
+                            $$K(x) = \frac{3}{4}(1-x^2)\mathbb{I}_{[-1,1]}(x),$$
+
+                            and the Gaussian kernel is given by
+
+                            $$K(x) = \frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}.$$
+
+                            (Note that the Gaussian kernel is simply the pdf of the standard normal distribution with mean $\mu=0$ and variance $\sigma^2=1$.)
+                        </p>
+
+                        <p>
+                            Unlike histograms, KDEs are more focused on <em>bandwidth</em> instead of bin width. The bandwidth $h$ is the width of the kernel that is placed at each data point.
+                            So the smaller $h$ is, the more narrow the kernels are and the more "spiky" the KDE is. The larger $h$ is, the wider the kernels are and the more "smooth" the KDE is.
+                            There is no "optimal" bandwidth, but there are some rules of thumb that can be used to choose a bandwidth, two of which are
+                            Scott's rule and Silverman's rule. Scott's rule is given by
+
+                            $$h = \left(\frac{6\sigma}{n}\right)^{\frac{1}{5}}$$
+
+                            where $\sigma$ is the sample standard deviation of the data. Silverman's rule is given by
+
+                            $$h = \left(\frac{4\sigma}{3n}\right)^{\frac{1}{5}}.$$
+
+                            Another method for choosing a bandwidth is simply by trial and error.
+                        </p>
+
+                        <p>
+                            Now, kernels and bandwidth are essentially useless without the KDE itself, so let's define that!
+
+                            Let $\mathbb{D} = \{x_1, \dots, x_n\}$ be a set of data points drawn from some unknown distribution $X$ with pdf $f_X(x)$.
+                            Let $K(x)$ be our chosen kernel and $h$ be our chosen bandwidth. Then, the kernel density estimator $\widehat{f}_n(x)$ is defined as
+
+                            $$\widehat{f}_n(x) = \frac{1}{nh}\sum_{i=1}^n K\left(\frac{x-x_i}{h}\right).$$
+
+                            Let's go ahead and define and visualize this in Python!
+                        </p>
+
+                        <h1>KDEs in Python</h1>
+
+                        <p>
+                            Let's start off by defining the kernels we will be using.
+                        </p>
+
+<pre><code class="language-python"># Define the four kernels discussed
+uniform = np.vectorize(lambda x: 0.5 * np.where(np.abs(x) <= 1, 1, 0))
+triangular = np.vectorize(lambda x: (1 - np.abs(x))*np.where(-1 <= x <= 1, 1, 0))
+epanechnikov = np.vectorize(lambda x: (3/4)*(1 - x**2)*np.where(-1 <= x <= 1, 1, 0))
+gaussian = np.vectorize(lambda x: (1/np.sqrt(2*np.pi))*np.exp(-0.5*x**2))</code></pre>
+
+                        <p>
+                            Plotting these, we get
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/kernels.png" alt="The four kernels discussed." width="90%" height="90%">
+
+                        <p>
+                            Now, let's define the KDE function.
+                        </p>
+
+<pre><code class="language-python"># Define the KDE function with the custom kernel
+def kde(x, data, h, kernel):
+    """
+    Compute the Kernel Density Estimate (KDE) at one or multiple points.
+
+    Parameters:
+    - x (float or array-like): The point(s) at which to estimate the KDE.
+    - data (array-like): The dataset used for the KDE estimation.
+    - h (float): The bandwidth, controlling the smoothness of the estimate.
+    - kernel (function): The kernel function used for weighting data points.
+
+    Returns:
+    - float or array-like: The KDE estimate(s) at the specified point(s).
+    """
+    # If we are estimate the value of a single point
+    if np.isscalar(x):
+        return np.sum(kernel((x - data) / h)) / (len(data) * h)
+    # If we are estimating the value of multiple points
+    else:
+        return [np.sum(kernel((xi - data) / h), axis=0) / (len(data) * h) for xi in x]</code></pre>
+
+                        <p>
+                            Now that we have all the necessary functions defined, let's go ahead and plot our KDEs!
+                            Let's plot these KDEs with a bandwidth of 0.1, 0.5, 1.5, and 3.0 for each of the four kernels, starting with the uniform kernel.
+                            
+                            (For reference, he is the code we used to generate the plots below. The code is the same for each kernel
+                            except for the kernel function used.)
+                        </p>
+
+<pre><code class="language-python"># Define initial variables
+bandwidths = [0.1, 0.5, 1.5, 3.0]
+x_vals = np.linspace(min(x), max(x), 1200)
+
+# Plot the unform kernel KDE
+fig, ax = plt.subplots(2, 2, figsize=(16, 10), dpi=100)
+for bw in bandwidths:
+    ax[bandwidths.index(bw) // 2][bandwidths.index(bw) % 2].plot(x_vals, kde(x_vals, x, bw, uniform), 'b', linewidth=2)
+    ax[bandwidths.index(bw) // 2][bandwidths.index(bw) % 2].hist(x, bins=14, color='c', edgecolor='black', linewidth=1.2, density=True)
+    ax[bandwidths.index(bw) // 2][bandwidths.index(bw) % 2].set_title(f'Bandwidth={bw}')
+
+plt.suptitle('Uniform Kernel', fontsize=16)
+plt.tight_layout()
+plt.show()</code></pre>
+
+                        <p>
+                            Plotting the uniform kernel for our generated data, we get
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/uniform_kernel.png" alt="KDEs with the uniform kernel." width="95%" height="95%">
+
+                        <p>
+                            Now, let's plot the triangular kernel. We get
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/triangular_kernel.png" alt="KDEs with the triangular kernel." width="95%" height="95%">
+
+                        <p>
+                            Moving onto the Epanechnikov kernel, we get
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/epanechnikov_kernel.png" alt="KDEs with the Epanechnikov kernel." width="95%" height="95%">
+
+                        <p>
+                            Finally, let's plot the Gaussian kernel. We get
+                        </p>
+
+                        <img src="blog_files/kernel_density_estimation/gaussian_kernel.png" alt="KDEs with the Gaussian kernel." width="95%" height="95%">
+
+                        <p>
+                            As you can see, the KDEs are very sensitive to the bandwidth, but are not really all that sensitive to the kernel used.
+                            Sure, there are differences between the kernels at the various bandwidths, but buy-and-large they are all very similar.
+                            Thus, when creating a KDE, it is more important to focus on the bandwidth than the kernel used.
+                        </p>
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            Congratulations! You've successfully ventured into the realm of kernel density estimators (KDEs). 
+                            Now, let's explore how to leverage the power of KDEs in your data analysis journey. KDEs offer a 
+                            flexible and non-parametric approach to estimate probability density functions, allowing you to 
+                            uncover the inherent structure and tendencies of your dataset in a smooth, continuous manner.
+
+                            In addition to coding up your own KDEs, there are many Python packages that offer KDE functionality,
+                            one of which is Seaborn (you can learn about that <a href="https://seaborn.pydata.org/generated/seaborn.kdeplot.html" target="_blank" rel="noopener noreferrer">here</a>).
+                            Additionally, all code used in this blog post (including creating the plots) can be found 
+                            on my <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/kernel_density_estimation/kde.ipynb" target="_blank" rel="noopener noreferrer">Github</a>
+                        </p>
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
