@@ -112,6 +112,12 @@
                             and <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosting</a>. If you are unfamiliar with these topics, I recommend reading those blog posts first.
                         </p>
 
+                        <p>
+                            Additionally, this blog post is <b>very</b> math heavy. If you are more interested in the implementation
+                            of XGBoost and seeing how it compares against random forests and gradient boosted trees, I would
+                            recommend skipping to the <a href="#python-example">Python Example</a> section.
+                        </p>
+
                         <figure>
                             <img src="blog_files/xgboost/XGBoost_logo.png" alt="XGBoost logo." width="90%" height="90%">
                             <figcaption text-align=center></figcaption>
@@ -177,6 +183,11 @@
                         </p>
 
                         <p>
+                            You might also be asking yourself, 'why are we using the second order Taylor series expansion instead of any other order'. That is a valid question!
+                            Ultimately, it comes down to the second order expansion seems to work well and is not too computationally expensive!
+                        </p>
+
+                        <p>
                             Since we are minimizing this objective function, we do not care about any constant terms, so we can drop them. This leaves us with
                         </p>
 
@@ -194,11 +205,16 @@
                             in points $\textbf{x}_1, \dots, \textbf{x}_N$ and outputs the values $t_{k+1}(\textbf{x}_1), \dots, t_{k+1}(\textbf{x}_N)$ and now try to minimize
                         </p>
 
-                        $$\small{\begin{align}\widetilde{T} &= \sum_{i}^{N} \mathscr{L}^{\prime}(\hat{y}_i^k + 0, y_i)\cdot(t_{k+1}(\textbf{x}_i))^1
-                        + \frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}\cdot(t_{k+1}(\textbf{x}_i))^2 + R(t_{k+1})\end{align}}$$
+                        $$\small{\begin{align}\widetilde{T} = \left[\sum_{i}^{N} \mathscr{L}^{\prime}(\hat{y}_i^k + 0, y_i)\cdot(t_{k+1}(\textbf{x}_i))^1
+                        + \frac{\mathscr{L}^{\prime\prime}(\hat{y}_i^k + 0, y_i)}{2!}\cdot(t_{k+1}(\textbf{x}_i))^2\right] + R(t_{k+1})\end{align}}$$
 
                         <p>
                             Where $R(t_{k+1})$ is the contribution of tree $t_{k+1}$ to our regularization term.
+                        </p>
+
+                        <p>
+                            Note, the summation occurs simply because we are doing this for each data point in our dataset. The only jump we made from the previous equation
+                            to this one is the inclusion of more data points. The previous equation is what we are minimizing for one data point, while this equation is what we are minimizing for all data points!
                         </p>
                         
                         <h4>Example of Quadratic Approximation: Exponential Loss</h4>
@@ -208,6 +224,10 @@
                         </p>
 
                         $$\small{\mathscr{L}(f(\textbf{x}_i), y_i) = \exp(-y_i f(\textbf{x}_i)).}$$
+
+                        <p>
+                            (We will be evaluating each derivative at $0$, so keep that in mind!)
+                        </p>
 
                         <p>
                             Replacing $f(\textbf{x}_i)$ with $f_k(\textbf{x}_i) + t_{k+1}(\textbf{x}_i)$, we get
@@ -286,6 +306,11 @@
                                     \widetilde{T}(t_{k+1}(\textbf{x}_i)) &= \sum_{i}^{N} \left[\mathscr{L}^{\prime}(\hat{y}_i^k, y_i)\cdot w(q(\textbf{x}_i))^1
                         + \frac{1}{2}\mathscr{L}^{\prime\prime}(\hat{y}_i^k, y_i)\cdot w(q(\textbf{x}_i))^2\right] + \gamma|L| + \frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2 \\
                           \end{align}}$$
+
+                        <p>
+                            Where the last two terms come from the regularization term $R(t_{k+1})$. The first term, $\gamma|L|$, is the cost of adding a new leaf to our tree.
+                            The second term, $\frac{1}{2}\lambda\sum_{\ell\in L}w_{\ell}^2$, is the cost of the weights of our tree. Note, $\gamma$ and $\lambda$ are hyperparameters that control the strength of regularization.
+                        </p>
 
                         <p>
                             This can "simplify", however, into
@@ -390,6 +415,21 @@
                         <p>
                             Now that we have a better grip behind the math of XGBoost, let's go through an exmaple implementing XGBoost in Python and compare it to random forests and normal gradient boosting!
                         </p>
+
+                        <h4>Comparing the Cost Functions of XGBoost, Random Forests, and Gradient Boosted Trees</h4>
+
+                        <p>
+                            Before getting into our python example, let's first look at the cost functions of XGBoost, random forests, and gradient boosted trees.
+
+                            Recall from my blog post about <a href="https://dylanskinner65.github.io/blog/decision_trees#gini_index" target="_blank" rel="noopener noreferrer">decision trees</a> that one way
+                            to build our trees is to use the Gini index as our cost function. The Gini index is a good cost function for building random forests and is given by
+
+                            $$ G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\mathscr{Y}}\left(\frac{1}{N_{\ell}}\sum_{(\mathbf{x}_i, y_i)\in\mathbb{D}_{\ell}}\mathbb{I}_{(y_i=c)}\right)^2$$
+                        </p>
+
+                        <a id="python-example"></a>
+
+
 
                         <h4>Python Example</h4>
 
@@ -538,5 +578,38 @@ xgb_classifier.score(X_test, y_test)
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
 <script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Get all links with the hash (#) symbol
+      var links = document.querySelectorAll('a[href^="#"]');
+  
+      // Add a click event listener to each link
+      links.forEach(function (link) {
+        link.addEventListener("click", function (e) {
+          // Prevent the default behavior of jumping to the target
+          e.preventDefault();
+  
+          // Get the target element's ID from the href attribute
+          var targetId = this.getAttribute("href").substring(1);
+  
+          // Find the target element
+          var targetElement = document.getElementById(targetId);
+  
+          if (targetElement) {
+            // Calculate the distance to scroll
+            var offset = targetElement.offsetTop;
+  
+            // Use the smooth scroll behavior
+            window.scrollTo({
+              top: offset,
+              behavior: "smooth",
+            });
+          }
+        });
+      });
+    });
+  </script>
+  
 
 </html>
