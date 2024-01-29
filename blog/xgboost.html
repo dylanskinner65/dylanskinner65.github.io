@@ -421,10 +421,28 @@
                         <p>
                             Before getting into our python example, let's first look at the cost functions of XGBoost, random forests, and gradient boosted trees.
 
-                            Recall from my blog post about <a href="https://dylanskinner65.github.io/blog/decision_trees.html#gini_index" target="_blank" rel="noopener noreferrer">decision trees</a> that one way
+                            Recall from my blog post about <a href="https://dylanskinner65.github.io/blog/decision_trees.html" target="_blank" rel="noopener noreferrer">decision trees</a> that one way
                             to build our trees is to use the Gini index as our cost function. The Gini index is a good cost function for building random forests and is given by
 
                             $$ G_{\mathbb{D}_{\ell}} = 1 - \sum_{c\in\mathscr{Y}}\left(\frac{1}{N_{\ell}}\sum_{(\mathbf{x}_i, y_i)\in\mathbb{D}_{\ell}}\mathbb{I}_{(y_i=c)}\right)^2$$
+                        </p>
+
+                        <p>
+                            Now, the cost function for gradient boosted trees is given by
+
+                            $$f^* \approx \text{argmin}_{f\in\mathscr{F}}T(f) = \text{argmin}_{f\in\mathscr{F}}\frac{1}{N}\sum_{i=1}^{N}\mathscr{L}(f(\textbf{x}_i), y_i),$$
+
+                            where we can iteratively find our next tree by
+
+                            $$f_{k+1} = f_k - \alpha_k DT(f_k)^T.$$
+
+                            Where $DT(f_k)^T$ is the gradient of the loss function $\mathscr{L}$ evaluated at $f_k$ and $\alpha_k$ is the learning rate. (For more information, check out
+                            my blog post about <a href="https://dylanskinner65.github.io/blog/gradient_boosting.html" target="_blank" rel="noopener noreferrer">gradient boosted trees</a>).
+
+                            And of course, the cost function for XGBoost is given by
+
+                            $$\widetilde{T}(t_{k+1}(\textbf{x}_i)) = \sum_{\ell\in L}\left(\gamma - \frac{F_{\ell}^2}{2(H_{\ell} + \lambda)}\right).$$
+
                         </p>
 
                         <a id="python-example"></a>
