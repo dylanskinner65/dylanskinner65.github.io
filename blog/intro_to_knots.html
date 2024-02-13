@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Introduction to Knot Theory: Knots, Isotopies, and Reidemeister's Theorem</title>
+    <meta name="description" content="Knot theory is a branch of topology that studies the properties of mathematical knots. In this blog post, 
+    we will briefly explore the basics of knot theory and define some common terms used in the field. 
+    This blog post is a high level introduction to knot theory that is meant to not only be accessible to a general audience, 
+    but also lays a foundation for more technical topics.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+    <style>
+        /* Style for the list */
+        ol {
+            list-style: none;
+            counter-reset: orderedlist;
+        }
+
+        /* Style for the list items */
+        ol li:before {
+            content: "[" counter(orderedlist) "]";
+            counter-increment: orderedlist;
+            margin-right: 2px; /* Adjust this value to adjust space between the number and text */
+        }
+
+        ol li:hover:before {
+        content: "[" counter(orderedlist) "]";
+        counter-increment: none;
+        }
+    </style>
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-02-14">14 February 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/intro_to_knots.html">Introduction to Knot Theory: Knots, Isotopies, and Reidemeister's Theorem</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"We learn the rope of life by untying its knots."</blockquote>
+                        <p>- Jean Toomer</p>
+
+                        <p>
+                           Knot theory is a branch of topology that studies the properties of mathematical knots.
+                           In this blog post, we will briefly explore the basics of knot theory and define some common terms used in the field.
+                           This blog post is a high level introduction to knot theory that is meant to not only be accessible to a general audience,
+                           but also prepare you for more advanced topics in knot theory that I will cover in subsequent blog posts.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/intro_to_knots/first_knot.gif" alt="Fun knot gif." width="90%" height="90%">
+                            <figcaption text-align=center>A fun knot. Credit to <a href="https://giphy.com/gifs/3d-abstract-math-3oz8xu8AVoL9dShI9G" target="_blank" rel="noopener noreferrer">Clayton Shonkwiler</a>.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Introduction to Knot Theory
+                        </h4>
+
+                        <p>
+                            When a non-mathematician thinks of a knot, they typically think about taking a piece of string and 
+                            tying the two ends together in some specific way. In mathematics, knots are thought of differently. 
+                            Instead of taking a piece of string and tying the two ends together, a mathematical <em>knot</em> can 
+                            be thought of by  taking the two ends of a necklace, tying a knot in the middle of the necklace, and 
+                            then clasping the two ends together. This results in a knotted loop where the only way to untangle 
+                            the knot in the middle of the necklace is to cut the necklace and remove the knot. Put another way, 
+                            a knot is a knotted loop of string except that we think of the string as having no thickness, and 
+                            its cross-section being a single point <a href="#adams">[1]</a>. Similarly, a <em>link</em> is a collection of multiple knots linked together.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/intro_to_knots/Figure1.png" alt="Fun knot gif." width="90%" height="90%">
+                            <figcaption text-align=center><b>Figure 1:</b> Three of the most basic knots that are used. On the left we have the unknot, 
+                                the middle is $3_1$ (the trefoil knot), and the right is $4_{1}$ (the figure 8 knot).</figcaption>
+                        </figure>
+
+                        <p>
+                            An important idea in knot theory is that there is no distinction between any particular configuration of a knot. 
+                            In other words, if you take a knot and deform it in some way without passing it through itself or by cutting 
+                            the string, the resulting knot is thought of as being the same as the original one. But, one problem arises 
+                            from this idea. How can we tell when two different-looking knots are equivalent?
+                        </p>
+
+                        <p>
+                            Before looking at the mathematical equivalence of knots, it is important to understand a few key terms. 
+                            The first is <em>projection</em>. Knots live in three-dimensional space. However, it is often convenient 
+                            to describe them using two-dimensional pictures. These two-dimensional pictures are obtained by projecting 
+                            the three-dimensional knot onto a two-dimensional plane. If you were to take two 'different' projections 
+                            of the same knot to a plane and create a model of one of those projections out of string, you should be 
+                            able to rearrange the string into the second projection without cutting the string. This idea of 
+                            rearranging the string in 3-dimensional space is something knot theorists call an <em>ambient isotopy</em>. 
+                            <em>Ambient</em> refers to the fact that the string is being deformed in three-dimensional space, 
+                            and <em>isotopy</em> the deformation of the string. When deforming a knot projection, knot theorists
+                            use the term <em>planar isotopy</em>, with <em>planar</em> referring to the fact that the knot is only 
+                            being deformed within the projection plane.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/intro_to_knots/Figure2.png" alt="Fun knot gif." width="90%" height="90%">
+                            <figcaption text-align=center><b>Figure 2:</b> Here we have the knot $5_1$ in two different configurations. 
+                                While these knots have been stretched in different ways, they are clearly 
+                                ambient isotopic and their projections are planar isotopic.</figcaption>
+                        </figure>
+
+                        <p>
+                            This idea of isotopy is important in determining the equivalence of knots. Although two knots are considered 
+                            equivalent if you can change one knot into the other by stretching it and moving it around without tearing 
+                            it or causing the knot to intersect with itself, it is not immediately clear how this idea of 3-dimensional 
+                            equivalence translates to 2-dimensional projections of the knot. In fact, it is a theorem that two knots are 
+                            equivalent if and only if the projection of one knot can be transformed into that of another knot through a 
+                            finite sequence of Reidemeister moves, as defined in Reidemeister's theorem below.
+                        </p>
+
+                        <h4>Reidemeister's Theorem</h4>
+
+                        Reidemeister's theorem states that two links are ambient isotopic if and only if their diagrams can be joined by 
+                        a sequence consisting of planar isotopies and the following three Reidemeister moves (see <a href="#figure3">Figure 3</a>):
+
+                        <ol>
+                            <li>Move I: Twist and untwist in either direction.</li>
+                            <li>Move II: Move one strand over another.</li>
+                            <li>Move III: Move a strand completely over or under a crossing.</li>
+                        </ol>
+
+                        <p>For more information about this theorem, you can check out chapter 1.4 in <a href="#adams">[1]</a>.</p>
+
+
+                        <figure>
+                            <img src="blog_files/intro_to_knots/Figure3.png" alt="Fun knot gif." width="90%" height="90%" id="figure3">
+                            <figcaption text-align=center><b>Figure 3:</b> Move I (Left), Move II (Middle), Move III (Right)</figcaption>
+                        </figure>
+
+                        <p>
+                            Reidemeister moves represent three different changes that can be made to a knot projection which do not change 
+                            the equivalence class of the knot itself. The first Reidemeister move (or Reidemeister move I) is done by 
+                            twisting or untwisting the knot. This twist will create another crossing but does not change the knot. 
+                            Reidemeister move II is done by pushing one strand above or below another strand. This push can be used 
+                            to create two new crossings, or remove two existing crossings. Reidemeister move III involves sliding a 
+                            strand from one side of a crossing to the other side of that same crossing. This will not change the 
+                            number of crossings present.
+                        </p>
+
+                        <p>
+                            These Reidemeister moves are often referred to as twisting (move I), poking (move II), or sliding (move III) 
+                            a knot, and represent the only three ways to change the projection of a knot, together with planar isotopy, 
+                            without changing the knot itself. These moves are named after Kurt Reidemeister, a German mathematician, 
+                            who proved in 1926 that if there are two distinct projections of the same knot, one can be transformed into 
+                            the other by a sequence of these three moves and planar isotopy.
+                        </p>
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this blog post, we have introduced the basics of knot theory and defined some common terms used in the field. 
+                            We have also discussed Reidemeister's theorem, which states that two links are ambient isotopic if and only if their 
+                            diagrams can be joined by a sequence consisting of planar isotopies and the three Reidemeister moves. In subsequent 
+                            blog posts, we will explore more advanced topics in knot theory, including braids, surfaces, Markov's theorem, and
+                            slice surfaces.
+                        </p>
+
+                        <h4>Citations</h4>
+
+                        <ol>
+                            <li id="adams">
+                                Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004.
+                            </li>
+
+                            <!-- Add more list items as needed -->
+                        </ol>
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
