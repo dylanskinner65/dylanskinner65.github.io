@@ -68,25 +68,6 @@
 
     </style>
 
-    <style>
-        /* Style for the list */
-        ol {
-            list-style: none;
-            counter-reset: orderedlist;
-        }
-
-        /* Style for the list items */
-        ol li:before {
-            content: "[" counter(orderedlist) "]";
-            counter-increment: orderedlist;
-            margin-right: 2px; /* Adjust this value to adjust space between the number and text */
-        }
-
-        ol li:hover:before {
-        content: "[" counter(orderedlist) "]";
-        counter-increment: none;
-        }
-    </style>
 
 </head>
 
@@ -194,11 +175,11 @@
                         Reidemeister's theorem states that two links are ambient isotopic if and only if their diagrams can be joined by 
                         a sequence consisting of planar isotopies and the following three Reidemeister moves (see <a href="#figure3">Figure 3</a>):
 
-                        <ol>
+                        <ul>
                             <li>Move I: Twist and untwist in either direction.</li>
                             <li>Move II: Move one strand over another.</li>
                             <li>Move III: Move a strand completely over or under a crossing.</li>
-                        </ol>
+                        </ul>
 
                         <p>For more information about this theorem, you can check out chapter 1.4 in <a href="#adams">[1]</a>.</p>
 
@@ -239,9 +220,7 @@
                         <h4>Citations</h4>
 
                         <ol>
-                            <li id="adams">
-                                Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004.
-                            </li>
+                            <span href="#adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004.
 
                             <!-- Add more list items as needed -->
                         </ol>
