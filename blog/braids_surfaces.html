@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Introduction to Knot Theory: Braids, Alexander's Theorem, and Markov's Theorem</title>
+    <meta name="description" content="In this blog post we build upon a previous post. We will be discussing braids, Alexander's theorem, and Markov's theorem.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-02-21">21 February 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/intro_to_knots.html">Introduction to Knot Theory: Braids, Alexander's Theorem, and Markov's Theorem</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Braids, bouffants, and balayage. Everything a girl wants to hear"</blockquote>
+                        <p>- The Internet</p>
+
+                        <p>
+                           Continuing on from my previous <a href="intro_to_knots.html" target="_blank" rel="noopener noreferrer">blog post</a>, this blog
+                           post focuses on braids, Alexander's Theorem, and Markov's Theorem.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/braid_intro_pic.jpg" alt="Fun knitted braid." width="90%" height="90%">
+                            <figcaption text-align=center>A fun braid. Credit to <a href="https://en.wikipedia.org/wiki/File:Knitcable.jpg" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Introduction to Braids
+                        </h4>
+
+                        <p>
+                            In knot theory, knots can be represented in many different ways besides using the planar projections described in my previous  
+                            <a href="intro_to_knots.html" target="_blank" rel="noopener noreferrer">blog post</a>. One of these ways is using <em>braid</em> closures. 
+                            Braids are particularly helpful because every knot can be described as the closure of a braid. A braid is a set of $n$ strings that are 
+                            attached to a horizontal bar at the top and the bottom and which travel monotonically downwards 
+                            (see <a href="#figure1">Figure 1</a>). 
+                            These strings can cross over or underneath each other, but they cannot loop back up. Another way of putting this is that each 
+                            string can cross any horizontal plane only one time.  We let $B_n$ denote the set of all braids with $n$ strands.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure1.png" alt="Example braid." width="90%" height="90%" id="figure1">
+                            <figcaption text-align=center><b>Figure 1:</b> An example of a braid. Braids can have any number of strings 
+                                and any number of crossings.</figcaption>
+                        </figure>
+
+                        <p>
+                            Similar to knots, there is a notion of equivalency for braids. In order to see that two braids are equivalent, 
+                            we must be able to rearrange the strings of the braid without removing the strings from the top or bottom bar, 
+                            and without allowing the strings to pass through each other or themselves.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure2.png" alt="Equivalent briads." width="90%" height="90%" id="figure2">
+                            <figcaption text-align=center><b>Figure 2:</b> Even though these braids are not completely the same, since you 
+                                can apply a series of Reidemeister moves to one and get the other, they are equivalent.</figcaption>
+                        </figure>
+
+                        <p>
+                            When we have a braid, we can turn that braid into a knot by connecting the top and bottom bars together.
+                            The resulting form is a knot or a link, and this is called the <em>closure of the braid</em> (see <a href="#figure3">Figure 3</a>).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure3.png" alt="Closure of a braid." width="90%" height="90%" id="figure3">
+                            <figcaption text-align=center><b>Figure 3:</b> On the left, we have a braid. On the right, we have the 
+                                closure of this braid, which is a knot.</figcaption>
+                        </figure>
+
+                        <p>
+                            As mentioned previously, one nice feature of braids is that every knot can be represented as the closure of a braid. 
+                            This helpful fact was proven by J.W. Alexander in 1923 and is known as Alexander's Theorem.
+                        </p>
+
+                        <h4>Alexander's Theorem</h4>
+
+                        <p>
+                            Alexander's theorem states that every knot or link can be expressed as the closure of a braid. (See chapter 5.4 in <a href="#adams">[1]</a> for more.)
+                        </p>
+
+                        <p>
+                            Simple as this theorem may be, it is incredibly helpful for working with knots. Since every knot can be represented 
+                            as a braid closure, we have another useful way of studying and classifying knots. In the same vein, one useful 
+                            quantity to consider when thinking of knots as braid closures is the <em>braid index</em>.
+                        </p>
+
+                        <p>
+                            The braid index of a knot is defined to be the fewest number of strings in a braid whose closure is the knot of 
+                            interest <a href="#adams">[1]</a>. For example, the unknot (which is simply a circle) has a braid index of 1 since it can be expressed as the closure of a braid with a single strand (and no crossings). 
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure4.png" alt="Closure of a braid." width="90%" height="90%" id="figure4">
+                            <figcaption text-align=center><b>Figure 4:</b> On the left, we have the simplest diagram of the unknot. On the right, 
+                                we still have the unknot, but as the closure of a two strand braid with a single crossing. This simple example 
+                                shows that different braids can have the same closure.</figcaption>
+                        </figure>
+
+                        <p>
+                            While calculating the braid index seems simple, it can actually be quite tricky. If we represent a 
+                            knot in braid form and then count the strings of the braid, it does not guarantee that we have achieved 
+                            the least number of strings possible for that knot. Counting the strings of a braid representative can 
+                            certainly give us an upper bound on the braid index, but finding the actual minimal braid index requires more work.
+                        </p>
+
+                        <h4>Braid Words</h4>
+
+                        <p>
+                            In order to fully describe a braid, we  look first at its projection. Once we have the projection of the braid—and 
+                            ensure that no two crossings occur at the same height—we describe the braid by listing the strings that cross over 
+                            and under other strings as we move toward the bottom bar. We always label the crossings from left to right. When 
+                            the first string crosses under the second string, we call this crossing a $\sigma_{1}$ crossing. On the other hand, 
+                            if the first string crosses over the second string, we call this crossing a $\sigma_{1}^{-1}$ crossing. If the 
+                            second string crosses under the third, it is a $\sigma_{2}$ crossing, and if the second string crosses over 
+                            the third, it is a $\sigma_{2}^{-1}$ crossing. This pattern continues, with a crossing of the $j^{th}$ strand 
+                            passing under the $(j+1)^{th}$ strand being labeled as $\sigma_j$, while $\sigma_j^{-1}$ denotes the $j^{th}$ strand 
+                            passing over the $(j+1)^{th}$ strand.  To describe a braid then we simply start at the top of the braid, and list 
+                            off the crossings we encounter as we travel from top to bottom. We call the resulting sequence of crossings a <em>braid word</em>.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure5.png" alt="Braid word example." width="60%" height="0%" id="figure5">
+                            <figcaption text-align=center><b>Figure 5:</b> The braid word for this braid is $\sigma_{1}^{-1}\sigma_{2}\sigma_{1}^{-1}$</figcaption>
+                        </figure>
+
+                        <p>
+                            If we look at the braid in <a href="#figure5">Figure 5</a>, we can see that by listing the crossings from top to 
+                            bottom, we obtain the braid word $\sigma_{1}^{-1}\sigma_{2}\sigma_{1}^{-1}$.
+                        </p>
+
+                        <p>
+                            Along with giving a convenient way to describe the braid, there are other advantages to using braid representations of knots. 
+                            One advantage is identifying which Reidemeister moves can be applied to simplify the braid. For example, if a braid word 
+                            contains $\sigma_{k}\sigma_{k}^{-1}$, we know that the $k^{th}$ string goes under the ${(k+1)}^{th}$, and then 
+                            immediately passes back underneath of it, returning to its original position. If we apply a simple Reidemester II move 
+                            to this pair of crossings, the strings will straighten out and we are left with an equivalent braid 
+                            (see <a href="#figure6">Figure 6</a>). 
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure6.png" alt="Braid word example." width="100%" height="80%" id="figure6">
+                            <figcaption text-align=center><b>Figure 6:</b> A Reidemester II move applied to a braid.</figcaption>
+                        </figure>
+
+                        <p>
+                            For a more complicated example, say we have the braid word $\sigma_{1}\sigma_{3}\sigma_{2}\sigma_{2}^{-1}\sigma_{3}^{-1}\sigma_{4}\sigma_{3}$. 
+                            Through a series of Reidemester II moves, we can take this word and simplify it to $\sigma_{1}\sigma_{3}\sigma_{3}^{-1}\sigma_{4}\sigma_{3}$,
+                            and then further to $\sigma_{1}\sigma_{4}\sigma_{3}$. This leaves us with a much simpler braid word which represents a 
+                            braid that is equivalent to the original braid.
+                        </p>
+
+                        <p>
+                            Another modification we can apply to braid projections is the Reidemeister III move. If we are given a braid projection 
+                            and wish to move a strand over or under a crossing we are allowed to do this since a string does not need to be 
+                            cut in the process. In general if you braid word contains $\sigma_{i}\sigma_{i+1}\sigma_{i}$, for $1 \leq i \leq n-2$, 
+                            then it can be replaced using the substitution $\sigma_{i}\sigma_{i+1}\sigma_{i} = \sigma_{i+1}\sigma_{i}\sigma_{i+1}$ 
+                            (see <a href="#figure7">Figure 7</a>, where the equivalent substitution 
+                            $\sigma_{i}^{-1}\sigma_{i+1}^{-1}\sigma_{i}^{-1} = \sigma_{i+1}^{-1}\sigma_{i}^{-1}\sigma_{i+1}^{-1}$ is illustrated).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure7.png" alt="Reidemeister III move on a braid." width="100%" height="80%" id="figure7">
+                            <figcaption text-align=center><b>Figure 7:</b> An example of a Reidemeister III move being applied to a general braid.</figcaption>
+                        </figure>
+
+                        <p>
+                            The final move that we can apply to braid projections is not a Reidemeister move; instead, it is a switch. 
+                            If our braid word contains $\sigma_{i}\sigma_{j}$, where $|i-j| > 1$, then we can switch the order of 
+                            $\sigma_{i}$ and $\sigma_{j}$. So $\sigma_{i}\sigma_{j}$ becomes $\sigma_{j}\sigma_{i}$ (see <a href="#figure8">Figure 8</a>).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure8.png" alt="Reidemeister III move on a braid." width="100%" height="80%" id="figure8">
+                            <figcaption text-align=center><b>Figure 8:</b> On the left we have $\sigma_{1}^{-1}\sigma_{4}^{-1}$. Since $|1 - 4| > 1$, we can switch 
+                                the order to $\sigma_{4}^{-1}\sigma_{1}^{-1}$.</figcaption>
+                        </figure>
+
+                        <p>
+                            Using these three moves allows us to determine when two braids $b_{1}$ and $b_{2}$ are equivalent. 
+                            This ideas leads to another very important theorem for working with braids: Markov's theorem.
+                        </p>
+
+                        <h4>Markov's Theorem</h4>
+
+                        <p>
+                            Markov's theorem <a href="#birman">[2]</a> states:
+                        </p>
+
+                        <p>
+                            Given two braid words $\beta_{n}\in B_{n}$, $\beta'_{m}\in B_{m}$ with $n$ and $m$ strands respectively, 
+                            their closures are equivalent links if and only if $\beta'_{m}$ can be obtained from  $\beta_{n}$ by applying 
+                            a sequence of the following operations:
+                        </p>
+
+                        <ol>
+                            <li>conjugating $\beta_{n}$ in $B_{n}$;</li>
+                            <li>replacing $\beta_{n}$ by $\beta_n\sigma_{n}^{\pm 1} \in B_{n+1}$;</li>
+                            <li>the inverse of the previous operation (if $\beta_{n}=\beta_{n-1}\sigma_{n}^{\pm 1}$ with $\beta_{n-1} \in B_{n-1}$, replace $\beta_{n}$ with $\beta_{n-1}$).</li>
+                        </ol>
+                        
+                        <p>
+                            In Markov's theorem, we learn about two new moves that can be applied to braids to obtain different braids 
+                            with equivalent closures. The first comes in part 1: conjugation. Conjugation is an operation applied to 
+                            the braid word where the beginning of the word is multiplied by $\sigma_{j}$, and the end of the word by 
+                            $\sigma_{j}^{-1}$, or vice-versa. In the closure we are only adding a Reidemeister II move, so we are not 
+                            changing the resulting knot type (see <a href="figure9">Figure 9</a>). 
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure9.png" alt="Example of conjugation." width="100%" height="80%" id="figure9">
+                            <figcaption text-align=center><b>Figure 9:</b> If we were to connect this braid into a knot and move the bottom crossing near 
+                                the top crossing, we would see that it is simply a pair of crossings that can be removed by a Reidemeister II move.</figcaption>
+                        </figure>
+
+                        <p>
+                            The second move comes in part 2: stabilization. Stabilization involves adding a new strand and a single 
+                            crossing to a braid as illustrated in <a href="figure10">Figure 10</a>. This is performed by taking the braid word $w$ that corresponds 
+                            to an $n$-string braid, adding a strand to make it an $(n+1)$-string braid, and then adding $\sigma_{n}$ or 
+                            $\sigma_{n}^{-1}$ to the beginning or end of the word $w$. Destabilization is the opposite of stabilization: simply 
+                            remove a string and a crossing from a braid as shown in <a href="figure11">Figure 11</a> below.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure10.png" alt="Stabilization." width="100%" height="80%" id="figure10">
+                            <figcaption text-align=center><b>Figure 10:</b> Through adding a single strand and crossing $\sigma^{\pm 1}_{n}$ 
+                                at the end of the braid representation, we obtain a different braid with equivalent closure.</figcaption>
+                        </figure>
+
+                        <figure>
+                            <img src="blog_files/braids/Figure11.png" alt="Destabilization." width="100%" height="80%" id="figure11">
+                            <figcaption text-align=center><b>Figure 11:</b> Through removing a single strand and crossing $\sigma^{\pm 1}_{n}$ 
+                                at the end of the braid representation, we obtain a different braid with equivalent closure.</figcaption>
+                        </figure>
+
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this blog post, we discussed the basics of braids and introduced Alexander's theorem, and Markov's Theorem. 
+                            Alexander's theorem which states that every knot or link can be expressed as the closure of a braid,
+                            and Markov's theorem which states that two braids are equivalent if and only if their diagrams are similar through
+                            a sequence of conjugations, stabilizations, and destabilizations. This is a precursor for the next blog post
+                            which will be about slice surfaces.
+                        </p>
+
+                        <h4>Citations</h4>
+
+                        <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>   
+
+                            <!-- Add more list items as needed -->
+                        </ol>
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
