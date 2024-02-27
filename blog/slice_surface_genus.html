@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Introduction to Knot Theory: Slice Surfaces and Slice Genus</title>
+    <meta name="description" content="In this blog post we build upon previous blog posts. We will be dicussing slice surfaces and slice genus.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-02-28">28 February 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/slice_surface_genus.html">Introduction to Knot Theory: Slice Surfaces and Slice Genus</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Nobody can point to the fourth dimension, yet it is all around us."</blockquote>
+                        <p>- Rudy Rucker</p>
+
+                        <p>
+                           Continuing on from my previous <a href="braids.html" target="_blank" rel="noopener noreferrer">blog post</a>, this blog
+                           post focuses on slice surfaces and the slice genus of a knot.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/4d_motion.gif" alt="Fun moving surface." width="90%" height="90%">
+                            <figcaption text-align=center>Some fun '4D' motion. Credit to <a href="https://www.reddit.com/r/woahdude/comments/15ibll/and_now_a_2d_moving_image_of_a_3d_model_of_4d/" target="_blank" rel="noopener noreferrer">this reddit user</a>.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Introduction to Surfaces
+                        </h4>
+
+                        <p>
+                            In the results to follow, one important idea to understand is that of a <em>topological surface</em> (or simply a <em>surface</em>). 
+                            A topological surface is a two-dimensional manifold, intuitively representing a flat, rubbery sheet that can be stretched, bent, 
+                            and manipulated without tearing or gluing. Surfaces can be <em>orientable</em>, which simply means you can distinguish between the 
+                            'front' and 'back' of the surface.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/manifold_examp.png" alt="Example 2d manifold." width="90%" height="90%" id="figure1">
+                            <figcaption text-align=center><b>Figure 1:</b> An example of a two-dimensional manifold. I got this image from 
+                                <a href="https://en.wikipedia.org/wiki/Surface_%28topology%29" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</figcaption>
+                        </figure>
+
+                        <p>
+                            An important piece of information about an orientable surface is its <em>genus</em>. 
+                            The genus of a surface is a fundamental topological invariant describing the shape 
+                            and structure of the surface. Intuitively, it can be thought of as the number of 
+                            "handles" or "holes" that a surface possesses (see <a href="#figure2">Figure 2</a>). Every orientable 
+                            surface is topologically equivalent some surface with specified genus.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure2.png" alt="Example 2d manifold." width="100%" height="100%" id="figure2">
+                            <figcaption text-align=center><b>Figure 2:</b> The left most surface has genus 0 (no holes), 
+                                the middle surface has genus 1 (one hole), and the right most surface has genus 2 (two holes).</figcaption>
+                        </figure>
+
+                        <h4>Seifert Surfaces</h4>
+
+                        <p>
+                            If we take an orientable surface and cut a hole in it, we then get a surface with boundary. 
+                            Given a knot $K$, we can always find a surface with boundary whose boundary is the knot 
+                            $K$ <a href="#seifert">[3]</a>. Such a surface is called a <em>Seifert surface for K</em>. 
+                            More precisely, a Seifert surface is an oriented surface associated with a knot or link 
+                            on its boundary in three-dimensional space (see <a href="#figure3">Figure 3</a>).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure3.png" alt="Seifert surface." width="60%" height="90%" id="figure3">
+                            <figcaption text-align=center><b>Figure 3:</b> This is a Seifert surface. The white and blue represents the surface. You
+                                can see it is orientable because there is a clear distinction between the front and
+                                back of the surface (shown by the two colors). The orange is the knot that is on the
+                                boundary of the surface. (Credit 
+                                to <a href="https://en.wikipedia.org/wiki/Seifert_surface" target="_blank" rel="noopener noreferrer">Wikipedia</a>.)</figcaption>
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            One of the ultimate goals of representing knots in this way is to find the simplest 
+                            surface possible to represent a given knot, which is not always obvious. For example,
+                            the minimal genus of a Seifert surface bounded by a certain knot may be 3, but an 
+                            explicit minimal genus surface might be difficult to find. Thankfully, the Seifert 
+                            genus (which is defined as the minimal genus of a Seifert surface bounded by the knot) 
+                            is relatively easy to calculate.
+                        </p>
+
+                        <h4>Slice Surfaces</h4>
+
+                        <p>
+                            Now suppose that you have knot that bounds a surface in $\mathbb{R}^{3}$ of genus 2, 
+                            but would like to construct a surface that it bounds with genus 1. One possible solution 
+                            is that instead of requiring the surface to live entirely inside $\mathbb{R}^{3}$, 
+                            we can allow it to dip into $\mathbb{R}^{4}$. Just as we can think of $\mathbb{R}^2$ 
+                            being the boundary of $\mathbb{R}^3_+ = \{(x,y,z) \in \mathbb{R}^3 \, | \, z \geq 0 \}$ 
+                            (see <a href="#figure4">Figure 4</a>), we can think of $\mathbb{R}^3$ as being the boundary of 
+                            $\mathbb{R}^4_+= \{(x,y,z,t) \in \mathbb{R}^3 \, | \, t \geq 0 \}$.  Given a knot 
+                            $K$ in $\mathbb{R}^3$ we can therefore consider surfaces in $\mathbb{R}^4_+$ that are bounded by $K$. 
+                            These surfaces that dip into $\mathbb{R}^{4}_+$ are called \emph{slice surfaces}, and the \emph{slice genus} 
+                            of a knot is the minimal genus of any slice surface you can find for that knot (see <a href="#figure5">Figure 5</a>). Unfortunately, 
+                            the slice genus is much more difficult to calculate than the Seifert genus.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure4.png" alt="2D is Boundary of 3D." width="90%" height="90%" id="figure4">
+                            <figcaption text-align=center><b>Figure 4:</b> $\mathbb{R}^{2}$ represents the boundary of $\mathbb{R}^{3}$, which in this example is a cube.</figcaption>
+                        </figure>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure5.png" alt="Dipping into the 4th dimension." width="90%" height="90%" id="figure5">
+                            <figcaption text-align=center><b>Figure 5:</b> Here is the trefoil knot in $\mathbb{R}^3$, and a slice surface it bounds in $\mathbb{R}^4_+$</figcaption>
+                        </figure>
+
+                        <p>
+                            Since visualizing $\mathbb{R}^{4}$ is quite difficult, representing slice surfaces can be a bit of a problem. 
+                            One way to overcome this is by looking at level sets. Level sets are a way of representing a slice surface in 
+                            $\mathbb{R}^4_+$ by taking a 'slice' out of the surface at various levels and seeing what the surface looks 
+                            like at the location of the slice. One dimension lower, taking level sets of a surface in $\mathbb{R}^3$ yields 
+                            a sequence of two-dimensional planes each containing a single slice of the surface. If you take enough of these 
+                            level sets you will be able to get the full picture of the surface (see <a href="#figure6">Figure 6</a>).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure6.png" alt="Slice Surfaces." width="90%" height="90%" id="figure6">
+                            <figcaption text-align=center><b>Figure 6:</b> The left most part of this figure is the surface inside $\mathbb{R}^3$. 
+                                By taking level sets of this surface, we can obtain an accurate representation of the surface.</figcaption>
+                        </figure>
+
+                        <p>
+                            To take level sets in $\mathbb{R}^{4}$ we do the exact same thing as in $\mathbb{R}^{3}$. 
+                            The only difference is now the level sets are each 3-dimensional slices with knots inside, 
+                            instead of 2-dimensional planes with planar curves.
+                        </p>
+
+                        <p>
+                            When studying the level sets of a slice surface in $\mathbb{R}^4_+$ there are a finite number of ways the 
+                            level sets may change from one picture to another.  If the surface has a \emph{saddle point} then passing 
+                            the saddle point will change the level sets by bringing two nearby strands together and merging them 
+                            (see the change that happens between the fourth and fifth diagrams in <a href="'$figure7">Figure 7</a> below). In this context, 
+                            we define a saddle point to be a point on the surface where the curvature takes on both positive and 
+                            negative values along different directions.  If the surface has a local minimal point, then passing the 
+                            mimimal point will result in a single circle being deleted from the level set (in <a href="'#figure7">Figure 7</a>, the two 
+                            circles in the final level set sit just above a pair of local maxima, and passing these maximum points 
+                            results in the two circles being deleted from the level set). Likewise, if the surface has a local 
+                            maximum point, then passing the maximum point results in a single circle being added to the level set.
+                        </p>
+                        
+                        <figure>
+                            <img src="blog_files/slice_surface_genus/Figure7.jpeg" alt="Cross sections." width="90%" height="90%" id="figure7">
+                            <figcaption text-align=center><b>Figure 7:</b> Here is an example of a surface being represented by cross-sections.</figcaption>
+                        </figure>
+                        
+
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this blog post, we discussed the basics of Seifert and slice surfaces. 
+                            Understanding surfaces, particularly topological surfaces and their properties, 
+                            is crucial in various fields, including knot theory. 
+                            Seifert surfaces provide a valuable tool for representing knots, offering insights into 
+                            their structure and complexity. Moreover, slice surfaces offer another perspective, allowing 
+                            us to explore the interaction between knots and higher-dimensional spaces. While calculating 
+                            the slice genus may pose challenges, techniques such as examining level sets provide valuable 
+                            insights into the nature of slice surfaces. By delving into these concepts, we uncover not only 
+                            the intricacies of knots but also deepen our understanding of the underlying mathematical structures that govern them.
+                        
+                        </p>
+
+                        <h4>Citations</h4>
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                            <!-- Add more list items as needed -->
+                        </ol>
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
