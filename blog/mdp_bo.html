@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Introduction to Reinforcement Learning: the Markov Decision Process and the Bellman Equation</title>
+    <meta name="description" content="In this blog post we begin a brief introduction to reinforcement learning by
+                                      talking about the Markov decision process and the Bellman equation.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-03-06">6 March 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/mdp_bo.html">Introduction to Reinforcement Learning: the Markov Decision Process and the Bellman Equation</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Nobody can point to the fourth dimension, yet it is all around us."</blockquote>
+                        <p>- Rudy Rucker</p>
+
+                        <p>
+                           Reinforcement learning is a type of machine learning that is concerned with how an agent should take actions in an environment in order to 
+                           maximize some notion of cumulative reward. In this blog post, we will begin a brief introduction to reinforcement learning by talking about 
+                           the Markov decision process (MDP).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/mdp_bo/intro_picture.jpg" alt="A man rock climbing." width="90%" height="90%">
+                            <figcaption text-align=center>Photo by <a href="https://unsplash.com/@neom?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">NEOM</a> on <a href="https://unsplash.com/photos/a-man-climbing-up-the-side-of-a-cliff-xhMz5xIbhRg?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+                            </figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            What is Reinforcement Learning?
+                        </h4>
+
+                        <p>
+                            Reinforcement learning (RL) is a branch of machine learning that allows an agent to interact with an environment 
+                            that it is placed in and to learn from the results of its interactions. When the agent is placed into an environment 
+                            it is given a set of actions that it is allowed to take, which is how it interacts with the environment. 
+                            The goal of reinforcement learning is to train the agent in such a way that it learns to select actions that yield 
+                            optimal results given whatever situation it is in. As a simple example, consider the Atari game <em>Breakout</em>. 
+                            The goal of the game is to break all the bricks in the level, which is done by using the paddle to hit a ball at 
+                            the bricks. Tackling this problem using reinforcement learning, the agent controls the paddle and learns to move 
+                            it in the most efficient way to break the bricks.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/mdp_bo/Breakout2600.png" alt="A picture of the Atari game, Breakout." width="90%" height="90%" id="figure1">
+                            <figcaption text-align=center><b>Figure 1:</b> The Atari 2600 version of Breakout. </figcaption>
+                        </figure>
+
+                        <p>
+                            When an agent begins training, it is passed a starting state $s_{0}$ from the environment. 
+                            The agent looks at this state, thinks about what it knows (which in the beginning is nothing), and selects an action $a_{0}$. 
+                            This action is then sent back to the environment, analyzed, and assigned a reward $r_0$ based on the effect of the action 
+                            on the environment. The environment then creates the next state $s_1$, and sends it and the reward $r_0$ back to the agent. 
+                            This cyclical pattern occurs until the agent achieves the goal, fails, or some pre-determined number of time steps is reached. 
+                            We can often model this situation as a <em>Markov Decision Process (MDP)</em>
+                        </p>
+
+                        <h4>The Markov Decision Process</h4>
+
+                        <p>
+                            An MDP is defined as $(S, A, R, \mathbb{P}, \gamma)$, where 
+                            
+                            <ul>
+                                <li>$S$ is the set of states,</li>
+                                <li>$A$ is the set of actions,</li>
+                                <li>$R$ is the distribution of rewards,</li>
+                                <li>$\mathbb{P}$ is the transition probabilities,</li>
+                                <li>$\gamma$ is the discount factor.</li>
+                            </ul> 
+                            Reinforcement learning agents must learn decision making strategies not only in situations where actions 
+                            create immediate rewards, but actions which impact rewards far into the future. In an MDP the current 
+                            state $s_t$ tells us everything we need to know about the environment we are working in (this is called the <em>Markov property</em>). 
+                            This is beneficial because there is no risk of filling up memory, but can be detrimental because all 
+                            information about the past is essentially forgotten.
+                        </p>
+
+                        <p>
+                            The goal of the agent utilizing the MDP is to pick an action to maximize the reward. To do this, 
+                            the agent uses a policy $\pi$ which is a function that maps $S$ to $A$, represented as $\pi: S \to A$ 
+                            (in some cases it is more useful to think of $A$ as a probability distribution across all actions, 
+                            conditioned on the current state $s_t$). This function will pick an action based on the state the agent is in. 
+                            Our hope is to find the best policy $\pi^{*}$ that will maximize the cumulative possible reward for the agent 
+                            $\sum_{t=0}^{T}\gamma^{t}r_{t}$ (here the discount factor $\gamma$ is included so future rewards are not 
+                            considered as heavily as current rewards). But this is a difficult task.
+                        </p>
+
+                        <p>
+                            Through the work of researchers many different algorithms—both classical and ones that rely on deep learning—
+                            have been created to aid in finding $\pi^{*}$ in the most efficient way possible. 
+                        </p>
+
+                        
+                        <h4>The Bellman Equation</h4>
+                        
+                        <p>
+                            In addition to the MDP, the <em>Bellman Optimiality Principle</em> is another key concept in reinforcement learning. Essentially,
+                            the Bellman optimality principle states that an optimal policy has the property that whatever the initial state and initial decision are,
+                            the remaining decisions must constitute an optimal policy with regard to the state resulting from the first decision. Meaning, for example,
+                            if the shortest path between Salt Lake City, UT and San Francisco, CA is through Elko, NV, then the shortest path between Elko and San Francisco
+                            must be through the shortest path between Salt Lake City and San Francisco. This principle is used to derive the Bellman equation, which is
+                            typically represented as:
+
+                            $$V(s) = \text{max}_a\left(R(s,a) + \gamma V(s')\right),$$
+
+                            where 
+
+                            <ul>
+                                <li>$V(s)$ represents the 'value' of being in our current state,</li>
+                                <li>$R(s,a)$ is the reward we will get for taking action $a$ and being in state $s$,</li>
+                                <li>$\gamma$ is the discount factor, and</li>
+                                <li>V(s') represents the the value of being in the next state $s'$.</li>
+                            </ul>
+
+                            The $\text{max}_a$ tells us that the value of our current state is ultimately determined by the action that will yield the highest combination
+                            of immediate reward and future value. Note: that does not necessarily mean that the action with the highest immediate reward is the best action to take,
+                            but instead some combination of immediate reward and future value.
+
+                            Now, because there are typically multiple next states, the above equation is modified to
+
+                            $$V(s) = \text{max}_a\left(R(s,a) + \gamma \sum_{s'}p(s', a, s)V(s')\right)$$
+
+                            This modification tells us that when figuring out the value of our current state, we must consider the value of all possible next states, and the probability
+                            of transitioning to those gates given our current state and action.
+                        </p>
+
+                        <p>
+                            To calculate $V(s)$, we use dynamic programming to recursively calculate the value of each state. These results are often stored in a table for
+                            easy lookup. If using the Bellman equation, we can let our agent run through the environment and update the value of each state as it goes. Our hope is that
+                            eventually the value of each state will converge to the true value of the state, and we can use this information to determine the best action to take in each state.
+                            (This is often called <em>value iteration</em>.)
+                        </p>
+
+                        <h4>MDP vs. Bellman</h4>
+
+                        <p>
+                            When people talk about reinforcement learning, they will often mention the MDP and/or the Bellman equation and optimality principle. So,
+                            let's compare them real quick.
+                        </p>
+
+                        <p>
+                            With the MDP, we have a memory benefit by not keeping track of all the previous states, but that can sometimes pose a 
+                            problem because we lose all information about the past. The Bellman equation, on the other hand, allows us to know
+                            the value of each state, which is useful for determining the best action to take given whatever state we are in. However, 
+                            not only can the Bellman equation be computationally expensive, but it also requires us to know the transition probabilities, which
+                            might not be known. Additionally, it is sometimes bold to assume that the state space is finite or can be discretized in a
+                            way that can be represented in a table.
+                        </p>
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this blog post, we discussed the basics of the Markov decision process and the Bellman optimality principle and Bellman equation. 
+                            These are fundamental concepts in reinforcement learning, and understanding them is crucial to understanding how reinforcement learning works.
+                            In future blog posts, we will discuss more advanced concepts in reinforcement learning, such as one of the optimal ways to calculate
+                            $\pi^*$.
+                        
+                        </p>
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
