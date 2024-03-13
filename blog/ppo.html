@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Proximal Policy Optimization: A Scenic Tour</title>
+    <meta name="description" content="In this blog post we talk about the deep reinforcement learning algorithm
+                                        proximal policy optimization.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-03-13">13 March 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/mdp_bo.html">Proximal Policy Optimization: A Scenic Tour</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"The biggest obstacle to creativity is breaking through the barrier of disbelief."</blockquote>
+                        <p>- Rodney Mullen</p>
+
+                        <p>
+                           Proximal policy optimization (PPO) is a deep reinforcement learning (rl) algorithm that is <em>quite</em> good. In this blog post, we
+                           will dive into PPO, specifically breaking down the cost function (which is rather hairy).
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/ppo/river_intro.jpg" alt="A river." width="90%" height="90%">
+                            <figcaption text-align=center>Photo by <a href="https://unsplash.com/@martinsanchez?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Martin Sanchez</a> on <a href="https://unsplash.com/photos/landscape-photography-of-river-between-green-mountains-ycG0A6DlvOk?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+  
+                            </figcaption>
+                            
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            What is PPO?
+                        </h4>
+
+                        <p>
+                            If you recall from my previous blog post on the <a href="/blog/mdp_bo.html">Markov Decision Process</a>, 
+                            we discussed how an agent interacts with an environment. We also discussed that one of the most active fields
+                            of research in reinforcement learning is how to train an agent to make the best decisions possible; how to find $\pi^*$. PPO is
+                            one of the many algorithms that has been developed to help us find $\pi^*$, and it is currently the state-of-the-art!
+                        </p>
+
+                        <p>
+                            PPO is a policy-based algorithm, meaning that it learns a policy $\pi$ that maps states to actions. The policy is
+                            learned by interacting with the environment and updating the policy based on the rewards received.
+                        </p>
+
+                        <p>
+                            Additionally, PPO seeks to strike a balance between ease of implementation, sample complexity, and ease of tuning; 
+                            all of which posed challenges to earlier algorithms. PPO does this 
+                            by trying to compute an update at each step that both minimizes the cost function and only slightly deviates from 
+                            the previous policy. This ensures that the agent does not take too big of steps and goes off track, but does not 
+                            take steps that are too small which may lead to the agent going nowhere.
+                        </p>
+
+                        <h4>The Loss Function</h4>
+
+                        <p>
+                            In order for this to work, the algorithm utilizes two separate policy neural networks—the current policy $
+                            \pi_{\theta}(a_{t}|s_{t})$, and the older policy $\pi_{\theta_{k}}(a_{t}|s_{t})$—and a rather unique objective function:
+
+ $$L^{CLIP}(\theta) = \widehat{E}_{t}\Bigl[\text{min}\bigl( r_{t}(\theta)\widehat{A}_{t}, \text{clip}(r_{t}(\theta), 1 - \varepsilon, 1+\varepsilon)\widehat{A}_{t}\bigr) \Bigr],$$
+                        </p>
+
+                        <p>
+                            where
+
+                            <ul>
+                                <li>$\theta$ is the policy parameter,</li>
+                                <li>$\widehat{E}_{t}$ is the expected value (calculated by taking the average over a sequence of actions),</li>
+                                <li>$r_{t}(\theta)$ is the probability ratio, or the ratio of the current policy over the older policy, 
+                                    $\frac{\pi_{\theta}(a_{t}|s_{t})}{\pi_{\theta_{k}}(a_{t}|s_{t})}$. 
+                                    If $r_t(\theta) > 1$, it indicates that the new policy has a higher probability of selecting 
+                                    $a_t$ than the old policy. If it is less than 1, the new policy has a lower probability,</li>
+                                <li>$\widehat{A}_{t}$ is the estimated advantage at time step $t$, calculated as $\hat{A_{t}} = R_{t} - V(s_{t})$, where $R_{t}$ 
+                                    is the reward from the most recent action, and $V(s_{t})$ is the estimate of return starting from current state $s_t$, and</li>
+                                <li>$\varepsilon$ is a hyperparameter setting the size of the epsilon-neighborhood for step size.</li>
+                            </ul>
+                        </p>
+
+                        
+                        <p>
+                            One thing that makes this loss function interesting are the components inside of the minimization function. 
+                            The first part, $r_{t}(\theta)\hat{A_{t}}$, is simply the probability ratio times the advantage. This is 
+                            done to determine how much to update the policy for a specific action in a specific state as it quantifies 
+                            the advantage of the action $a_t$ taken in state $s_t$ and its relative likelihood under the new and old policies. 
+                            The second part, $clip(r_{t}(\theta), 1-\epsilon, 1+\epsilon)\hat{A_{t}}$, is a little bit different. If our new policy has a 
+                            much higher probability of selecting $a_t$ than our old policy, then $r_t(\theta) \gg 1$. Similarly, if our new policy has 
+                            a much lower probability of selecting $a_t$ than our old policy, we have $r_t(\theta) \ll 1$. This can be an issue because 
+                            it can cause our algorithm to take a step too far in the wrong direction, potentially ruining its learning. The $\text{clip}$ 
+                            function ensures all of our steps stay in a specified range. More specifically, if 
+                            $r_t(\theta) < 1 - \epsilon$ or $r_t(\theta) > 1 + \epsilon$, the new value of $r_t(\theta)$ becomes $1 - \epsilon$ or $1 + \epsilon$, respectively. </em>
+                        </p>
+
+                        <p>
+                            Once $r_t(\theta)$ and $clip(r_t(\theta), 1-\epsilon, 1+\epsilon)$ are calculated, $L^{CLIP}$ selects the minimum of the two, 
+                            and then finds the expected value of that result, thus allowing us to find the optimal step size.
+                        </p>
+
+                        <h4>The Algorithm</h4>
+
+                        <p>
+                            Let's now discuss how PPO works. The algorithm is quite simple, and can be broken down into the following steps:
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/ppo/ppo_algorithm.png" alt="The pseudocode for the PPO algorithm." width="100%" height="100%">
+                            <figcaption text-align=center>The pseudocode for the PPO algorithm.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            When the PPO runs, it starts off by running the old policy $\pi_{\theta_{k}}$, $N$ times for $T$ time steps. 
+                            For each $n \in N$ iterations, the advantage $\hat{A_{t}}$ is calculated for each $t \in T$. Once the 
+                            $N$ iterations are over, $L^{CLIP}$ is optimized with respect to $\theta$, and then $\pi_{\theta_{k}} \leftarrow \pi_{\theta}$.
+                        </p>
+
+                        <p>
+                            In addition to these two policy networks, PPO also utilizes a value network. 
+                            The value network is another neural network model used to estimate the expected 
+                            cumulative reward (value) associated with a given state. It is used to assess 
+                            the quality of states and provide feedback for policy improvement. There is only 
+                            one of this network--not two networks like with the policy network.
+                        </p>
+
+                        <h4>Coding PPO</h4>
+
+                        <p>
+                            One of the best ways to understand an algorithm is to code it. Below is a simple implementation of the above algorithm using Pytorch 
+                            (with the above loss function).
+                        </p>
+
+<pre><code language="python">def learn_ppo(optim, policy, value, memory_dataloader, epsilon, policy_epochs):
+    """Implement PPO policy and value network updates. Iterate over your entire 
+       memory the number of times indicated by policy_epochs (policy_epochs = 5).    
+  
+      Args:
+          optim (Adam): value and policy optimizer
+          policy (PolicyNetwork): Policy Network
+            policy_network = PolicyNetwork(state_size, action_size).cuda()
+          value (ValueNetwork): Value Network
+            value_network = ValueNetwork(state_size).cuda()
+          memory_dataloader (DataLoader): dataloader with (state, action, action_dist, return) tensors
+          epsilon (float): trust region
+          policy_epochs (int): number of times to iterate over all memory
+    """
+    # Go through all epochs
+    for epoch in range(policy_epochs):
+      for batch in memory_dataloader:
+        optim.zero_grad()
+        
+        # Get the all variables from memory (by batch)
+        state, action, action_dist, return_v = batch
+
+        # Do state.stack because we have a list of tensors, and we need a tensor of stuff.
+        state = torch.stack(state, dim=1)      
+  
+        state_t       = state.type(torch.FloatTensor).cuda()
+        action_t      = action.type(torch.LongTensor).cuda()
+        action_dist_t = action_dist.type(torch.FloatTensor).cuda()
+        return_v_t    = return_v.type(torch.FloatTensor).cuda()
+  
+        # Calculate advantage Â
+        advantage = (return_v_t - value(state_t).cuda()).detach()
+  
+        # Calculate value loss
+        value_loss = F.mse_loss(return_v_t, value(state_t).squeeze())
+  
+        # Calculate π(s,a)
+        policy_norm       = action_dist_t.squeeze(1)
+        action_onehot     = F.one_hot(action_t, 13).bool()
+        taken_policy_norm = policy_norm[action_onehot]
+        
+        #Calculate π'(s,a)
+        policy_prime       = policy(state_t)
+        taken_policy_prime = policy_prime[action_onehot]
+        
+        #Calculate the ratio between π'(s,a)/π(s,a)
+        prim_div_norm = taken_policy_prime / taken_policy_norm
+  
+        # Clipping π'(s,a)/π(s,a)
+        clip = torch.clip(prim_div_norm, 1-epsilon, 1+epsilon)
+        
+        # Left part of the policy loss (π'(s,a)/π(s,a))*Â
+        left_part = prim_div_norm * advantage
+
+        # Right part of the policy loss clip*Â
+        right_part = clip * advantage
+  
+        # Calculating policy loss
+        policy_loss = torch.mean(torch.min(left_part, right_part))
+  
+        # Total loss
+        total_loss = value_loss - policy_loss
+        
+        total_loss.backward()
+        optim.step()</code></pre>
+
+                        <p>
+                            (To see a more complete implementation, check out my 
+                            <a href="https://github.com/dylanskinner65/DeepRLKnots/blob/master/knot_gpu_Large.py">Github</a> where I have implemented PPO to solve a 4D topology problem.)
+                        </p>
+
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this blog post, we discussed the PPO algorithm and its loss function. We also discussed how to implement PPO in Pytorch. PPO
+                            is a powerful algorithm that has been used to solve a variety of problems, from playing video games to solving 4D topology problems!
+                            I encourage you to try implementing PPO in your own projects, and see how it can help you solve your problems. (I also invite you to
+                            check out the original <a href="https://arxiv.org/abs/1707.06347">PPO paper</a> to learn more about the weeds of this algorithm.)   
+                        </p>
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
