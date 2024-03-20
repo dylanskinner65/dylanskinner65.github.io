@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Maximum Likelihood Estimation</title>
+    <meta name="description" content="In this blog post we talk about maximum likelihood estimation and its importance in probability.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-03-20">20 March 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/mle.html">Maximum Likelihood Estimation</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"And when is there time to remember, to sift, to weigh, to estimate, to total?"</blockquote>
+                        <p>- Tillie Olson</p>
+
+                        <p>
+                            Maximum likelihood estimation (MLE) stands as a cornerstone in the realm of statistical inference, 
+                            offering a powerful method for estimating the parameters of a probability distribution. Rooted in 
+                            the principle of finding the most probable values for the parameters given observed data, MLE 
+                            provides a systematic framework for making inferences about unknown quantities. Whether in fields 
+                            like economics, biology, or engineering, where uncertainty reigns, understanding and applying MLE 
+                            empowers researchers and practitioners to glean insights from data and make informed decisions.
+                        </p>
+
+                        <p>
+                            In this blog post, we will explore the concept of MLE, its mathematical underpinnings, and consider a few
+                            examples.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/mle/estimation_image.jpg" alt="A river." width="90%" height="90%">
+                            <figcaption text-align=center>Photo by <a href="https://unsplash.com/@solenfeyissa?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Solen Feyissa</a> on <a href="https://unsplash.com/photos/a-black-background-with-multicolored-lines-in-the-dark-8z1SGcgkOiA?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+                            </figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            What is Maximum Likelihood Estimation?
+                        </h4>
+
+                        <p>
+                            Maximum likelihood estimation is an estimation method used to find the parameter values of a probability
+                            distribution that maximize the likelihood of the observed data. In other words, MLE seeks to find the most
+                            probable values for the parameters of a distribution given the observed data. Consider the following definition.
+                        </p>
+
+                        <p>
+                            Let $X_1, X_2, \ldots, X_n$ be a random sample from a discrete distribution $X$ with probability mass function (p.m.f.) $g(x,\theta)$
+                            (or a random sample from a continuous distribution $X$ with probability density function (p.d.f.) $f(x,\theta)$), 
+                            where $\theta$ is the parameter of the distribution. If $\bold{x} = (x_1, \dots, x_n)$ is a draw from the sample, we define the joint probability
+                            to be
+
+                            $$L(\theta) = P(X_1 = x_1, \dots, X_n = x_n) = \prod_{i=1}^n P(X_i=x_i) = \prod_{i=1}^n g(x_i, \theta) $$
+
+                            in the discrete case, or 
+
+                            $$ \prod_{i=1}^n P(X_i=x_i) = \prod_{i=1}^n f(x_i, \theta)$$
+
+                            in the continuous case. The function $L(\theta)$ is called the <em>likelihood of</em> $\mathit{\theta}$
+
+                            We defined the point $\widehat{\theta}$ that maximizes $L(\theta)$ as the <em>maximum likelihood estimate of</em> $\mathit{\theta}$. If we find a 
+                            an estimator $\widehat{\theta}(X_1,\dots, X_n)$ whose estimate $\widehat{\theta}(x_1,\dots,x_n)$ is the maximum likelihood estimate of $\theta$, 
+                            then $\widehat{\theta}$ is called a <em>maximum likelihood estimator</em> of $\theta$.
+                        </p>
+
+                        <p>
+                            With those definitions in mind, let's do some examples to illustrate the concept.
+                        </p>
+
+                        <h4>MLE Examples</h4>
+
+                        <p>
+
+                        For our first example, let's consider a simple case where we have a random sample from a Bernoulli distribution. Recall that the p.m.f.
+                        for the Bernoulli distribution is given by
+
+                        $$g(x,\theta) = \theta^x(1-\theta)^{1-x}$$
+
+                        where $x \in \{0,1\}$ and $\theta \in [0,1]$, with $\theta$ unknown. If $\bold{x} = (x_1, \dots, x_n)$ is a draw from our distribution,
+                        then the likelihood of $\theta$ is given by
+
+                        $$L(\theta) = \prod_{i=1}^n \theta^{x_i}(1-\theta)^{1-x_i}.$$
+
+                        By the nature of products, this is equivalent to
+
+                        $$L(\theta) = \theta^{\sum_{i=1}^n x_i}(1-\theta)^{n-\sum_{i=1}^n x_i}.$$
+
+                        Working with $\sum_{i=1}^n x_i$ will be a little hairy, so define $\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i$. Then we have
+
+                        $$L(\theta) = \theta^{n\bar{x}}(1-\theta)^{n-n\bar{x}}.$$
+
+                        To find the maximum likelihood estimate of $\theta$, we take the derivative of $L(\theta)$ with respect to $\theta$, set it equal to zero, and solve for $\theta$. 
+                        Doing this we get
+
+                        $$\begin{aligned}
+                        \frac{dL(\widehat{\theta})}{d\theta} = n\bar{x}\widehat{\theta}^{n\bar{x}-1}(1-\widehat{\theta})^{n-n\bar{x}} - (n-n\bar{x})\widehat{\theta}^{n\bar{x}}(1-\widehat{\theta})^{n-n\bar{x}-1} &= 0 \\
+                        \widehat{\theta}^{n\bar{x}-1}(1-\widehat{\theta})^{n-n\bar{x}-1}\left(n\bar{x}(1-\widehat{\theta}) - (n-n\bar{x})\widehat{\theta}\right) &= 0 \\
+                        \end{aligned}$$
+
+                        Dividing both sides by the part outside the parenthesis gives us
+
+                        $$\begin{aligned}
+                            n\bar{x}(1-\widehat{\theta}) - (n-n\bar{x})\widehat{\theta} &= 0 \\
+                            n\bar{x}(1-\widehat{\theta}) &= (n-n\bar{x})\widehat{\theta} \quad\quad\text{(divide by $n$)} \\
+                            \bar{x}(1-\widehat{\theta}) &= (1-\bar{x})\widehat{\theta} \quad\quad\;\;\;\text{(distribute)} \\
+                            \bar{x} - \bar{x}\widehat{\theta} &= \widehat{\theta} - \bar{x}\widehat{\theta} \\
+                            \bar{x} &= \widehat{\theta}
+                        \end{aligned}$$
+
+                        Recall that $\bar{x}$ is the sample mean of our data. Thus, the maximum likelihood estimate of $\theta$ is the sample mean of our data. 
+                        
+                        This should make sense to us. We estimate the probability of success in a Bernoulli trial by getting the average number of successes in our sample.
+                        </p>
+
+                        <p>
+                            Now, one thing to note is that the math does not always work out this nice. However, there is a way around that!
+                        </p>
+
+                        <h4>Log-Likelihood!</h4>
+
+                        <p>
+                            The idea of log-likelihood is to take the natural logarithm of the likelihood function and solve for the maximum likelihood estimate of our
+                            parameter. It is important to note that this will still give us the same answer. Since the logarithm is a monotonicly increasing function (always increasing)
+                            and the likelihood function is nonnegative, the log-likelihood $\ell(\theta) = \log L(\theta)$ will achieve its maximum at the same value of $\theta$ as the likelihood function. 
+                        </p>
+
+                        <p>
+                            Let's see this in action, first with the Bernoulli distribution. We have
+
+                            $$\ell(\theta) = \log L(\theta) = \log\left( \prod_{i=1}^n \theta^{x_i}(1-\theta)^{1-x_i} \right).$$
+
+                            Recalling that $\log(ab) = \log a + \log b$, we can rewrite the above as
+
+                            $$\begin{aligned}
+                            \ell(\theta) = \log\left( \prod_{i=1}^n \theta^{x_i}(1-\theta)^{1-x_i} \right) &= \log\left(\theta^{n\bar{x}}(1-\theta)^{n-n\bar{x}} \right) \\
+                            &= \log(\theta^{n\bar{x}}) + \log((1-\theta)^{n-n\bar{x}}) \\
+                            &= n\bar{x}\log(\theta) + (n-n\bar{x})\log(1-\theta).
+                            \end{aligned}$$
+
+                            Taking the derivative of this with respect to $\theta$ and setting it equal to zero gives us
+
+                            $$\begin{aligned}
+                            \frac{d\ell(\widehat{\theta})}{d\theta} = \frac{n\bar{x}}{\widehat{\theta}} - \frac{n-n\bar{x}}{1-\widehat{\theta}} &= 0 \\
+                            \frac{n\bar{x}}{\widehat{\theta}} &= \frac{n-n\bar{x}}{1-\widehat{\theta}}  \quad\quad(\text{divide by } n)\\
+                            \frac{\bar{x}}{\widehat{\theta}} &= \frac{1-\bar{x}}{1-\widehat{\theta}} \\
+                            \bar{x}(1-\widehat{\theta}) &= \widehat{\theta}(1-\bar{x}) \\
+                            \bar{x} - \bar{x}\widehat{\theta} &= \widehat{\theta} - \bar{x}\widehat{\theta} \\
+                            \bar{x} &= \widehat{\theta}.
+                            \end{aligned}$$
+
+                            We get the same answer as before! This is a general result, and we can use the log-likelihood to find the maximum likelihood estimate of any parameter.
+                        </p>
+
+                        <h4>Why is MLE Useful?</h4>
+
+                        <p>
+                            Earlier I mentioned that MLE is a powerful method for estimating the parameters of a probability distribution. But truthfully this is an understatement.
+                            MLE is the best method for estimating the parameters of a probability distribution. The principle of MLE is used as a foundation
+                            for many machine learning algorithms and statistical methods. 
+                        </p>
+
+                        <p>
+                            Truthfully, the question should not be when is MLE useful, but when is it not useful.
+                        </p>
+
+                        
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            Maximum likelihood estimation is a powerful method for estimating the parameters of a probability distribution. 
+                            It provides a systematic framework for making inferences about unknown quantities, and is used as a foundation for many machine learning algorithms and statistical methods.
+                            In this blog post, we explored the concept of MLE, its mathematical underpinnings, and considered an example with the Bernoulli distribution. Stay tuned as 
+                            we talk about different important ideas that use MLE!
+                        </p>
+                        
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
