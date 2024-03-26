@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Basics of Unconstrained Optimization</title>
+    <meta name="description" content="In this blog post we discuss the basics of unconstrained optimization.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeta Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-03-27">27 March 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/mle.html">Basics of Unconstrained Optimization</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"If you optimize everything, you will always be unhappy."</blockquote>
+                        <p>- Donald Knuth</p>
+
+                        <p>
+                            Behind important things like machine learning, finance, and operations research lies an important concept: optimization.
+                            Optimization is the process of finding the best solution to a problem from all possible solutions. In this blog post, we will
+                            discuss the basics of unconstrained optimization, a fundamental concept in optimization theory. We will specifically discuss
+                            a few necessary and sufficient conditions for optimality, and consider a few examples.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/unconstrained_opt/optimization_image.jpg" alt="An optimized pipe." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                Photo by <a href="https://unsplash.com/@martinadams?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Martin Adams</a> on <a href="https://unsplash.com/photos/brown-metal-tower-a_PDPUPuNZ8?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+  
+                            </figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Some Important Definitions
+                        </h4>
+
+                        <p>
+                            Throughout this blog post, we will be working with a function $f: \Omega \rightarrow \mathbb{R}$, where $\Omega\in\mathbb{R}^n$ is an open set.
+                        </p>
+
+                        <p>
+                            It is first important to define what it means for a value to be a minimizer. If we have our function $f$ as defined above, then we say a point $\textbf{x}^*\in\Omega$
+                            is a minimizer of $f$ if $f(\textbf{x}^*) \leq f(\textbf{x})$ for all $\textbf{x}\in\Omega$. In this case, we call $f(\textbf{x}^*)$ the minimum value of $f$.
+                            We currently make no claims about either the uniqueness of the minimizer nor claim is is a global minimizer (but we will discuss this later). In this current set up,
+                            if there are no other constraints on the set of possible minimizers, then we say we are working with unconstrained optimization.
+                        </p>
+
+                        <p>
+                            As mentioned above, it is very possible to have multiple minimizers of a function. It is typical to denote the set of all minimizers of $f$ as
+
+                            $$\text{argmin}_{\textbf{x}\in\Omega} \;f(\textbf{x}) = \{\textbf{x}\in\Omega \;|\; f(\textbf{x})\,\leq\, f(\textbf{y})\quad \forall\textbf{y}\in\Omega \}.$$
+
+                            Of course, if this is a set with one element, then we say the minimizer is unique. It should also be mentioned that, by definition, this set will contain only minimizers that yield the
+                            global minimum value. 
+                        </p>
+
+                        <h4>
+                            Necessary and Sufficient Conditions for Optimality
+                        </h4>
+
+                        <p>
+                            With these basic definitions and ideas under our belt, we can now discuss some necessary and sufficient conditions for optimality. 
+                            We begin with the first order necessary condition for optimality.
+                        </p>
+
+                        <h5>
+                            First-Order Necessary Condition (FONC)
+                        </h5>
+
+                        <p>
+                            If we have our function $f$ as defined above with the additional condition that $f$ is differentiable, then if we know $\textbf{x}^*$ is a local minimizer of $f$, then $Df(\textbf{x}^*) = \mathbf{0}^T$.
+                        </p>
+
+                        <p>
+                            To see this, let's suppose that we have a point $\textbf{x}^*$ that is a local minimizer of $f$, but $Df(\textbf{x}^*) \neq \mathbf{0}^T$. If this is true, then we can define a unit vector 
+                            $\textbf{q} = -\frac{Df(\textbf{x}^*)^T}{\lVert Df(\textbf{x}^*)^T}$. This tells us that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert$. So, by the non-negative property
+                            of norms, we have that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert < 0$. Since $\textbf{x}^*$ is a local minimizer, this means that we can find a point 
+                            $\textbf{x}^* + \alpha\textbf{q}$ such that $f(\textbf{x}^* + \alpha\textbf{q}) < f(\textbf{x}^*)$. By definition of the derivative, we have
+
+
+                            $$\begin{aligned}
+                                \frac{|f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*) - tDf(\textbf{x}^*)\textbf{q}|}{\lVert t\textbf{q}\rVert} &= \frac{f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*) + t\lVert Df(\textbf{x}^*)\rVert}{|t|} \\
+                                &= \frac{f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*) + t\lVert Df(\textbf{x}^*)\rVert}{t} \\
+                                &= \frac{f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*)}{t} + \lVert Df(\textbf{x}^*)\rVert \geq \lVert Df(\textbf{x}^*) \rVert.
+                            \end{aligned}$$
+
+                            This implies that 
+
+                            $$\frac{f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*)}{t} \geq 0$$
+
+                            However, by definition of the derivative, we have
+
+                            $$\frac{|f(\textbf{x}^* + t\textbf{q}) - f(\textbf{x}^*) - tDf(\textbf{x}^*)\textbf{q}|}{\lVert t\textbf{q}\rVert} = 0,$$
+
+                            so we conclude with $0\geq 0$, which is a contradiction. Thus, we must have that $Df(\textbf{x}^*) = \mathbf{0}^T$.
+                        </p>
+
+                        <p>
+                            With this in mind, we know that a point can only be a local minimizer if the derivative of the function at that point is zero. That is not to say that every point where the derivative is zero is a local minimizer,
+                            but a point is certainly not a local minimizer if the derivative is not zero.
+                        </p>
+
+                        <p>
+                            (While the FONC has a very simple statement, it should be noted that it is not always easy to verify $Df(\textbf{x}) = 0$. This is important to find keep in mind.)
+                        </p>
+
+                        <h5>
+                            Second-Order Necessary Condition (SONC)
+                        </h5>
+
+                        <p>
+                            In addition to the first-order necessary condition, we can also consider the second-order necessary condition. This condition is a little more involved, but it is still important to consider.
+                        </p>
+
+                        <p>
+                            For second-order conditions, we utilize what is called the Hessian or second-derivative matrix. The Hessian of a function $f$ is defined <i>very</i> generally as
+
+                            $$ \textbf{H}_f = D^2f(\textbf{x}) = \begin{bmatrix}
+                            \frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1\partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_1\partial x_n} \\
+                            \frac{\partial^2 f}{\partial x_2\partial x_1} & \frac{\partial^2 f}{\partial x_2^2} & \cdots & \frac{\partial^2 f}{\partial x_2\partial x_n} \\
+                            \vdots & \vdots & \ddots & \vdots \\
+                            \frac{\partial^2 f}{\partial x_n\partial x_1} & \frac{\partial^2 f}{\partial x_n\partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_n^2}
+                            \end{bmatrix}.$$
+
+                            With this in mind, we define the SONC to be if $\textbf{x}^*$ is a local minimizer of $f$, then the Hessian $D^2f(\textbf{x}^*)$ is positive semidefinite (also denoted $D^2f(\textbf{x}^*) \geq 0$). Now, the
+                            term positive semidefinite might be new to you, but it simply means that all the eigenvalues of the matrix are nonnegative ($\lambda \geq 0$ $\forall\lambda\in\sigma(D^2f(\textbf{x}^*))$).
+                        </p>
+
+                        <p>
+                            Rather than dive into the proof (which is not very exciting to me), let's instead consider an example. Consider the function $f(x) = -4x^2 - 2y^2$. The first derivative of the function is defined as
+                            $Df(x, y) = \begin{bmatrix} -8x, & -4y \end{bmatrix}$. We can easily see that the only place where $Df(x,y) = 0$ is at the origin $(0,0)$. So the origin is the only point that <i>could</i> be a local minimizer (though not guaranteed).
+                            The second derivative of the function is defined as $$D^2f(x, y) = \begin{bmatrix} -8 & 0 \\ 0 & -4 \end{bmatrix}$$. In this case, the eigenvalues of the Hessian are $-8$ and $-4$, which are both negative. Thus, our
+                            Hessian matrix is negative definite everywhere, so we can conclude the origin is not a local minimizer. This is of course a toy example and can be easily verified by graphing the function (see below). But the idea is important.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/unconstrained_opt/example_plot.png" alt="Plotting our example function." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                Plot of the function $f(x,y) = -4x^2 - 2y^2$.
+                            </figcaption>
+                        </figure>
+
+                        <h5>
+                            Second-Order Sufficient Condition (SOSC)
+                        </h5>
+
+                        <p>
+                            Now, up to this point, we have only discussed necessary conditions for optimality. 
+                            That is, we have only discussed conditions that, if a point $\textbf{x}^*$ is a local minimizer, then those conditions are true. 
+                            We will now discuss a sufficient conditions for optimality, namely the second-order sufficient condition.
+                        </p>
+                        
+                        <p>
+                            We define the second-order sufficient condition (SOSC) to be
+                            if $\textbf{x}^*\in\Omega$ is a point such that $Df(\textbf{x}^*) = \mathbf{0}^T$ and $D^2f(\textbf{x}^*)$ is positive definite (denoted $D^2f(\textbf{x}^*) > 0$), then $\textbf{x}^*$ is a local minimizer of $f$. (This idea
+                            of positive definite is similar to positive semidefinite, but all the eigenvalues are positive.)
+                        </p>
+
+                        <p>
+                            We should note that this sufficiency condition does not say anything about the point $\textbf{x}^*$ being
+                            a global minimizer. It only says that if the conditions are met, then $\textbf{x}^*$ is a local minimizer.
+                        </p>
+
+                        <p>
+                            Let's see SOSC in action with a fun example.
+                        </p>
+
+                        <h4>
+                            The Rosenbrock Function
+                        </h4>
+
+                        <p>
+                            We will show the power of the SOSC with the Rosenbrock function. The Rosenbrock function is often used
+                            as a test function for optimization algorithms because of how difficult it is to find the simple minimizer
+                            numerically. This difficulty arises from the fact that the function has a very flat valley that the optimizer
+                            must traverse to find the minimum. We define the Rosenbrock function to be $f(x,y) = (1-x)^2 + 100(y-x^2)^2$.
+                            Here is a plot to visualize it.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/unconstrained_opt/rosenbrock.png" alt="The Rosenbrock function." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                The Rosenbrock function.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            Let's do some math to get the local minimizer! Recall that SOSC tells us that if $Df(\textbf{x}^*) = \mathbf{0}^T$ and $D^2f(\textbf{x}^*) > 0$, then $\textbf{x}^*$ is a local minimizer.
+                            So, let's start by getting some derivatives. The first derivative of the Rosenbrock function (and setting it equal to zero) is
+
+                            $$\begin{aligned}
+                            Df(x, y) &= \begin{bmatrix} -2(1-x) - 400x(y-x^2), & 200(y-x^2) \end{bmatrix} \\
+                            &= \begin{bmatrix} -2 + 2x -400xy + 400x^3, & 200y - 200x^2 \end{bmatrix} = \begin{bmatrix} 0, & 0 \end{bmatrix}.
+                            
+                            \end{aligned}$$
+
+                            Solving the second entry of the vector, we get $y = x^2$. Plugging this into the first entry, we get
+
+                            $$-2(1-x) - 400x({\color{red}x^2}-x^2) = 0 \implies -2(1-x) - {\color{red}0} = 0 \implies x = 1.$$
+
+                            Since $y = x^2$ and $x=1$, we have $y=1$. Thus, our candidate point (or <em>critical point</em>) is $(1,1)$. Now, let's find the Hessian of the Rosenbrock function. The Hessian is
+
+                            $$D^2f(x, y) = \begin{bmatrix} 2 - 400y + 1200x^2 & -400x \\ -400x & 200 \end{bmatrix}.$$
+
+                            Evaluating our Hessian at $(1,1)$, we get
+
+                            $$D^2f(1, 1) = \begin{bmatrix} 2 - 400{\color{red}(1)} +1200{\color{red}(1)}^2 & -400{\color{red}(1)} \\ -400{\color{red}(1)} & 200 \end{bmatrix} = \begin{bmatrix} 802 & -400 \\ -400 & 200 \end{bmatrix}.$$
+
+                            We can now check if $D^2f(1,1)$ is positive definite by looking at the eignevalues. Using a computational solver, we get $\lambda  = 501 \pm \sqrt{250601} \approx \{1001.6, 0.399 \}$.
+                            Since both of these are positive always, $D^2f(1,1)$ is positive definite. Thus, by SOSC, we have that $(1,1)$ is a local minimizer of the Rosenbrock function.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/unconstrained_opt/rosen_point.png" alt="The Rosenbrock function and its minimizer." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                The Rosenbrock function and its minimizer at $(1,1)$.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            This is a very powerful result! Looking at the graph of the Rosenbrock function, it is very difficult to see that $(1,1)$ is a minimizer. But, by using the SOSC, we can see that it is indeed a local minimizer.
+                        </p>
+
+                        
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            Unconstrained optimization is a very important concept in optimization theory. In this blog post, we discussed some necessary and sufficient conditions for optimality. We discussed the first-order necessary condition (FONC),
+                            the second-order necessary condition (SONC), and the second-order sufficient condition (SOSC). We also considered the Rosenbrock function as an example of how to use these conditions.
+                            Unconstrained optimization plays a huge role in many complex fields and is even the backbone of tools like gradient descent.
+                            (If you want to see how I built the plots for this blog post, you can check them out <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/unconstrained_opt/unconstrained_opt.ipynb"
+                                target="_blank">here</a>.)
+                        </p>
+                        
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
