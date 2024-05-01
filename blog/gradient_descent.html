@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Gradient Descent</title>
+    <meta name="description" content="In this blog post we discuss gradient descent and the math behind several modifications that make it better.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="blog_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="blog_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/css.css">
+    <link rel="stylesheet" type="text/css" href="blog_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/blog/blog.html"><img src="blog_files/bloglogo.png" alt="Pi Zeta Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/blog/blog.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-04-26">26 April 2024</time> </span>
+                    <h2 class="post-title"><a href="/blog/gradient_descent.html">Gradient Descent</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"All we're doing is going down hill."</blockquote>
+                        <p>- Dr. Ben Webb</p>
+
+                        <p>
+                            Gradient descent is one of the key innovations that allows us to optimize functions. It is a simple algorithm with a simple goal: solving
+                            unconstrained optimization problems of the form
+
+                            $$\text{minimize} \;f: \mathbb{R}^n\to\mathbb{R}.$$
+                        </p>
+
+                        <p>
+                            In a previous blog post we discuessed <a href="https://dylanskinner65.github.io/blog/unconstrained_opt.html">unconstrained optimization</a> and some of the necessary and sufficient conditions for optimality. 
+                            In this blog post, we will make the optimization a little more complicated. Don't be afraid, though! In the words of
+                            one of my college professors, <a href="https://science.byu.edu/directory/ben-webb">Dr. Ben Webb</a>, "All we're doing is going down hill."
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/initial_mountain.jpg" alt="A nice picture of a mountain." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                Photo by <a href="https://unsplash.com/@sepoys?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Rohit Tandon</a> on <a href="https://unsplash.com/photos/aerial-photography-of-mountain-range-covered-with-snow-under-white-and-blue-sky-at-daytime-9wg5jCEPBsw?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>  
+                            </figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            The Basics of Gradient Descent
+                        </h4>
+
+                        <p>
+                            If you can recall from your multivariate calculus class (and if you never took multivariate calculus, that's okay), the gradient
+                            $Df(\textbf{x})^{\intercal}$ of a function $f$ is a vector that points in the direction of the greatest <em>increase</em> of the function at a point $\textbf{x}$.
+                            This tells us that the negative gradient $-Df(\textbf{x})^{\intercal}$ points in the direction of the greatest <em>decrease</em> of the function at a point $\textbf{x}$.
+                            This idea of the negative gradient is exactly the intuition behind gradient descent.
+                        </p>
+
+                        <p>
+                            So, we define the basic form of gradient descent to be
+
+                            $$\textbf{x}_{k+1} = \textbf{x}_k - \alpha Df(\textbf{x}_k)^{\intercal},$$
+
+                            where $\textbf{x}_k$ is the current point, $\textbf{x}_{k+1}$ is the next point, and $\alpha$ is a step size (or learning rate) that we can adjust.
+                        </p>
+
+                        <p>
+                            This is a very simply algorithm to code up with one simple implementation being as follows:
+                        </p>
+
+<pre><code class="language-python">import numpy as np
+import scipy.optimize as opt
+
+# Define our gradient descent function
+def gradient_descent(f, x0, lr=0.1, tol=1e-6, maxiter=10**5):
+    # Get our initial guess
+    x_vals = np.array([x0])
+    x = x0
+    
+    # Iterate until we converge
+    for i in tqdm(range(maxiter)):
+        # Get the gradient
+        grad = opt.approx_fprime(x, f, 1e-6)
+        
+        # Update our guess
+        x = x - lr * grad
+        x_vals = np.vstack((x_vals, x))
+        
+        # Check for convergence
+        if np.linalg.norm(grad) < tol:
+            break
+    return x_vals, i</code></pre>
+
+                        <p>
+                            In this implementation, we use the <code>approx_fprime</code> function from the <code>scipy.optimize</code> package to approximate the gradient of the function $f$ at a point $\textbf{x}$.
+                            This could also be doing using something like <code>jax</code> or your favorite difference method for calculating derivatives.
+                        </p>
+
+                        <p>
+                            To visualize how this code works, consider the following function:
+                            
+                            $$f(x,y) = -7e^{-\frac{(x-8)^2 + (y-20)^2}{100}} - 4e^{-\frac{(x+19)^2 + (y-17)^2}{100}} + 23e^{-\frac{(x+7)^2}{100} - \frac{(y+10)^2}{100}}.$$
+                            
+                            This function has two minima. A local minimum at the point $(-19, 17)$, and a global minimum at the point $(8, 20)$. We can visualize this function with the following plot.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/func1.png" alt="The test function function." width="100%" height="90%">
+                            <figcaption text-align=center>
+                                Our test function.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            To see how gradient descent works, we can start at a point $(x_0, y_0)$ (which we pick randomly), and then follow the recursive formula until a convergence criterion is met.
+                            In this case, we define the convergence criterion to be when the norm of the gradient is less than $10^{-8}$. We can visualize this process with the following gif.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/func1.gif" alt="Gif of gradient descent at a random point." width="100%" height="90%">
+                        </figure>
+
+                        <p>
+                            In this gif, we are able to see both a strength and a weakness of gradient descent. The strength is that gradient descent is able to
+                            go downhill towards a minimum. The weakness is it finds a <em>local</em> minimum rather than a <em>global</em> minimum. 
+                            This is a common problem in optimization and does not have a one-size-fits-all answer. There have been some research into 
+                            fixing this problem, which we will now talk about.
+                        </p>
+
+                        <h4>Polyak's Heavy Ball Method</h4>
+
+                        <p>
+                            As seen in the previous section about Gradient Descent, we find the next point in our optimization by taking a step in the direction of the negative gradient.
+                            This gives us a progression of points that should lead us to a minimum. We can use this information and a few ideas from physics to improve our optimization.
+
+                            One idea is to think of a ball rolling down a hill. If the ball is heavy, it will have more momentum and will be able to roll further down the hill. This ball
+                            will have a particular velocity that we can find by looking at the current and previous positions of the ball and how long the point update took. In the case of
+                            gradient descent, since the time it takes to get from one point to the next is simply one time step, we can create an auxiliary variable $\textbf{v}_k$ that represents
+                            the velocity of our point and is given by
+
+                            $$v_k = \textbf{x}_{k+1} - \textbf{x}_k.$$
+
+                            Notice, we find the velocity is always one step behind the current point. This should make sense because it is impossible to tell the velocity of the ball 
+                            at the current point if we're not sure where the ball will be next. This is the idea behind Polyak's Heavy Ball Method.
+                        </p>
+
+                        <p>
+                            Differing from the basic gradient descent algorithm, Polyak's Heavy Ball Method is given by
+
+                            $$\textbf{x}_{k+1} = \textbf{x}_k - \alpha Df(\textbf{x}_k)^{\intercal} + \beta(\textbf{x}_k - \textbf{x}_{k-1}),$$
+
+                            where $\beta$ is a <b>momentum</b> parameter that we can adjust. If $\beta = 0$, this is simply gradient descent. It is common to choose $\beta\in(0, 1)$.
+                        </p>
+
+                        <p>
+                            There are two other ways to calculate Polyak's method. The first (which is actually how PyTorch implements it) is to use a dummy variable $\textbf{u}$, initializing
+                            $\textbf{u}_0 = \textbf{x}_0$, and then updating by
+
+                            $$\begin{aligned}
+                                \textbf{u}_k &= (1 + \beta)\textbf{x}_k - \beta\textbf{x}_{k-1} \\
+                                \textbf{x}_{k+1} &= \textbf{u}_k - \alpha Df(\textbf{x}_k)^{\intercal}.
+                            \end{aligned}$$
+                        </p>
+
+                        <p>
+                            The second way by initializing the same dummy variable $\textbf{u}$, but updating by
+
+                            $$\begin{aligned}
+                                \textbf{u}_{k+1} &= \beta\textbf{u}_k - Df(\textbf{x}_k)^{\intercal} \\
+                                \textbf{x}_{k+1} &= \textbf{x}_k + \alpha \textbf{u}_{k+1}.
+                            \end{aligned}$$
+                        </p>
+
+                        <p>
+                            All three of these are fine implementations. For the purposes of this blog post, we will implement the first method. The code for this implementation is as follows (with the same
+                            imports from above):
+                        </p>
+
+<pre><code class="language-python">def heavy_ball(f, x0, alpha=0.1, beta=0.7, tol=1e-6, maxiter=10**5):
+    # Get our initial guess
+    x_vals = np.array([x0])
+    x = x0
+    x_prev = x0
+    
+    # Iterate until we converge
+    for i in tqdm(range(maxiter)):
+        # Get the gradient
+        grad = opt.approx_fprime(x, f, 1e-6)
+        
+        # Update our guess
+        x_new = x - alpha * grad + beta * (x - x_prev)
+        x_vals = np.vstack((x_vals, x_new))
+        
+        # Check for convergence
+        if np.linalg.norm(x_new - x) < tol:
+            break
+        
+        # Update our points
+        x_prev = x
+        x = x_new
+        
+    return x_vals, i</code></pre>
+
+                        <p>
+                            In this case, we check for convergence by seeing if the norm between the previous and current points is less than some tolerance threshold. Implemented on the same function as above—
+                            though with a different initial point—we get:
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/func2.gif" alt="Gif of Polyak's heavy ball method at a random point." width="100%" height="90%">
+                        </figure>
+
+                        <p>
+                            Again, we see that this method finds the local minima instead of the global minima, but it is interesting to note that as the slope of the surface changes, so does the distance between the more recent and current points.
+                            This is a result of the momentum parameter $\beta$.
+                        </p>
+
+                        <p>
+                            Here is an example of when Polyak's heavy ball method finds the global minima.
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/func2a.gif" alt="Gif of when Polyak's heavy ball method finds the global minima." width="100%" height="90%">
+                        </figure>
+
+                        <p>
+                            One interesting thing about Polyak's method is that its convergence rate (for convex functions) is $\mathcal{O}(1/\sqrt{\varepsilon})$, where $\varepsilon$ is our tolerance threshold; meaning, if we want
+
+                            $$\lVert \textbf{x}_k - \textbf{x}^*\rVert$$ \leq \varepsilon,$$
+
+                            we will need to run Polyak's method for $\mathcal{O}(1/\sqrt{\varepsilon})$ iterations. ($\textbf{x}^*$ is the true minimum of the function.)
+                        </p>
+
+                        <h4>Nesterov's Accelerated Gradient Descent Method</h4>
+
+                        <p>
+                            Another method that is similar to Polyak's Heavy Ball Method is Nesterov's Accelerated Gradient Descent Method. Nesterov's method is essentially advanced Polyak's method with a twist.
+
+                            A big part of Polyak's method over gradient descent is the idea of momentum. This momentum, however, can hurt us in the end as it can cause us to overshoot the minimum.
+                            Nesterov's method incorperates the idea of damping (or friction) into Newton's law of motion.
+
+                            If we write
+
+                            $$ma = F - cv,$$
+
+                            where $m$ is the mass of the object, $a$ is the acceleration, $F$ is the force, $c$ is the damping coefficient, and $v$ is the velocity. In this, we have that the effective
+                            force helps to decrease the velocity of the object. This allows the weight updates to not slow down in the beginning when the gradient is large. However, as we get closer to the minimum
+                            and the gradient magnitude is smaller, the damping coefficient will help to slow down the weight updates and prevent overshooting.
+                        </p>
+
+                        <p>
+                            To perform Nesterov's method, we can use the following update equations:
+
+                            $$\begin{aligned}
+                                \textbf{u}_{k+1} &= \beta\textbf{u}_k - Df(\textbf{x}_k + \beta\textbf{u}_k) \\
+                                \textbf{x}_{k+1} &= \textbf{x}_{k+1} + \beta(\textbf{u}_{k+1}).
+                            \end{aligned}
+                            $$
+
+                            It is important to point out that the only difference between this method and Polyak's method (at least the second alternative implementation) is the terms inside the derivative $Df$. 
+                            This main change computes the gradient as if the weights have already moved with the current velocity $\textbf{u}_k$. It then uses that velocity to update the weights.
+
+                            An alternative way to write this update is
+
+                            $$\begin{aligned}
+                                \textbf{u}_{k+1} &= (1 + \beta)\textbf{x}_k - \beta\textbf{x}_{k-1} \\
+                                \textbf{x}_{k+1} &= \textbf{u}_{k} - \alpha Df(\textbf{u}_{k}).
+                            \end{aligned}$$
+                        </p>
+
+                        <p>
+                            The first way, implemented in Python, is given by
+                        </p>
+
+<pre><code class="language-python">def nag(f, x0, alpha=0.1, beta=0.7, tol=1e-6, maxiter=10**5):
+    # Get our initial guess
+    x_vals = np.array([x0])
+    x = x0
+    v = np.zeros_like(x0)
+    
+    # Iterate until we converge
+    for i in tqdm(range(maxiter)):
+        # Get the gradient
+        grad = opt.approx_fprime(x - beta*v, f, 1e-6)
+        
+        # Update our guess
+        v_new = beta * v + alpha * grad
+        x_new = x - v_new
+        x_vals = np.vstack((x_vals, x_new))
+        
+        # Check for convergence
+        if np.linalg.norm(x_new - x) < tol:
+            break
+        
+        x = x_new
+        v = v_new
+        
+    return x_vals, i</code></pre>
+
+                        <p>
+                            In this case, <code>v_new</code> is our $\textbf{u}_k$.
+                        </p>
+
+                        <p>
+                            Applying this to our test function, we get
+                        </p>
+
+                        <figure>
+                            <img src="blog_files/gradient_descent/func3.gif" alt="Gif of Nesterov's Accelerated Gradient Descent." width="100%" height="90%">
+                        </figure>
+
+                        <p>
+                            Nesterov's method hits the global minimum in this case, but it is very possible for Nesterov's to hit a local minima. 
+                        </p>
+
+                        <h4>Other Gradient Descent Methonds</h4>
+
+                        <p>
+                            These methods discussed today are not the only methods for gradient descent. There are many other methods that have been developed over the years. Some of these methods include:
+
+                            <ul>
+                                <li>Adagrad</li>
+                                <li>Adam</li>
+                                <li>Adadelta</li>
+                                <li>RMSprop</li>
+                                <li>LBFGS</li>
+                            </ul>
+
+                            but the current most popular method is Adam. I will touch on Adam in a future blog post.
+                        </p>
+
+                        
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            Gradient descent is a huge, key component of deep learning and optimization. While not perfect, gradient descent does a dang good job for non-convex functions.
+
+                            Some of the main methods we covered today are standard gradient descent, Polyak's Heavy Ball Method, and Nesterov's Accelerated Gradient Descent. These methods all have their strengths and weaknesses, but they all have the same goal: to minimize a function.
+
+                            I hope you enjoyed this blog post. I invite you to check out the <a href="https://github.com/dylanskinner65/dylanskinner65.github.io/blob/main/blog/blog_files/gradient_descent/gradient_descent.ipynb">iPython notebook</a>
+                            I used to write all the methods and create the graphs and animations (it took me a long time to figure out, so just take what I did and don't reinvent the wheel haha).
+                        </p>
+                        
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/blog/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li>
+                <li><a href="/blog/feed.xml">RSS Feed</a></li>
+            </ul>
+
+            <ul>
+            </ul>
+
+            <p>This blog has been continuously published since 2024</p>
+
+            <footer class="site-footer">
+                <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan
+                        Skinner</a> © 2024<br>
+            </footer>
+        </aside>
+    </div>
+</body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+</html>
