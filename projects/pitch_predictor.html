@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>MLB Pitch Predictor</title>
+    <meta name="description" content="A project using shallow and deep learning models to predict the next pitch in an MLB game.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="projects_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="projects_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/css.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Blog</a></h1>
+            <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-10-16">16 October 2023</time> </span>
+                    <h2 class="post-title"><a href="/projects/pitch_predictor.html">MLB Pitch Predictor</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"It's unbelievable how much you don't know about the game you've been playing all your life"</blockquote>
+                        <p>- Mickey Mantle</p>
+
+                        <p>This project was a joint effort by me and my friend <a href="https://www.linkedin.com/in/jasonwvasquez/">Jason Vasquez</a>. When I say "we," I am talking about me and Jason.</p>
+
+                        <p>
+                            Pitch prediction is a very complicated process that remains (for the most part) unsolved. Many different independent researchers, as well as well-funded MLB analytics departments, 
+                            have set out to achieve the highest degree of accuracy possible. However, with all of the factors involved, including the unpredictable nature of pitchers, any degree of accuracy 
+                            that would be noticeably helpful to in-game batters remains elusive. Nevertheless, this problem remains a fun classification/prediction exercise that allows for experimenting with all types of Neural Networks. 
+                            For our project, we established accuracy baselines, first on random sampling of pitching distributions and then on a shallow CatBoost machine learning model. Then, we iteratively experimented with different models, 
+                            feature engineering, activation functions, and optimizers to attempt to achieve the highest degree of accuracy we could. 
+                            Our ultimate goal was to beat 51% accuracy, which was what the author of the dataset on Kaggle achieved by using built-in Keras models.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/pitch_predictor/pitcher_initial.jpg" alt="Salt Lake Bees player throwing a pitch." width="90%" height="90%">
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            The Dataset
+                        </h4>
+
+                        <p>
+                            The data from our dataset was downloaded from <a href="https://www.kaggle.com/datasets/pschale/mlb-pitch-data-20152018">Kaggle</a>, courtesy of <a href="https://www.kaggle.com/pschale">Paul Schale</a>, it included all pitches from the 
+                            2015-2019 MLB seasons including the game situation at the pitch. This data has been widely used for a variety of baseball analytics (sabermetrics) projects.
+                        </p>
+
+                        <h4>Dataset Exploration</h4>
+
+                        <p>
+                            The data includes a <code>pitches.csv</code>, which includes each pitch, the pitcher id, batter id, game id, and lots of information about the pitch such as spin rate, velocity, break angle, etc. 
+                            It also contains a prelabeled column <code>pitch type</code> that we will use as our truth values. There is also a file called <code>atbats.csv</code>, which includes information about the 
+                            specific at bat, including the score, runners on base, result of the at bat, handedness of the pitcher, and handedness of the batter. Finally, there is a <code>players.csv</code> that includes 
+                            the player name to link to the id's in the above tables. For this project, we want to only use data that would be available to a batter or team before a pitch is thrown, 
+                            such as the handedness of pitcher, runners on, and most importantly, prior pitches that have been thrown. We calculated a pitch distribution for each pitcher, and our first accuracy baseline was a 
+                            model that randomly sampled from the pitcher's distribution for each pitch. Figure 1 below shows the distribution as well as distribution of 2500 random samples for 4 random pitchers in the database. 
+                            The random model produced an accuracy of 32.9%.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/pitch_predictor/sampled_dists.png" alt="The sampled distributions." width="90%" height="90%">
+                        </figure>
+
+
+                        <h4>Our Methodology</h4>
+
+                        <p>
+                        After our random model, we established another random baseline by fitting our data to a shallow machine learning classifier, CatBoost. This model achieved a 45% accuracy. Our goal was to be higher than 51% with a Deep Learning model. 
+
+                        To prepare the data, we randomly split pitches into training or testing data using the built-in <code>sklearn.model_selection.train_test_split()</code>. With the data split, we prepared the data by combining the data frames and 
+                        filtering out the columns we wouldn't use for our model. We were left with 15 features, namely pitcher name, pitcher handedness, batter, batter stance, batter score, ball count, strike count, outs, runner on 1st, 
+                        runner on 2nd, runner on 3rd, inning, pitcher score, and game id. We also had approximately 3.5 million pitches in our dataset, and about 80% of those were in our training data, leaving about 20% for our testing data. 
+                        
+                        Our first approach was thinking that a Recurrent Neural Network would be the best model for this task. This would allow us to treat a game like a paragraph, with 
+                        each pitch a character. Because of the nature of baseball, past pitches (and their success rate) influence future pitches, so we were hopeful a type of RNN model would capture the 
+                        patterns and learn how to predict future pitches from past pitches. This provided some difficulties with the data cleaning, as we had to treat a game of pitches like a sequence, and 
+                        then pass in one game at a time to our model. However, as the games have different amounts of pitches, we had to pad them which provided some difficulties. 
+                        We also tried not padding or batching the pitches and passing one pitch at a time to the RNN, reinitializing the hidden layer every game, but this did not provide 
+                        us with the accuracy we were hoping for. Experimenting with an LSTM gate, and a GRU cell provided marginally better accuracy than vanilla RNN, but we were still topping out in the low 40s.
+                        
+                        After this, we thought that a transformer with self-attention would be a good way to capture the sequential patterns in the data. With the data still grouped by game and padded, 
+                        we passed it through a self-attention transformer. This also slightly bumped up our accuracy, but not to the levels we were hoping for or believed we could get.
+                        At this point, we shifted our approach, we stopped grouping the data by games and realized that feature engineering might be able to unlock higher accuracy for us. 
+                        We went through the data, added a column (feature) for each pitch type, and then filled in the columns with how many pitches of that type the pitcher had thrown up to that point in the game. 
+                        So at the beginning of the game, all of those columns were 0, but as the pitcher started to throw pitches the columns would populate with past pitch types. 
+                        This allowed us to batch the data and not group it by game, which provided for much faster and more efficient training, but it still had the sequential information that was needed for accuracy. 
+                        In a way, it became a pseudo-markov chain because each row of data contained all of the information it needed about past events in its current state. 
+                        However, as each row only knew about past pitches, this didn't violate the principle of being able to predict pitches in real-time.
+                        
+                        With our updated dataset, we shifted the focus of our model to dense linear networks, and experimented with several different amounts of layers, activation functions, etc. 
+                        We found that this method worked best of all, and initially saw a result of around 51%. We also formatted the code in a way that allowed us to run it on the supercomputer so we could train for 
+                        longer with denser networks. With using the <a href="https://arxiv.org/abs/2010.07468">AdaBelief optimizer</a>, and Penalized TanH as an activation function on our deep model, we achieved accuracy of around 55% after 10 epochs of training. 
+                        Then, as a final experiment, we attached a self-attention transformer to our linear model, and found that while the final accuracy didn't improve all that much, the network trained much faster, which is still an improvement. 
+                        Figure on the top is the test accuracy with the deep linear model, and the figure on the bottom is with the transformer in the model.	
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/pitch_predictor/test_acc_deep_linear.png" alt="The test accuracy for our deep linear model" width="100%" height="100%">
+                            <figcaption text-align=center>The test accuracy for our deep linear model.
+                            </figcaption>
+                        </figure>
+
+                        <figure>
+                            <img src="projects_files/pitch_predictor/test_acc_for_transformer.png" alt="The test accuracy for our transformer involved model." width="100%" height="100%">
+                            <figcaption text-align=center>The test accuracy for our transformer involved model.
+                            </figcaption>
+                        </figure>
+
+                        <h4>Analysis</h4>
+
+                        <p>
+                            After experimenting, we were able to achieve 54-55% accuracy on our test data, and the average for the training data accuracy was in the same range. 
+                            We consider this a success, as it beats our baseline accuracy models, and beats the 51% accuracy that the author of the dataset achieved in his Kaggle post. 
+                            We consider the most important element to our increased accuracy to be the novel techniques we used on our model and the feature engineering that encoded important information in the dataset before training. 
+                            Our first approach of using a Recurrent Neural Network was not our final approach, because it did not achieve our accuracy goal, and after several iterations we were able to achieve higher accuracy without an RNN. 
+                            We believe that one limitation that we had was the scope of our data. We had access to 4 seasons of pitch data which only provided just over 3 million pitches. 
+                            We are hopeful that with more data and more experimentation, we could achieve even higher results.
+                        </p>
+
+                        <p>
+                            To see all of our code, please visit our
+                            <a href="https://github.com/dylanskinner65/PitchPredictor">Github</a>.
+                        </p>
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/projects/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <!-- <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li> -->
+                <!-- <li><a href="/blog/feed.xml">RSS Feed</a></li> -->
+            </ul>
+
+            <ul>
+            </ul>
+
+<p>This website has been continuously published since <span id="currentYear"></span>.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+    });
+    </script>
+
+<footer class="site-footer">
+    <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan Skinner</a> © <span id="currentYear"></span><br>
+</footer></aside>
+    </div>
+        </body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+
+    </html> 
