@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Deep Knots RL</title>
+    <meta name="description" content="The code used for my honors thesis project.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="projects_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="projects_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/css.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Porfolio</a></h1>
+            <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-02-29">29 February 2024</time> </span>
+                    <h2 class="post-title"><a href="/projects/pitch_predictor.html">Deep Knot RL</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Knit your hearts with an unslipping knot."</blockquote>
+                        <p>- William Shakespeare</p>
+
+                        <p>
+                            This project is the backbone of my honors thesis.
+                        </p>
+
+                        <p>
+                            My thesis title is: Using Deep Learning Techniques to Find the 4D Slice Genus of a Knot, with abstract:
+                        </p>
+                            
+                        <p>
+                            Deep reinforcement learning (DRL) has proven to be exceptionally effective in addressing challenges related to pattern recognition and problem-solving, particularly in domains where human intuition faces limitations. Within the field of knot theory, a significant obstacle lies in the construction of minimal-genus slice surfaces for knots of varying complexity. This thesis presents a new approach harnessing the capabilities of DRL to address this challenging problem. By employing braid representations of knots, our methodology involves training reinforcement learning agents to generate minimal-genus slice surfaces. The agents achieve this by identifying optimal sequences of braid transformations with respect to a defined objective function.
+                        </p>
+
+                        <p>
+                            Ultimately, we used PPO to try and find the minimal slice genus of a knot. You can find all my code here, including my implementation of PPO! (And if you are interested in reading my thesis, you can find it <a href="https://dylanskinner65.github.io/Using%20Deep%20Learning%20Techniques%20to%20Find%20the%204D%20Slice%20Genus%20of%20a%20Kn.pdf">here</a>!)
+                        </p>
+
+                        <p>To see the code used in this project, visit my <a href="https://github.com/dylanskinner65/DeepRLKnots">Github</a>.</p>
+
+                        <figure>
+                            <img src="projects_files/deep_knots_rl/intro_knots.png" alt="Some knots." width="90%" height="90%">
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>Technologies & Tools Used</h4>
+                        <ul>
+                            <li><strong>Python</strong> – Primary programming language for model development.</li>
+                            <li><strong>Gym (Custom Environment)</strong> – Created a reinforcement learning environment tailored to the problem.</li>
+                            <li><strong>PyTorch</strong> – Built and trained custom PPO deep learning models.</li>
+                            <li><strong>TensorBoard</strong> – Visualized training progress and model performance.</li>
+                            <li><strong>Supercomputer at BYU</strong> – Leveraged high-performance computing for multi-GPU large-scale training.</li>
+                        </ul>
+                    
+                        <h4>Project Structure</h4>
+                    
+                        <h5>Custom Gym Environment (<code>gym</code> and <code>gym-knot</code>)</h5>
+                        <p>
+                            To train the agents effectively, I implemented a custom <strong>Gym</strong> environment, which allowed seamless interaction with the problem space. 
+                            The repository contains multiple files for environment registration, though only one is necessary—something I’d need to revisit for clarity! 
+                            If you're interested in custom environments, OpenAI Gym’s documentation is a great resource.
+                        </p>
+                    
+                        <h5>Experimental Results (<code>result_csv</code>)</h5>
+                        <p>
+                            The <code>result_csv</code> directory holds CSV files documenting various training experiments. Each subfolder represents a separate experiment, labeled as <code>sol_n_m</code>, where:
+                        </p>
+                        <ul>
+                            <li><strong>n</strong> = lower bound for the crossing number used in training</li>
+                            <li><strong>m</strong> = upper bound for the crossing number used in training</li>
+                        </ul>
+                        <p>Each CSV file records:</p>
+                        <ul>
+                            <li>The braid attempted</li>
+                            <li>Epoch and step when a solution was found</li>
+                            <li>The reward achieved</li>
+                            <li>The sequence of moves taken by the agent</li>
+                        </ul>
+                        <p>
+                            Experiments were run in parallel across four GPUs, meaning some experiments may have missing results if certain agents failed to solve their assigned problems.
+                        </p>
+                    
+                        <h3>Training Logs (<code>runs</code>)</h3>
+                        <p>
+                            This folder contains <strong>TensorBoard logs</strong>, providing a detailed view of agent performance across different training runs.
+                            Due to the sheer volume of experiments, this directory contains a significant number of log files.
+                        </p>
+                    
+                        <h5>Stable Baselines PPO Experiments (<code>tensorboard_stable/updated_logs</code>)</h5>
+                        <p>
+                            At one point, I experimented with <strong>Stable Baselines’ PPO algorithm</strong> for comparison with our custom model. 
+                            Although this approach was ultimately not used in the final thesis, the logs are preserved here for reference.
+                        </p>
+                    
+                        <h5>Model Weights (<code>training_files</code>)</h5>
+                        <p>
+                            This directory contains <strong>saved model weights</strong> from various experiments. The most useful files are:
+                        </p>
+                        <pre><code>knot_gpu_optim_Large_[number].pt</code></pre>
+                        <p>
+                            Here, <strong>number</strong> refers to the upper bound crossing number. If you want to apply these models to similar problems, 
+                            use a file where the number is greater than the maximum crossing number you are solving for.
+                        </p>
+                    
+                        <h5>Core Python Files</h5>
+                        <p>The repository includes various Python scripts used to develop and train the reinforcement learning model.</p>
+                        <ul>
+                            <li><code>knot_gpu_Large.py</code> – The most important file, containing the model architecture and training loops. This file was responsible for the results presented in my thesis.</li>
+                            <li>Other Python files – Various iterations of experiments and auxiliary scripts.</li>
+                        </ul>
+                    
+                        <h5>Supercomputer Job Script (<code>knot_jobscript</code>)</h5>
+                        <p>
+                            To efficiently train the model on BYU’s <strong>supercomputer</strong>, I created a <strong>Bash script</strong> for job submission. 
+                            While not required to run the model, this script provides insight into configuring large-scale training runs.
+                        </p>
+
+                        
+
+                        <h4>Results</h4>
+
+                        <p>
+                            Before addressing the results achieved by our agent, we describe how the agent was trained. Starting off, the agent is given a range of crossing numbers to consider. 
+                            The environment samples a random knot between those crossing numbers and presents it to the environment. The agent is given 500 chances to solve this knot. 
+                            (Each epoch provides 100 chances for the agent, so the agent is given 5 epochs total.) 
+                            If the agent solves the knot 20 times (allowing for the agent to optimize a solution it found for that knot), a new knot is sampled and the agent begins again. 
+                            If the agent does not solve it 20 times in those 500 attempts, we sample and give the agent a new knot attempt. 
+                            This process takes approximately 3.5 hours on our GPU for each crossing number range.
+                        </p>
+                    
+                        <p>
+                            We started off by training on knots with five crossings or less, then slowly increased the complexity. 
+                            We found that allowing our algorithm to see and work on easier knots to solve while still being challenged by higher crossing knots 
+                            aided in the success of the algorithm long term. In our experiments, our algorithm learned to construct minimal genus slice surfaces 
+                            for (some, but not all) knots up to 13 crossings.
+                        </p>
+                    
+                        <h5>Training Results</h5>
+                    
+                        <p>
+                            We separate our result figures below into two main parts. The left panel presents the raw training score data. 
+                            Each graph (and associated color) represents the model's progress on a different GPU. Since we trained on four GPUs at once, 
+                            we have four different sets of training data. If the agent did not find a slice surface with the correct Euler characteristic for the knot, 
+                            it was given a reward of <code>-350</code>. Thus, when the agent is successful, the graph contains a spike near <code>0</code>, 
+                            but when unsuccessful, the reward does not climb above <code>-350</code>.
+                        </p>
+                    
+                        <p>
+                            The right panel represents the <strong>exponential moving average (EMA)</strong> for the reward. 
+                            The exponential moving average places more weight on recent data points, making it more responsive to recent changes. 
+                            The formula for EMA is given as:
+                        </p>
+                    
+                        <pre>
+                            EMA_t = (1 - α) * EMA_{t-1} + α * X_t
+                        </pre>
+                    
+                        <p>Where:</p>
+                        <ul>
+                            <li><strong>EMA<sub>t</sub></strong> is the EMA at time <code>t</code>.</li>
+                            <li><strong>EMA<sub>t-1</sub></strong> is the EMA at the previous time step.</li>
+                            <li><strong>X<sub>t</sub></strong> is the value of the time series at time <code>t</code>.</li>
+                            <li><strong>α</strong> is the smoothing factor or weight applied to the most recent data point. A smaller <code>α</code> gives more weight to older data.</li>
+                        </ul>
+                    
+                        <p>
+                            For these graphs, we used a smoothing factor of <code>α = 0.01</code>. In the initial training stages, 
+                            the EMA increases, indicating the agent’s improving ability to find surfaces with the correct Euler characteristic. 
+                            However, as the complexity of knots increases, the agent struggles more. This is expected, as solving more complex knots takes longer.
+                        </p>
+                    
+                        <h5>Training Graphs</h5>
+                    
+                        <figure>
+                        <img src="projects_files/deep_knots_rl/2_5.png" alt="Training Results for Range 2-5">
+                        <img src="projects_files/deep_knots_rl/3_6.png" alt="Training Results for Range 3-6">
+                        <img src="projects_files/deep_knots_rl/4_7.png" alt="Training Results for Range 4-7">
+                        <img src="projects_files/deep_knots_rl/5_8.png" alt="Training Results for Range 5-8">
+                        <img src="projects_files/deep_knots_rl/6_9.png" alt="Training Results for Range 6-9">
+                        <img src="projects_files/deep_knots_rl/6_10.png" alt="Training Results for Range 6-10">
+                        <img src="projects_files/deep_knots_rl/7_11.png" alt="Training Results for Range 7-11">
+                        <img src="projects_files/deep_knots_rl/6_11.png" alt="Training Results for Range 6-11">
+                        <img src="projects_files/deep_knots_rl/7_12.png" alt="Training Results for Range 7-12">
+                        <img src="projects_files/deep_knots_rl/8_13.png" alt="Training Results for Range 8-13">
+                        <img src="projects_files/deep_knots_rl/8_14.png" alt="Training Results for Range 8-14">
+                        </figure>
+
+                        <p>As you can see, the model eventually died...</p>
+                    
+                        <h5>Example of a Successful Solution</h5>
+                    
+                        <p>
+                            Below is an example of our agent finding a minimal genus slice surface for the 10-crossing knot with braid word:
+                        </p>
+                    
+                        <code>[2, -1, -1, 3, 1, 2, -4, 3, 4, 1]</code>
+                    
+                        <p>
+                            For this knot, our algorithm received a reward of <code>0.7</code> by performing the moves:
+                        </p>
+                    
+                        <code>[8, 10, 10, 8, 10, 8, 8, 8, 0, 8, 0, 8, 8, 8, 9, 8, 8, 10, 0, 8, 8, 8, 9, 1, 8, 9, 8, 8, 8, 0]</code>
+                    
+                        <p>Here is a visualization of these moves being applied to the prescribed knot:</p>
+                    
+                        <figure>
+                        <img src="projects_files/deep_knots_rl/result_moves1.png" alt="Move Sequence Step 1">
+                        <img src="projects_files/deep_knots_rl/result_moves2.png" alt="Move Sequence Step 2">
+                        <img src="projects_files/deep_knots_rl/result_moves3.1.png" alt="Move Sequence Step 3.1">
+                        <img src="projects_files/deep_knots_rl/result_moves3.2.png" alt="Move Sequence Step 3.2">
+                        <img src="projects_files/deep_knots_rl/result_moves4.png" alt="Move Sequence Step 4">
+                        </figure>
+
+                        <h4>Future Work</h4>
+
+                        <p>One improvement that could be made to this project in the future to improve performance is using GPUs with larger memory capacity. Our model size was ultimately limited to the memory on the GPU, which could very well be what kept us from consistently finding minimal genus slice surfaces for knots with more than 13 crossings.</p>
+
+                           <p>Additionally, we might not have been using the most effective way to represent knots. The use of alternative knot representation methods (other than braids) could yield more effective approaches, potentially enhancing the overall performance of our deep reinforcement learning model in uncovering the minimal slice genus of knots.</p>
+                            
+                            <p>With ongoing research in the Deep RL space new algorithms are being developed which outperform PPO. Exploring and incorporating these future developments will be instrumental in increasing the progress we have made for finding the minimal slice genus of knots.</p>
+
+                        <!-- <h4>Citations</h4> -->
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/projects/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <!-- <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li> -->
+                <!-- <li><a href="/blog/feed.xml">RSS Feed</a></li> -->
+            </ul>
+
+            <ul>
+            </ul>
+
+<p>This website has been continuously published since <span id="currentYear"></span>.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+    });
+    </script>
+
+<footer class="site-footer">
+    <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan Skinner</a> © <span id="currentYear"></span><br>
+</footer></aside>
+    </div>
+        </body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+
+    </html> 
