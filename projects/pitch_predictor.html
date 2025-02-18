@@ -76,7 +76,7 @@
         <div class="site-head-content">
             <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
                     height="64"></a>
-            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Blog</a></h1>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Porfolio</a></h1>
             <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
         </div>
     </header>
@@ -142,19 +142,25 @@
                         <h4>Our Methodology</h4>
 
                         <p>
-                        After our random model, we established another random baseline by fitting our data to a shallow machine learning classifier, CatBoost. This model achieved a 45% accuracy. Our goal was to be higher than 51% with a Deep Learning model. 
+                        After our random model, we established another random baseline by fitting our data to a shallow machine learning classifier, CatBoost. This model achieved a 45% accuracy. Our goal was to be higher than 51% with a Deep Learning model.
+                        </p>
 
+                        <p>
                         To prepare the data, we randomly split pitches into training or testing data using the built-in <code>sklearn.model_selection.train_test_split()</code>. With the data split, we prepared the data by combining the data frames and 
                         filtering out the columns we wouldn't use for our model. We were left with 15 features, namely pitcher name, pitcher handedness, batter, batter stance, batter score, ball count, strike count, outs, runner on 1st, 
                         runner on 2nd, runner on 3rd, inning, pitcher score, and game id. We also had approximately 3.5 million pitches in our dataset, and about 80% of those were in our training data, leaving about 20% for our testing data. 
+                        </p>
                         
+                        <p>
                         Our first approach was thinking that a Recurrent Neural Network would be the best model for this task. This would allow us to treat a game like a paragraph, with 
                         each pitch a character. Because of the nature of baseball, past pitches (and their success rate) influence future pitches, so we were hopeful a type of RNN model would capture the 
                         patterns and learn how to predict future pitches from past pitches. This provided some difficulties with the data cleaning, as we had to treat a game of pitches like a sequence, and 
                         then pass in one game at a time to our model. However, as the games have different amounts of pitches, we had to pad them which provided some difficulties. 
                         We also tried not padding or batching the pitches and passing one pitch at a time to the RNN, reinitializing the hidden layer every game, but this did not provide 
                         us with the accuracy we were hoping for. Experimenting with an LSTM gate, and a GRU cell provided marginally better accuracy than vanilla RNN, but we were still topping out in the low 40s.
+                    </p>
                         
+                    <p>
                         After this, we thought that a transformer with self-attention would be a good way to capture the sequential patterns in the data. With the data still grouped by game and padded, 
                         we passed it through a self-attention transformer. This also slightly bumped up our accuracy, but not to the levels we were hoping for or believed we could get.
                         At this point, we shifted our approach, we stopped grouping the data by games and realized that feature engineering might be able to unlock higher accuracy for us. 
@@ -163,7 +169,9 @@
                         This allowed us to batch the data and not group it by game, which provided for much faster and more efficient training, but it still had the sequential information that was needed for accuracy. 
                         In a way, it became a pseudo-markov chain because each row of data contained all of the information it needed about past events in its current state. 
                         However, as each row only knew about past pitches, this didn't violate the principle of being able to predict pitches in real-time.
+                    </p>
                         
+                    <p>
                         With our updated dataset, we shifted the focus of our model to dense linear networks, and experimented with several different amounts of layers, activation functions, etc. 
                         We found that this method worked best of all, and initially saw a result of around 51%. We also formatted the code in a way that allowed us to run it on the supercomputer so we could train for 
                         longer with denser networks. With using the <a href="https://arxiv.org/abs/2010.07468">AdaBelief optimizer</a>, and Penalized TanH as an activation function on our deep model, we achieved accuracy of around 55% after 10 epochs of training. 
