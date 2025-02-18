@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Labor Economy Dynamics ODE Model</title>
+    <meta name="description" content="A project using ordinary differential equations (odes) to model the labor economy dynamics in the United States.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="projects_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="projects_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/css.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Porfolio</a></h1>
+            <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2023-12-07">07 December 2023</time> </span>
+                    <h2 class="post-title"><a href="/projects/pitch_predictor.html">Labor Economy Dynamics ODE Model</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"In order to solve this differential equation you look at it until a solution occurs to you."</blockquote>
+                        <p>- George Polya</p>
+
+                        <p>This project was a joint effort by me, and my friends <a href="https://www.linkedin.com/in/jasonwvasquez/">Jason Vasquez</a>, <a href="https://www.linkedin.com/in/ethan-crawford-766463169/">Ethan Crawford</a>,
+                            and <a href="https://www.linkedin.com/in/benjamin-mcmullin/">BenJ McMullin</a>. When I say "we," I am talking about all of us together.</p>
+
+                        <p>The labor market, including the unemployment rate and the amount of workers looking for jobs, can have a large impact on the economy.
+                            The more people employed means more money being spent, which in turn means more money being made. 
+                            Furthermore, rise in unemployment can lead to a recession. Being able to predict the labor market can help us prepare for a recession and help us understand the economy better.
+                            In this paper, we adapt an SIR model to characterize the dynamics of employed, unemployed, and retired individuals in the labor market. 
+                            Additionally, we employ a quasi predator-prey model to illustrate the oscillatory behavior observed in the white-collar and blue-collar industries. 
+                            By comparing the SIR model to the predator-prey model, we aim to enhance our understanding of the complex interactions within the labor market, 
+                            providing potential insights for recession prediction and economic analysis.</p>
+
+
+                        <figure>
+                            <img src="projects_files/labor_dynamics/ode_board.jpg" alt="Blackboard with math on it." width="90%" height="90%">
+                            <figcaption>This is an image of Camillo De Lellis, taken by Thomas Robert Clarke. You can find the image <a href="https://www.ias.edu/ideas/curiosities-partial-differential-equations">here</a>.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Background and Motivation
+                        </h4>
+
+                        <p>
+                        One thing that is certain in life is that people will always need jobs. Not only this, but people 
+                        will often lose their jobs. Furthermore, people will (eventually) retire from their jobs.
+                        The focus of our project is modeling this situation.
+                        </p>
+
+                        <p>
+                        In recent studies exploring the complexities of employment trajectories and occupational sectors, researchers 
+                        have employed various modeling approaches such as Agent-Based Modeling <a href='#9'>[9]</a>, and Markov Chains <a href='#14'>[14]</a>. However, 
+                        in a departure from conventional methodologies, our investigation takes an innovative turn by adapting 
+                        the SIR (Susceptible-Infectious-Recovered) model <a href='#5'>[5]</a>, typically utilized for studying disease dynamics, to the 
+                        realm of employment dynamics. This unique application aims to unravel the intricate propagation of employment 
+                        statuses, specifically delving into the transitions between being employed, unemployed, and retired.
+                        </p>
+
+                        <p>
+                        A discernible trend has emerged in recent times, 
+                        notably influenced by the technological revolution. The surge in interest and demand for tech-oriented careers 
+                        has prompted a significant shift away from traditional blue-collar professions. This migration has led to a 
+                        dual challenge: a scarcity of skilled workers in the blue-collar sector and an oversaturation of the tech 
+                        industry <a href='#3'>[3]</a>. To capture this relationship between white and blue collar jobs, we also create a quasi-predator-prey 
+                        framework inspired by ecological models, which offers insights into the cyclical dynamics between these sectors. 
+                        </p>
+                        <p>
+                        Motivated by the imperative to comprehend and address the consequences of this evolving employment landscape, 
+                        our research aims to contribute valuable insights for informing strategic policies and industry interventions. 
+                        By analyzing the strengths of both the predator-prey framework and the SIR model, we aspire to provide a 
+                        comprehensive understanding of the intricate dynamics shaping the contemporary employment scenario.
+                        </p>
+
+                        <h4>Modeling</h4>
+
+                        <h5>Theoretical Framework</h5>
+
+                        <p>
+                            The Susceptible-Infectious-Recovered (SIR) model, developed by Kermack and McKendrick in 1927 <a href='#5'>[5]</a>, 
+                            is a foundational mathematical framework for understanding the spread of infectious diseases in populations. 
+                            It divides individuals into susceptible, infectious, and recovered compartments, capturing the dynamics of disease transmission.
+                            In our model, we adapt the SIR model to represent the dynamics of the employment market through the labor force,
+                            unemployed, and retired populations.
+                        </p>
+
+                        <h5>Previous Work</h5>
+
+                        <p>We begin by building off the work of ElFadily et. al. <a href='#2'>[2]</a>. In their work, ElFadily et. al. proposed a model
+                            representing the labor force and unemployed populations. They begin by defining their equations as
+                           
+                           $$\frac{dL}{dt} = \gamma U - (\sigma + \mu)L, \quad \frac{dU}{dt} = \rho \left(1 - \frac{L_{\tau} + U_{\tau}}{N_c} \right)L_{\tau} + \sigma L - (\gamma + \mu)U,$$
+                           
+                           
+                           where $L$ is the labor force, $U$ is the unemployed population, with initial conditions for (1) defined as:
+                           
+                           $$L(0) > 0, \quad U(0) > 0,$$
+                           
+                           $$(L(\theta),U(\theta)) = (\varphi_1(\theta), \varphi_2(\theta)), \quad \theta \in [-\tau,0],$$
+                           
+                           where $\varphi_i\in C([-\tau, 0], \mathbb{R}^+),$  $i=1,2$.
+                           
+                           The parameters are defined as follows:
+                           
+                           <ul>
+                            <li> $\gamma$: employment rate</li>
+                            <li> $\sigma$: rate of job loss </li>
+                            <li> $\mu$: mortality rate</li>
+                            <li> $\rho$: maximum population growth rate </li>
+                            <li> $N_c$: population carrying capacity </li>
+                            <li> $\tau$: time lag needed to contribute in the reproductive process of a new individual looking for a job</li>
+                           </ul>
+
+                           </p>
+
+                           <h5>Modifications: The Retirement Group</h5>
+
+                           <p>
+                            With this information in mind, we can begin to adapt this model to fit our desired model structure. We begin by adding a third population, the retired population, $R$.
+                                We can then define our new equations as
+
+
+                                $$\frac{dL}{dt} = \gamma U - (\sigma + \mu)L {\color{red} - \left(\frac{\Sigma}{L + U}\right) L + \omega\left(\frac{\Sigma}{L + U}\right) R + \rho L},$$
+
+                                $$\frac{dU}{dt} = \rho\left(1 - \frac{L + U}{N_c} \right)L + \sigma L -(\mu + \gamma)U,$$
+
+                                $$\frac{dR}{dt} = {\color{red}\left(\frac{\Sigma}{L + U}\right) L - \omega\left(\frac{\Sigma}{L + U}\right) R - \mu R},$$
+
+                                which simplify to 
+
+                                $$\frac{dL}{dt} = \gamma U - (\sigma + \mu)L {\color{red} + (\omega R - L)\left(\frac{\Sigma}{L + U}\right) + \rho L},$$
+                                        
+                                $$\frac{dU}{dt} = \rho\left(1 - \frac{L + U}{N_c} \right)L + \sigma L -(\mu + \gamma)U$$
+                                        
+                                $$\frac{dR}{dt} = {\color{red}(L - \omega R)\left(\frac{\Sigma}{L + U}\right) - \mu R}.$$
+
+                                One of the first things to note from our equations is the removal of the time lag $\tau$. 
+                                This is because, instead of factoring in people when they are born, we are instead factoring them
+                                in when they turn of working age (for simplification, age 16). This reduces unnecessary complexity in our model. 
+                                Additionally, we make two assumptions about unemployed people, being they will
+                                neither retire directly from unemployment, nor contribute to the growth of the population. A final thing to note
+                                is that we have added two new parameters, $\omega$ and $\Sigma$. We define $\Sigma$ to be the number of people who
+                                retire each year in the United States, and $\omega$ to be the rate at which retired people enter back
+                                into the full-time workforce (which is a dimensionless constant). We can then define our new initial conditions as:
+
+                                $$L(0) > 0, \quad U(0) > 0, \quad R(0) > 0,$$
+                                        
+                                $$(L(\theta),U(\theta), R(\theta)) = (\varphi_1(\theta), \varphi_2(\theta), \varphi_3(\theta)), \quad \theta \in [-\tau,0],$$
+
+                                where $\varphi_i\in C([-\tau, 0], \mathbb{R}^+),$ $i=1,2,3$. Incorporating nuanced dynamics into our model, we introduce the following terms and elucidate their significance within the equations
+                                
+                                <ul>
+                                    <li>$\pm\left(\frac{\Sigma}{L + U}\right) L$: Captures retirements relative to the total workforce, considering the annual number of retirees ($\Sigma$) as a percentage of the employed population ($L$).</li>
+                                    <li>$\pm \omega\left(\frac{\Sigma}{L + U}\right) R$: Models retired individuals re-entering the workforce, with $\omega$ representing the transition rate.</li>
+                                    <li>$\rho L$: Represents natural job growth, proportional to the employed population.</li>
+                                    <li>$-\mu R$: Represents the natural attrition of retired individuals due to mortality at each time step.</li>
+                                </ul>
+                           </p>
+
+                        <h5>Modifications: The Blue- and White-Collar Groups</h5>
+
+                        <p>
+                            We can further model the labor market by examining the relationship between two industries commonly referred to as the white-collar and blue-collar industries.
+                            In recent years, we have seen an explosion of jobs and interest in the white-collar field, specifically in the tech industry, while the blue-collar industry has seen a decline in interest.
+                            This has led to an oversaturation of the tech industry and a scarcity of labor in the blue-collar industry, which in turn has slowed growth in the former and led to increased growth in the latter.
+                            This cyclical relationship mirrors that of a predator-prey relationship, and we can model it as such. </p>
+
+                            <p>
+                            Choosing a predator-prey model to represent blue-collar and white-collar jobs is justified by its ability to capture dynamic interactions and 
+                            cyclic behavior between the two job categories. This modeling approach incorporates feedback loops, reflecting the influence each job type has 
+                            on the other, and naturally represents population dynamics in response to economic, educational, or technological factors. 
+                            Additionally, the model's adaptability allows for the inclusion of additional factors, offering flexibility in addressing 
+                            the multifaceted dynamics of the labor market. This choice opens avenues for research and exploration of hypothetical scenarios, 
+                            providing a structured framework to analyze and understand the interplay between different job categories over time.</p>
+
+                            <p>
+                            The classical predator-prey model is given by the following equations:
+
+                            $$ \frac{dx}{dt} = \rho x - a x y, \quad \frac{dy}{dt} = -\mu y + \varepsilon a x y.$$
+
+                            where $x$ is the prey population, $y$ is the predator population, and $\rho$, $a$, $\mu$, and $\varepsilon$ are parameters <a href='#6'>[6]</a> <a href='#13'>[13]</a>. 
+                            We can adapt this model by defining the following:
+
+                            $$\frac{dx}{dt} = \rho x {\color{red}\left(1-\frac{x}{k}\right)} - a x y, \quad \frac{dy}{dt} = -\mu y + \varepsilon a x y + {\color{red} \beta y \left(1-\frac{y}{C}\right)}.$$
+
+                            where 
+
+                            <ul>
+                                <li> $x$: Blue-collar jobs </li>
+                                <li> $y$: White-collar jobs </li>
+                                <li> $\rho$: Growth rate of blue-collar jobs </li>
+                                <li> $a$: Rate at which people switch from blue collar to white collar jobs </li>
+                                <li> $\mu$: Decay rate of white-collar jobs </li>
+                                <li> $\varepsilon$: The rate at which job transitioning affects the labor market </li>
+                                <li> $k$: Carrying capacity for blue-collar jobs </li>
+                                <li> $C$: Carrying capacity for white-collar jobs. </li>
+                                <li> $\beta$: Growth rate of white-collar jobs </li>
+                            </ul>
+
+                            Thus, we can interpret the new additions to our model as:
+                            
+                            <ul>
+                            <li> $\rho x (1-\frac{x}{k})$: Carrying capacity term for the blue-collar (prey) population, reflecting growth proportional to the number of blue-collar workers. </li>
+                            <li> $\beta y (1-\frac{y}{C})$: Carrying capacity term for the white-collar (predator) population, constrained by the workforce size and capable of independent growth. </li>
+                            </ul>
+
+                            The reason that only white-collar jobs have a decay rate is meant to model the current market situation. The white-collar market is becoming
+                            oversaturated so as it increases in population it decays, whereas the blue-collar market has not reached this point and never does with the initial conditions given.
+                            We also made the assumption that the white-collar market converts whereas the blue-collar market does not. This was a choice to model the specific
+                            circumstance we attempt to analyze. In the real world, this could go both ways with varying degrees, but for simplification we made it only one way.
+                        </p>
+
+
+                        <h5>Labor Force, Unemployment, and Retirement Situations</h5>
+
+                        <p>
+                    <ul>
+                    <li> $\sigma = 0.013905$: Derived from comprehensive data on total layoffs and discharges in the United States (2000-2023) <a href='#4'>[4]</a>.</li>
+                    <li> $\rho = 0.014577$: Maximum growth rate calculated from MacroTrends Excel data (2000-2022) <a href='#7'>[7]</a>.</li>
+                    <li> $\gamma = 0.6062$: Employment rate average (2000-2022) from the Bureau of Labor Statistics <a href='#11'>[11]</a>.</li>
+                    <li> $\mu = 0.008498$: Mortality rate derived from 2000-2022 mortality data <a href='#12'>[12]</a>.</li>
+                    <li> $N_c = 260,000,000$: Population of individuals aged 16 and above in the United States in 2022 <a href='#1'>[1]</a>.</li>
+                    <li> $\Sigma = 775,045$: Annual retirees in the U.S. (2000-2021) using Social Security Administration data <a href='#10'>[10]</a>, calculated by
+
+                    $$\Sigma = \frac{1}{2021 - 2001}\sum_{i=2001}^{2021}(x_i - x_{i-1})$$</li>
+
+                    <li> $\omega = 0.063$: Rate at which retirees re-enter the workforce based on research by Maestas <a href='#8'>[8]</a>.</li>
+                    </ul>
+
+                        We began testing our model by running it for 60 years with the current numbers for the United States (see <a href='#figure1'>figure 1</a>). 
+
+                        <figure>
+                            <img src="projects_files/labor_dynamics/results_lur_1.png" alt="Figure1." width="90%" height="90%" id="figure1">
+                            <figcaption text-align=center><b>Figure 1:</b> Initial conditions: $L(0) = 157,000,000$, $U(0) = 6,500,000$, $R(0) = 48,590,000$.</figcaption>
+                        </figure>
+                        
+                        To test the robustness of our model, we ran it with different initial conditions that do not represent the current situation in the United States. 
+                        We first decreased the number in the labor force, increased the number of unemployed, and decreased the number of retired. We made these changes rather conservative
+                        by only slightly perturbing the real numbers. We then ran the model for 60 years (see <a href='#figure2'>figure 2</a>).
+                        Parallel to <a href='#figure1'>figure 1</a>, we can see that the model still reaches an equilibrium despite the initial conditions being skewed from their true values.
+  
+                        <figure>
+                            <img src="projects_files/labor_dynamics/results_lur_2.png" alt="Figure2." width="90%" height="90%" id="figure2">
+                            <figcaption text-align=center><b>Figure 2:</b> Initial conditions: $L(0) = 100,000,000$, $U(0) = 50,000,000$, $R(0) = 10,000,000$.</figcaption>
+                        </figure>
+                        
+                        
+                        We ran our model, once again, against a different set of initial conditions. This time, we significantly decreased the number of people in the occupied
+                        labor force, significantly increased the number of unemployed (ensuring that the number of unemployed was much greater than the number of people in the labor force), and moderately decreased the number of retired. We then ran the model for 60 years (see <a href='#figure3'>figure 3</a>).
+                        As you can see, the model still reaches an equilibrium, despite the initial conditions being heavily skewed from their true values.
+                        
+                        <figure>
+                            <img src="projects_files/labor_dynamics/results_lur_3.png" alt="Figure3." width="90%" height="90%" id="figure3">
+                            <figcaption text-align=center><b>Figure 3:</b> Initial conditions: $L(0) = 18,000,000$, $U(0) = 200,000,000$, $R(0) = 10,000,000$.</figcaption>
+                        </figure>
+                        
+                        We ran a final test, this time having the number of retired people set as greater than the number of
+                        people in the labor force and unemployed combined. We then ran the model for 60 years (see <a href='#figure4'>figure 4</a>).
+                        
+                        <figure>
+                            <img src="projects_files/labor_dynamics/results_lur_4.png" alt="Figure4." width="90%" height="90%" id="figure4">
+                            <figcaption text-align=center><b>Figure 4:</b> Initial conditions: $L(0) = 17,500,000$, $U(0) = 20,400,000$, $R(0) = 195,000,000$.</figcaption>
+                        </figure>
+                        
+                        Unlike the previous graphs, we can see that the model does not reach an equilibrium in 60 years. 
+                        While the number of people in the labor force rises and the number of retired people falls, 
+                        this change does not appear to be significant enough to reach an equilibrium. However,
+                        when ran again for $T = 100$ years, we can see that the model gets closer to an equilibrium, but 
+                        still does not reach one (see <a href='#figure5'>figure 5</a>).
+                        
+                        <figure>
+                            <img src="projects_files/labor_dynamics/results_lur_5.png" alt="Figure5." width="90%" height="90%" id="figure5">
+                            <figcaption text-align=center><b>Figure 5:</b> Initial conditions: $L(0) = 17,500,000$, $U(0) = 20,400,000$, $R(0) = 195,000,000$.</figcaption>
+                        </figure>
+                        </p>
+
+                        <h5>White-Collar and Blue-Collar Simulations</h5>
+
+                        <p>
+                        For our white- and blue-collar model, we experimented with different hyperparameters to see how they would affect the model. 
+                    </p>
+                    
+                    <p>
+                        In our first run of the model, we used parameters $\rho = 7$, $a = 5$, $\mu = 1$, $\varepsilon = .2$, $k = 3$, $\beta = 1$, $C = 1.5$. As we see, the model oscilates
+                        slightly in the beginning, and then settles into a stable equilibrium (see <a href='#figure6'>figure 6</a>). The initial conditions come from data on the US Labor market and percentage of workers in white-collar or blue-collar jobs <a href='#11'>[11]</a>.
+                        
+                        <figure>
+                          <img src="projects_files/labor_dynamics/blue_vs_white2.png" alt="Figure6." width="90%" height="90%" id="figure6">
+                          <figcaption text-align=center><b>Figure 6:</b> Parameters $\rho = 7$, $a = 5$, $\mu = 1$, $\varepsilon = .2$, $k = 3$, $\beta = 1$, $C = 1.5$. Zooming in between years $10-50$, we can see the oscillations more clearly.</figcaption>
+                        </figure>
+                        
+                        
+                        Consider now a new set of initial conditions, namely $\rho = 7$, $a = 5$, $\mu=2$ $\varepsilon = .2$, $k = 3$, $\beta = 1$, $C = 1.5$, and the same set with $\mu=1$.
+                        Despite only the slight change of $\mu$ by $1$, our model predicts completely different results (see <a href='#figure7'>figure 7</a>).
+                        
+                        <figure>
+                          <img src="projects_files/labor_dynamics/bad_paramenters.png" alt="Figure7." width="90%" height="90%" id="figure7">
+                          <figcaption text-align=center><b>Figure 7:</b> The left graph corresponds to $\mu = 2$, while the right graph corresponds to $\mu = 1$, others parameters are kept the same.</figcaption>
+                        </figure>
+                    </p>
+
+                    <h4>Results</h4>
+
+                    <p>
+                        The SIR and predator-prey models in the context of employment dynamics offers a comprehensive framework for understanding 
+                        the complex interactions within the labor market. Here are some key observations and conclusions drawn from the presented models:</p>
+
+                        <p>
+                    Overall, our SIR model of the labor market shows remarkable stability. 
+                    We can see that, regardless of the initial conditions, the model reaches an equilibrium, 
+                    with the number of employed, unemployed, and retired individuals remaining relatively constant.
+                    When we used initial conditions that reflected the current numbers for the United States,
+                    the model saw relatively little change as time went on (see <a href='#figure1'>figure 1</a>).
+                    With initial conditions that represented a larger than average unemployed population, the model corrected itself and reached a
+                    similar equilibrium as the previous model (see <a href='#figure2'>figure 2</a>).
+                    Finally, when presented with initial populations that were flipped, the model still stabilized to the same equilibrium
+                    (see <a href='#figure3'>figure 3</a>).
+                    </p>
+
+                    <p>
+                    The predator-prey model is very sensitive to changes in the hyperparameters as even a small change can cause the model to behave very 
+                    differently. We see in <a href='#figure7'>figure 7</a> that a change of $1$ in $\mu$ causes the populations to entirely flip. 
+                    This model, while not as robust as the SIR labor force model, still shows some interesting results. It is interesting to see how the relationships in the model
+                    caused oscillations in the different populations. The oscillations are small enough that they are not visible on the graph, but they are still present, and can mimic the overall 
+                    labor force where a swing of thousands of jobs is noticed by the economy as a whole (see <a href='#figure6'>figure 6</a>). 
+                    A strength of this second model is exactly that, being able to see the oscillations while keeping the oscillations to a scale that would be realistic in the real world.
+                    </p>
+
+                    <h4>Analysis/Conclusions</h4>
+
+                    <p>
+                        In our model, modified from ElFadily et. al. <a href='#2'>[2]</a>, we have extended their adapted SIR framework to capture more interesting dynamics of the labor market. 
+                    </p>
+                        In our adaptation, 
+                        we introduced an additional compartment for Retired $(R)$ individuals, reflecting the life cycle of employment. The key 
+                        modifications involve incorporating terms that represent the natural attrition of the retired population, their potential re-entry into 
+                        the workforce, and the growth of job opportunities proportional to the number of employed individuals. These adjustments provide 
+                        a nuanced representation of the labor market's temporal evolution, accounting for retirement dynamics, mortality, and the cyclical 
+                        nature of job creation and re-entry. This enhanced model allows for a more comprehensive understanding of the complex interactions 
+                        within the labor market over time.
+                        </p>
+
+                        <p>
+                        Despite the strengths of our SIR model, there are weaknesses present. One weakness is that changing the initial conditions can cause 
+                        the results to differ significantly between each other during the first few years. While it is true that the solutions 
+                        end up reaching similar values as $T$ grows, those first few years of difference can pose a problem. Another more significant 
+                        weakness is that this model only considers how the labor markets interact with each other. One major factor in the labor market 
+                        is the current state of the economy, and our model does not take that into account. Thus, one improvement that can be made is finding a way to 
+                        include present economic conditions.
+                        </p>
+
+                        <p>
+                        The predator-prey model, while not as robust as the SIR model, still shows some exciting results. 
+                        It is interesting to see how the relationships in the model cause oscillations between the different populations. 
+                        The oscillations are small enough that they are not visible on the graph, but they are still present, and can mimic the overall labor force.
+                        However, this second model is very unstable and requires several large simplifications. This model fails to be a accurate representation of the labor market, 
+                        and does little else other than show small oscillations. Given more time, we would have loved to expand on this idea and come up with a stable robust model that 
+                        can illustrate the oscillations between the white-collar and blue-collar industries.
+                        </p>
+
+                        <p>
+                        Despite its weaknesses, our models provide insights into the long-term stability and equilibrium of the workforce. 
+                        The inclusion of retirement-related terms allows policymakers and economists to analyze the impact of demographic shifts on employment trends and anticipate 
+                        workforce fluctuations. Moreover, the explicit consideration of job creation and re-entry mechanisms offers a more realistic representation of economic dynamics, 
+                        enabling better predictions of labor market behavior. Understanding the cyclical nature of job opportunities and retiree contributions provides valuable insights 
+                        for economic planning, workforce management, and policy development. This modified SIR model, by bridging epidemiological principles with labor market dynamics, 
+                        contributes to a holistic framework for studying the interplay between demographic factors and economic trends, supporting informed decision-making in the real world.
+                    </p>
+                        
+
+                        <h4>Citations</h4>
+
+                        <ol>
+                            <li id="1">Annie E. Casey Foundation. KIDS COUNT Data Center. <a href="https://datacenter.aecf.org/data/tables/99-total-population-by-child-and-adult-populations#detailed/1/any/false/1095,2048,574,1729,37,871,870,573,869,36/39,40,41/416,417">Link</a>, 2023. Data retrieved from KIDS COUNT Data Center website.</li>
+                            <li id="2">Michele Calì, Sanaa ElFadily, and Abdelilah Kaddar. Modeling and mathematical analysis of labor force evolution. <i>Modelling and Simulation in Engineering</i>, 2019:2562468, 2019.</li>
+                            <li id="3">Dana Wilkie. The Blue-Collar Drought. <a href="https://www.shrm.org/hr-today/news/all-things-work/pages/the-blue-collar-drought.aspx">Link</a>, 2023. Accessed: 7 December 2023.</li>
+                            <li id="4">Federal Reserve Bank of St. Louis. Federal Reserve Economic Data. <a href="https://fred.stlouisfed.org/series/JTSLDR">Link</a>, 2023. Data retrieved from the Federal Reserve Economic Data (FRED) website.</li>
+                            <li id="5">W. O. Kermack and A. G. McKendrick. A contribution to the mathematical theory of epidemics. <i>Proceedings of the Royal Society of London. Series A</i>, 115(772):700–721, 1927.</li>
+                            <li id="6">Alfred J. Lotka. Elements of physical biology. <i>Proceedings of the National Academy of Sciences of the United States of America</i>, 14(8):659–664, 1925.</li>
+                            <li id="7">MacroTrends LLC. MacroTrends. <a href="https://www.macrotrends.net/countries/USA/united-states/population-growth-rate">Link</a>, 2023. Data retrieved from MacroTrends website.</li>
+                            <li id="8">Nicole Maestas. Back to work: Expectations and realizations of work after retirement. <i>Journal of Human Resources</i>, 45(3):718–748, 2010.</li>
+                            <li id="9">Fábio Neves, Pedro Campos, and Sandra Silva. Innovation and employment: An agent-based approach. <i>Journal of Artificial Societies and Social Simulation</i>, 22(1):8, 2019.</li>
+                            <li id="10">Social Security Administration. Number of beneficiaries receiving benefits on December 31, 1970-2022. <a href="https://www.ssa.gov/oact/STATS/OASDIbenies.html">Link</a>, 2023. Data retrieved from Social Security Administration website.</li>
+                            <li id="11">U.S. Bureau of Labor Statistics. HOUSEHOLD DATA ANNUAL AVERAGES 1. Employment status of the civilian noninstitutional population, 1952 to date. <a href="https://www.bls.gov/cps/cpsaat01.pdf">Link</a>, 2023. Data retrieved from the Bureau of Labor Statistics website.</li>
+                            <li id="12">USAFacts. Deaths Per 100,000 People. <a href="https://usafacts.org/data/topics/people-society/health/longevity/mortality-rate/">Link</a>, 2023. Data retrieved from USAFacts website.</li>
+                            <li id="13">Vito Volterra. Fluctuations in the abundance of a species considered mathematically. <i>Nature</i>, 118(2972):558–560, 1926.</li>
+                            <li id="14">Mark Zais and Dan Zhang. A markov chain model of military personnel dynamics. <i>International Journal of Production Research</i>, 54(6):1863–1885, 2016.</li>
+                          </ol>
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/projects/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <!-- <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li> -->
+                <!-- <li><a href="/blog/feed.xml">RSS Feed</a></li> -->
+            </ul>
+
+            <ul>
+            </ul>
+
+<p>This website has been continuously published since <span id="currentYear"></span>.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+    });
+    </script>
+
+<footer class="site-footer">
+    <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan Skinner</a> © <span id="currentYear"></span><br>
+</footer></aside>
+    </div>
+        </body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+
+    </html> 
