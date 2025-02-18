@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>Causal Inference with Graph Neural Networks</title>
+    <meta name="description" content="A project where we try to find causal inference in graph neural networks (GNNs).">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="projects_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="projects_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/css.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+table {
+  margin: auto; /* Centers the table horizontally */
+  border-collapse: collapse; /* Optional: Ensures clean borders */
+}
+caption {
+  caption-side: bottom; /* Places the caption below the table */
+  font-style: italic;
+  margin-top: 10px;
+}
+
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .theorem { background: #f9f9f9; padding: 15px; border-left: 5px solid #007bff; }
+    .theorem-title { font-weight: bold; font-style: italic; }
+</style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Porfolio</a></h1>
+            <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-04-24">24 April 2024</time> </span>
+                    <h2 class="post-title"><a href="/projects/causal_inference.html">Causal Inference with Graph Neural Networks</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"Correlation does not imply causation."</blockquote>
+                        <p>- Everyone at some point</p>
+
+                        <p>This project was a joint effort by me, and my friends <a href="https://www.linkedin.com/in/jasonwvasquez/">Jason Vasquez</a>, <a href="https://www.linkedin.com/in/gwen-martin-98057b220/">Gwen Martin</a>,
+                            and <a href="https://www.linkedin.com/in/dallinstewart/">Dallin Stewart</a>. When I say "we," I am talking about all of us together.</p>
+
+                        <p>Neural networks have revolutionized computer science by modeling complex data relationships, yet the need 
+                            to elucidate their predictions and understand underlying causality grows increasingly crucial. 
+                            This project explores the integration of causal inference, traditionally rooted in statistics and philosophy, 
+                            into neural networks, particularly focusing on Graph Neural Networks (GNNs) for causal modeling. 
+                            Leveraging GNNs' capabilities in learning graph-structured data representations, we conduct supervised classification 
+                            tasks on the LUCAS0 dataset to assess GNNs' ability to capture causal relationships and enhance interpretability and robustness. 
+                            Results reveal varying accuracies across GNN architectures, with Transformer convolutional layers showing the highest performance. 
+                            Comparisons against Bayesian networks, which exploit causal relationships, demonstrate superior accuracy with less training time. 
+                            Moreover, employing \textbf{do}-calculus exposes GNNs' limitations in discerning precise causal relationships, underscoring 
+                            the importance of causal inference for improving neural networks' predictive power. This study advocates for deeper integration 
+                            of causal inference into neural network research to foster more interpretable and reliable AI systems, suggesting 
+                            future exploration of diverse datasets and model architectures to validate and extend these findings.</p>
+
+
+                        <figure>
+                            <img src="projects_files/causal_inference/visualized_graph.jpg" alt="A visualized graph." width="90%" height="90%">
+                            <figcaption>This image was found on <a href="https://www.reddit.com/r/dataisbeautiful/comments/78vo65/visualizing_neural_networks_as_large_directed/">Reddit</a>.</figcaption>
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Introduction
+                        </h4>
+
+                        <p>
+                            Neural networks are at the center of computer science research and have revolutionized our ability to model complex relationships with data.
+                            As these networks continue to proliferate in decision-making processes, output explanation and gaining a deeper understanding of the causality behind their predictions become increasingly essential. 
+                            The distinction between correlation and causation is not merely philosophical; it creates the foundation for building robust, interpretable, and ethically sound AI systems.
+                        </p>
+
+                        <p>
+                            Causal inference is a field deeply rooted in statistics and philosophy that offers a framework to disentangle cause-and-effect relationships from observed data. 
+                            Traditionally, researchers have applied causal inference in fields including epidemiology, economics, and social sciences. 
+                            However, integrating these ideas into the domain of neural networks presents a promising frontier with implications ranging from improving model interpretability to enhancing the fairness and accountability of AI systems.
+                        </p>
+
+                        <p>
+                            In this project, we explore the intersection of causal inference and neural networks by focusing on the application of Graph Neural Networks (GNNs) to causal modeling.
+                            We leverage these unique capabilities of GNNs to learn representations of graph-structured data and perform a supervised classification task on the LUCAS0 dataset <a href="lucas_dataset">[7]</a>.
+                            Our goal is to determine if GNNs can capture causal relationships within a graph and provide insights into the interpretability and robustness of these models. 
+                            We also use a Bayesian network as a baseline machine learning model that leverages causal relationships to compare against the neural network.
+                        </p>
+
+                        <h4>Related Work</h4>
+
+
+                        <p>
+                            Integrating causal inference with neural networks has garnered significant interest in recent years.
+                            Other studies have proposed several approaches to combine the strengths from these two fields and leverage the expressive power of neural networks to model causal relationships.
+                            Koch et al. discusses ongoing work to extend causal inference to settings where confounding is non-linear, time-varying, or encoded in text, networks, and images <a href="koch2023">[4]</a>. 
+                            Furthermore, Yuan et al. compared the performance of CNN's on causal data to previous methods <a href="yuan2020">[10]</a>.
+                        </p>
+
+                        <h4>Graph Neural Networks</h4>
+
+                            <p>
+                                The Graph Neural Networks that Mori et al. <a href="gori2005new">[2]</a>, originally proposed in 2005 are a class of neural networks that operate on graph-structured data. 
+                                They have gained significant attention in recent years due to their versatility in handling various types of graph data, including social networks, citation networks, biological networks, and more. 
+                            </p>
+
+                            <p>
+                                Unlike traditional neural networks, which operate on grid-like structures such as images or sequences, GNNs' architectures allow 
+                                them to capture and leverage the structural information present in graphs. One remarkable feature allows them to learn meaningful 
+                                representations of nodes in a graph for various downstream tasks such as node classification, link prediction, and graph classification. 
+                                Their ability to capture and model complex relationships in graph data makes them invaluable tools for exploring 
+                                and understanding real-world phenomena represented in graph form.
+                            </p>
+
+                            <p>
+                                In this project, we apply GNNs to a supervised classification 
+                                task by training it on a labeled, tabular dataset, where we associate each graph instance (or node) with a target label.
+                            </p>
+
+                           <h4>$\textbf{do}$ Operator</h4>
+
+                           <p>
+                            The $\textbf{do}$ operator is a way to represent interventions in a causal model, i.e. the effect of an intervention on a variable. For example, consider the following model involving smoking.
+                           </p>
+
+                           <p>
+                            If a person's fingernails $(N)$ have turned yellow, this implies a higher probability that they are a heavy smoker $(S)$ 
+                            and hence have a higher probability of developing lung cancer $(C)$. However, simply dyeing someone's fingernails yellow does not impact their probability of developing lung cancer. 
+                           </p>
+
+                           <p>
+                            So, in terms of $\textbf{do}$ calculus, we can denote the process of setting a variable $N$ to have a value $\textit{yellow}$ by $\textbf{do}(N = \textit{yellow})$. 
+                            We note that 
+
+                            $$P(C \;|\;N = \textit{yellow}) \neq P(C\;|\; \textbf{do}(N=\textit{yellow})).$$
+
+                            With this in mind, we now define the $\textbf{do}$ operator.
+
+                            <div class="theorem">
+                                <p class="theorem-title">Theorem (<a href="pearl2009causal">[6]</a>):</p>
+                                <p>In a causal diagram \( \Gamma \) with nodes \( X_1, \dots, X_n \) and joint distribution 
+                                \( P(X_1, \dots, X_n) \), the result of doing \( X_i = x_i \) on the joint distribution is:</p>
+                            
+                                \[
+                                    P(X_1, \dots, X_n \;|\; \textbf{do}(X_i = x_i)) = \frac{P(x_1,\dots,x_n)}{P(x_i\;|\; \textup{par}(x_i))} = \prod_{j\neq i}P(x_j\;|\; \textup{par}(x_j)).
+                                \]
+                            </div>
+
+                            In this equation, $\text{par}(x_i)$ represents values of the parent nodes of $\text{PAR}(X_i)$ of $X_i$ in $\Gamma$.
+                            We call the probabilities on the right hand side of the above equation <i>preintervention</i>. 
+                            Preintervention means that we use the probabilities from the original model before "doing" $X_i = x_i$.
+                           </p>
+
+                           <p>
+                            The equation above describes how we calculate the probability of several events happening given one event has happened. What if we want to find the probability of a single event happening, 
+                            given we do a single event? This scenario leads to the following corollary.
+                           
+
+                           <div class="theorem">
+                            <p class="theorem-title">Corollary:</p>
+                            <p>    If $X$ and $Y$ are random variables in a causal diagram $\Gamma$ and $\textup{PAR}(X)$ are the parents of $X$, then
+
+                                \[P(y\;|\;  \textbf{do}(x)) = \sum_{\textup{par}}\frac{P(x,\,y,\,\textup{par})}{P(x\;|\; \textup{par})},\]
+                            
+                                where the sum runs over all values $\textup{par}$ that the variables $\textup{PAR}(X)$ can take. If $X$ has no parents, then
+                            
+                                \[P(y\;|\; \textbf{do}(x)) = \frac{P(x,\,y)}{P(x)} = P(y\;|\; x).\]
+                        </div>
+
+                            Let us now consider a basic example to see how this works. Consider the following causal diagram in Figure 1.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/causal_inference/figure1.png" alt="Basic directional graph." width="90%" height="90%">
+                            <figcaption><b>Figure 1:</b> Basic causal diagram. Note it is in the form of a directed acyclic graph (DAG).</figcaption>
+                        </figure>
+
+                        <p>
+                            In this diagram, nodes $A$ and $C$ are both parents of $B$. So, for any values of $x$ and $b$, 
+                            the above Corollary tells us that
+
+                            $$P(X = x \,|\, \textbf{do}(B=b)) = \sum_{\text{par}(b)}\frac{P(x, \,b, \,\text{par}(b))}{P(b\,|\, \text{par}(b))}$$
+
+                            which, written out, is 
+
+                            $$\sum_{\text{par}(b)}\frac{P(x, \,b, \,\text{par}(b))}{P(b\,|\, \text{par}(b))} = \sum_{a}\sum_{c}\frac{P(X=x\,, \, A=a\,,\, B=b \, ,\, C=c)}{P(B=b \;|\; A=a,\, C=c)}.$$
+
+                            Since each node only depends conditionally on their parents, we can rewrite the expression as
+
+                            $$\sum_{a}\sum_{c}\frac{P(X=x\;|\; A=a\,,\, B=b)P(B=b\;|\; A=a,\, C=c)P(A=a)P(C=c)}{P(B=b \;|\; A=a,\, C=c)},$$
+
+                            which simplifies to
+
+                            $$\sum_{a}\sum_{c}P(X=x\;|\; A=a\,,\, B=b)P(A=a)P(C=c).$$
+
+                            Since there is only one instance where we are considering the probability with respect to $c$, we can further reduce this to
+
+                            $$\sum_{a}P(X=x\;|\; A=a\,,\, B=b)P(A=a),$$
+
+                            which is our final answer.
+                        </p>
+                            While this introduction to the $\textbf{do}$ operator might feel a bit abstract, it is the foundation of all current research in causal inference. 
+                        </p>
+
+                        <h4>Data</h4>
+
+                        <p>
+                            For our project, we used the LUCAS0 dataset <a href="lucas_dataset">[7]</a>, which is a synthetic toy data set with causal Bayesian networks and binary variables. 
+                            The LUCAS0 dataset is a DAG with 11 nodes and 2000 training samples (see Figure 2). 
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/causal_inference/figure2.png" alt="The dataset." width="90%" height="90%">
+                            <figcaption><b>Figure 2:</b> Basic causal diagram. Note it is in the form of a directed acyclic graph (DAG). Our target variable
+                                is shaded in <span style="color:pink"><b>pink</b></span>, and the nodes in <span style="color:teal"><b>teal</b></span> constitute the Markov
+                                blanket of the target variable.</figcaption>
+                        </figure>
+
+                        <p>
+                            We associate each node of the graph with a specific conditional probability that the creators of the dataset used to generate the data (the end of this post).
+                        </p>
+
+
+                        <h4>Experiments and Testing</h4>
+
+                        <p>
+                            Graph Neural Networks and Bayesian Networks perform well when handling complex structured data that consists of underlying causal relationships and do calculus operations. 
+                            By examining these models more closely, we can assess their predictive power in capturing these underlying do-calculus operations. 
+                            In order to do so, we train these models to predict lung cancer based on the components of the graph provided in Figure 2 and evaluate their accuracy. 
+                        </p>
+
+                        <h5>Graph Convolutional Layers</h5>
+
+                        <p>
+                            We begin by training several graph neural networks with five different types of convolutional layers and performing a grid search of learning rates (0.001, 0.005, 0.01, 0.05). 
+                            Each model includes a unique convolutional layer variant as at least one of seven convolutional layers. Each layer is followed by a ReLU activation function and dropout regularization, 
+                            except the final layer. We describe each of these convolutional layers below.
+                        </p>
+
+                        <p>
+                            The first type of layer we experiment with is a standard graph convolution layer acting as a control for comparison against the other layers. 
+                            The other four layer types we test are Chebyshev convolution model, SAGE convolution model, GAT convolution model and a Transformer convolution model. 
+                        </p>
+
+                        <p>
+                            <a href="Defferrard2017CNNGraphs">[1]</a> describes a method of using Chebyshev polynomials for rapid filtering in graph neural networks. While previous methods of filtering signals in graphs require expensive computations, 
+                            <a href="Defferrard2017CNNGraphs">[1]</a>  implements Chebyshev polynomials in order to approximate kernels. These functions are easy to work with and recursively compute an orthogonal basis efficiently. The resulting combination of these Chebyshev terms can effectively represent the new filter function. 
+                        </p>
+
+                        <p>
+                            Researchers created SAGE convolutional layers to generate embeddings using node features such as various attributes, profile information and graph structure <a href="Hamilton2018InductiveGraphs">[3]</a>>. 
+                            The algorithm achieves this embedding scheme with a forward propagation algorithm that uses  $K$ parameters of the model to search through the nodes. 
+                            It then creates the node's embedding by sampling and aggregating the graph information. This approach provides better generalization to unseen nodes and facilitates node feature learning in a network. 
+                            This algorithm is popular because of its robustness to complex node features and information. 
+                        </p>
+
+                        <p>
+                            GATConv uses attention mechanisms in order to perform node classification. <a href="GraphAttentionNetworks2018">[9]</a> created this type of specialized attention layer for graph neural networks, 
+                            and explained that "One of the benefits of attention mechanisms is that they allow for dealing with variable sized inputs, focusing on the most relevant parts of the input to make decisions"  <a href="GraphAttentionNetworks2018">[9]</a>. 
+                        </p>
+
+                        <p>
+                            Researchers first adopted Graph Transformer convolution layers in an attempt to combine feature propagation and label propagation as discussed in <a href="MaskedLabelPrediction2021">[8]</a>. 
+                            The Transformer Convolution layer relies on a general vanilla structure of a transformer while also accounting for edge features. This layer is similar to the GATConv layer since they both use multi-headed attention.
+                        </p>
+
+                        <h5>Bayesian Network</h5>
+
+                        <p>
+                            To further investigate the ability of neural networks to learn causal relationships, we compared the results of the neural network with a Bayesian network. 
+                            A Bayesian network can include causal relationships implicitly in its initialization before it fits the data. 
+                            If the Bayesian network performed better than the neural networks, then we can infer that the neural networks are not able to fully grasp causal relationships. 
+                            We can also infer that learning causal relationships are essential for higher accuracy when such a dependency exists in the data.
+                        </p>
+
+                        <p>
+                            Bayesian networks, also known as belief networks or directed acyclic graphical models, are probabilistic graphical models that represent a set of variables and their conditional 
+                            dependencies via a directed acyclic graph (DAG). Each node in the graph represents a random variable, and the edges between nodes represent probabilistic dependencies, indicating direct influences or causal relationships between variables.
+                        </p>
+
+                        <p>
+                            One of the key features of Bayesian networks is their ability to model uncertainty and reason under ambiguity using Bayesian inference. By leveraging Bayes' theorem, Bayesian networks can update beliefs about variables based on observed evidence and allow for efficient probabilistic reasoning.
+                        </p>
+
+                        <p>
+                            When comparing Bayesian networks with neural networks in learning causal relationships, Bayesian networks offer a structured framework for explicitly modeling causal dependencies between variables. We can encode prior knowledge or assumptions about causal relationships into the network structure to facilitate causal inference and reasoning. Furthermore, Bayesian networks can provide insights into causal mechanisms that may not be fully captured by neural networks alone. This source of insights is particularly salient in tasks where understanding causal relationships is crucial, such as predictive modeling in domains like healthcare or finance.
+                        </p>
+
+                        <h4>Results</h4>
+
+                        <h5>Convolutional Layers and Learning Rate</h5>
+
+                        <p>
+                            While the initial accuracies provided in Table 1 appear relatively high, the performance of these models have several faults. 
+                            The total percentage of lung cancer patients in this dataset is $0.7215$, so models with this level of accuracy are likely predicting ``True" each time rather than learning from the data. 
+                            This behavior will cause the model to generalize poorly on other unseen data. With this in mind, both the standard and Chebyshev convolution yield insignificant results. The Transformer convolution provides the most accurate results at the expense of longer training time. 
+                        </p>
+
+                        <table border="1">
+                    
+                            <thead>
+                              <tr>
+                                <th rowspan="2">Convolutional Layers</th>
+                                <th colspan="4">Learning Rates</th>
+                              </tr>
+                              <tr>
+                                <th>0.001</th>
+                                <th>0.005</th>
+                                <th>0.01</th>
+                                <th>0.05</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>Standard Graph Convolution</td>
+                                <td>0.725</td>
+                                <td>0.8325</td>
+                                <td>0.725</td>
+                                <td>0.725</td>
+                              </tr>
+                              <tr>
+                                <td>Chebyshev Convolution</td>
+                                <td>0.721</td>
+                                <td>0.725</td>
+                                <td>0.725</td>
+                                <td>0.658</td>
+                              </tr>
+                              <tr>
+                                <td>SAGE Convolution</td>
+                                <td><b>0.8675</b></td>
+                                <td>0.8575</td>
+                                <td>0.865</td>
+                                <td>0.725</td>
+                              </tr>
+                              <tr>
+                                <td>GAT Convolution</td>
+                                <td>0.8125</td>
+                                <td>0.85</td>
+                                <td>0.855</td>
+                                <td>0.725</td>
+                              </tr>
+                              <tr>
+                                <td>Transformer Convolution</td>
+                                <td>0.8625</td>
+                                <td><b>0.875</b></td>
+                                <td><b>0.8775</b></td>
+                                <td><b>0.8675</b></td>
+                              </tr>
+                            </tbody>
+                            <caption><b>Table 1:</b> Models by Convolutional Layers and Learning Rates</caption>
+                          </table>
+
+                          <p></p>
+
+                          <table border="1">
+                            <thead>
+                              <tr>
+                                <th>Convolutional Layers</th>
+                                <th>Avg Training Time (s)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>Standard Graph Convolution</td>
+                                <td>0.98</td>
+                              </tr>
+                              <tr>
+                                <td>Chebyshev Convolution</td>
+                                <td>0.713</td>
+                              </tr>
+                              <tr>
+                                <td>SAGE Convolution</td>
+                                <td>12.457</td>
+                              </tr>
+                              <tr>
+                                <td>GAT Convolution</td>
+                                <td>9.982</td>
+                              </tr>
+                              <tr>
+                                <td>Transformer Convolution</td>
+                                <td>9.189</td>
+                              </tr>
+                            </tbody>
+                            <caption><b>Table 2:</b> Models by Convolutional Layers and Average Training Times</caption>
+                          </table>
+                          
+
+                          <h5>Bayesian Networks</h5>
+
+                          <p>
+                            For the Bayesian network, we initialized the model with the causal relationships on the dataset defined above, split the data randomly into $80\%$ training data and $20\%$ test data, 
+                            then fit the model on the training data, which took $0.09$ seconds. The model was able to predict cancer with $86.25\%$ accuracy on the test set, beating every GNN we tested except for the Transformer models. 
+                          </p>
+
+
+                          <h5>Evaluating Models with $\textbf{do}$ Calculus</h5>
+
+                          <p>
+                            Let's consider the following conditional probabilities with $\textbf{do}$ operators applied:
+
+                            \[
+                            \begin{aligned}
+                                P(\text{LC} = \text{T} \;&|\; \mathbf{do}(\text{YF} = \text{T})), \\
+                                P(\text{LC} = \text{T} \;&|\; \mathbf{do}(\text{PP} = \text{T})), \\
+                                P(\text{LC} = \text{T} \;&|\; \mathbf{do}(\text{A} = \text{T})), \\
+                                P(\text{LC} = \text{T} \;&|\; \mathbf{do}(\text{AD} = \text{T})), \\
+                                P(\text{LC} = \text{T} \;&|\; \mathbf{do}(\text{CA} = \text{T})), \\
+                            \end{aligned}
+                            \]
+
+                            where LC is lung cancer, YF is yellow fingers, PP is peer pressure, A is anxiety, AD is attention disorder, and CA is car accident. 
+                            We note that we chose this probability because it does not involve any variables that are in the Markov blanket of our target variable. 
+                            Thus, we should expect that there is very little predictive power in this probability.
+                          </p>
+
+                          <p>
+                            Following the $\textbf{do}$ calculus algorithm, we write $P(\text{LC} = \text{T} \;|\; \textbf{do}(\text{YF} = \text{T}))$ (using the corollary) as
+
+                            \[
+                            \begin{equation}
+                            P(\text{LC} = \text{T} \;|\; \textbf{do}(\text{YF} = \text{T})) = 
+                            \sum_{s\in\{T, F\}} \frac{P(\text{YF} = \text{T},\, \text{LC} = \text{T},\, \text{S} = s)}{P(\text{YF} = \text{T}\,|\, \text{S} = s)},
+                            \label{yf1}
+                        \end{equation}
+                            \]
+
+                            where $\text{S}$ is smoking. Since the Lung Cancer node has Smoking and Genetics as parents, and Smoking
+has parent Anxiety and Peer Pressure (see Figure 2), we can write the above equation to
+
+                            \[  
+                            \begin{equation}
+                                \sum_{S, G, A, PP}\frac{P(\text{YF} =\text{T}\;|\; \text{S}) P(\text{LC} 
+                                = \text{T}\;|\; \text{S},\, \text{G}) P(\text{G}) P(\text{S}\;|\;\text{A},\, \text{PP}) P(\text{A})P(\text{PP})}
+                                {P(\text{YF} = \text{T}\;|\; \text{S})}.
+                                \label{yf2}
+                            \end{equation}
+                            \]
+
+                            where each $\text{S},\text{A}, \text{G}, \text{PP}$ is in terms of $\{T, F\}$.
+                          </p>
+
+                          <p>
+                            Since not every term is in terms of every variable, we can rewrite the above equation as 
+
+                            \[
+                            \begin{align*}
+                                &=\sum_{S} \frac{P(\text{YF} = T\,|\, S)}{P(\text{YF} = T\,|\, \text{S})}
+                                    \Biggl(\sum_{G} P(\text{LC} = \text{T}\,|\, \text{S}, \text{G})P(\text{G})\Biggr)
+                                        \Biggl(\sum_{A} P(\text{A}) 
+                                            \Bigl(\sum_{\text{PP}}P(\text{S}\,|\, \text{A}, \text{PP})P(\text{PP})\Bigr) 
+                                        \Biggr) \\
+                                &=\sum_{S}\Big(\sum_{G} P(\text{LC} = \text{T}\,|\, \text{S}, \text{G})P(\text{G})\Big)
+                                    \Biggl(\sum_{A} P(\text{A}) 
+                                        \Bigl(\sum_{\text{PP}}P(\text{S}\,|\, \text{A}, \text{PP})P(\text{PP})\Bigr) 
+                                    \Biggr).\label{yf3}
+                            \end{align*}
+                            \]
+
+                            Using the probabilities from Table 5 on the above equation we get
+
+                            \[
+                            \begin{equation*}
+                                P(\text{LC} = \text{T} \;|\; \textbf{do}(\text{YF} = \text{T})) = 0.7363
+                            \end{equation*}
+                            \]
+                          </p>
+
+                          <table>
+                          <caption><b>Table 3:</b> The resulting probabilities of the <b>do</b> statements found in the above equation.</caption>
+                          <tr>
+                              <th><i>do Statements</i></th>
+                              <th><i>Probabilities</i></th>
+                          </tr>
+                          <tr>
+                              <td>\( P(\text{LC} = \text{T} \mid \mathbf{do}(\text{A} = \text{T})) \)</td>
+                              <td>0.5158</td>
+                          </tr>
+                          <tr>
+                              <td>\( P(\text{LC} = \text{T} \mid \mathbf{do}(\text{S} = \text{T})) \)</td>
+                              <td>0.8639</td>
+                          </tr>
+                      </table>
+
+                      <p>
+                        These probabilities are what we expect based on the causal diagram. For example, the probability of cancer given $\textbf{do}$(YF = T) is hardly higher than the probability of lung cancer on its own. 
+                        This helps us understand that while cancer patients are more likely to have yellow fingers, yellow fingers themselves do not cause cancer. However the probability of cancer given $\textbf{do}$(S = T) is much higher, implying that smoking does cause cancer.
+                      </p>
+
+                      <p>
+                        We compare these probabilities to the probability output by our GNN in Table 4. To calculate these probabilities, we took a data point with False for every feature except for one feature artificially set to True, and then passed this data point through our model. 
+                        The discrepancy in the probabilities seems to imply that our neural network was unable to pickup on causality, as it assumed that everyone with yellow fingers has cancer (even absent smoking).
+                      </p>
+
+                      <table>
+                        <caption>The resulting probabilities of the <b>do</b> statements running the data points through the Transformer model with a learning rate of 0.01 as seen above.</caption>
+                        <tr>
+                            <th><i>do Statements</i></th>
+                            <th><i>Probabilities</i></th>
+                        </tr>
+                        <tr>
+                            <td>\( P(\text{LC} = \text{T} \mid \mathbf{do}(\text{YF} = \text{T})) \)</td>
+                            <td>1.000</td>
+                        </tr>
+                        <tr>
+                            <td>\( P(\text{LC} = \text{T} \mid \mathbf{do}(\text{A} = \text{T})) \)</td>
+                            <td>0.1329</td>
+                        </tr>
+                        <tr>
+                            <td>\( P(\text{LC} = \text{T} \mid \mathbf{do}(\text{S} = \text{T})) \)</td>
+                            <td>0.9565</td>
+                        </tr>
+                    </table>
+
+                    <h4>Conclusion</h4>
+
+                    <p>
+                        This project seeks to examine how neural networks can be used to perform do-calculus and causal inference.
+                         Graph neural networks have gained significant popularity in their ability to handle complex relationships and capture meaningful node representations. 
+                         These networks achieve successful results in both computational efficiency and accuracy, with a Transformer convolutional layer model leading in performance. 
+                         Bayesian networks also prove that a model that understands the causal relationships between the data can outperform most neural networks in much less time. 
+                         Furthermore, using $\textbf{do}$ calculus we conclude that neural networks are unable to pickup on the exact nature of causal relationships. 
+                         These results indicate that the field of causal inference is very important in neural networks and the better that neural networks can understand causal relationships, the higher the predictive power.
+                    </p>
+
+                    <p>
+                        We recognize that there is significant room for improvement especially with a topic as complicated as causal inference in deep learning. 
+                        For future work, we hope to experiment with a wider variety of datasets to explore how other graphical relationships perform with our models. 
+                        Given that our testing is confined to this dataset and lacks sufficient validation across other graphs and model performances, 
+                        we suggest that future work couple these results with other reliable studies in making important claims such as lung cancer detection.
+                    </p>
+                    
+
+
+
+
+                          
+                        
+                        
+ 
+
+                    <h4>Results</h4>
+
+                    
+
+                    <h4>Analysis/Conclusions</h4>
+
+                        
+
+                        <h4>Citations</h4>
+
+                        <ol>
+                            <li id="Defferrard2017CNNGraphs">Defferrard, Michaël, Xavier Bresson, and Pierre Vandergheynst. "Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering." 2017. <a href="https://arxiv.org/pdf/1606.09375.pdf">Paper link</a>.</li>
+
+                            <li id="">Gori, Marco, Gabriele Monfardini, and Franco Scarselli. "A new model for learning in graph domains." <em>Proceedings of the International Joint Conference on Neural Networks</em>, vol. 2, 2005, pp. 729–734. <a href="https://doi.org/10.1109/IJCNN.2005.1555942">DOI: 10.1109/IJCNN.2005.1555942</a>.</li>
+
+                            <li id="Hamilton2018InductiveGraphs">Hamilton, William L., Rex Ying, and Jure Leskovec. "Inductive Representation Learning on Large Graphs." 2018. <a href="https://arxiv.org/pdf/1706.02216.pdf">Paper link</a>.</li>
+
+                            <li id="koch2023">Koch, Bernard, et al. "Deep Learning of Potential Outcomes." <em>CoRR</em>, vol. abs/2110.04442, 2021. <a href="https://arxiv.org/abs/2110.04442">arXiv: 2110.04442</a>.</li>
+
+                            <li id="koller2009probabilistic">Koller, Daphne, and Nir Friedman. <em>Probabilistic Graphical Models: Principles and Techniques</em>. MIT Press, 2009.</li>
+
+                            <li id="pearl2009causal">Pearl, Judea. "Causal Inference in Statistics: An Overview." <em>Statistics Surveys</em>, vol. 3, 2009, pp. 96–146. <a href="https://doi.org/10.1214/09-SS057">DOI: 10.1214/09-SS057</a>.</li>
+                        
+                            <li id="lucas_dataset">Research Group for Lung Cancer Analysis. "LUCAS (LUng CAncer Simple set) Dataset." ETH Zurich Causality and Machine Learning Group, 2020. <a href="https://www.causality.inf.ethz.ch/data/LUCAS.html">Dataset link</a>.</li>
+
+                            <li id="MaskedLabelPrediction2021">Shi, Yunsheng, et al. "Masked Label Prediction: Unified Message Passing Model for Semi-Supervised Classification." 2021. <a href="https://arxiv.org/pdf/2009.03509.pdf">Paper link</a>.</li>
+
+                            <li id="GraphAttentionNetworks2018">Velicković, Petar, et al. "Graph Attention Networks." 2018. <a href="https://arxiv.org/pdf/1710.10903.pdf">Paper link</a>.</li>
+
+                            <li id="yuan2020">Yuan, Ye, Xueying Ding, and Ziv Bar-Joseph. "Causal inference using deep neural networks." <em>CoRR</em>, vol. abs/2011.12508, 2020. <a href="https://arxiv.org/abs/2011.12508">arXiv: 2011.12508</a>.</li>
+                        
+                        </ol>
+                    
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company. -->
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/projects/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <!-- <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li> -->
+                <!-- <li><a href="/blog/feed.xml">RSS Feed</a></li> -->
+            </ul>
+
+            <ul>
+            </ul>
+
+<p>This website has been continuously published since <span id="currentYear"></span>.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+    });
+    </script>
+
+<footer class="site-footer">
+    <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan Skinner</a> © <span id="currentYear"></span><br>
+</footer></aside>
+    </div>
+        </body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+
+    </html> 
