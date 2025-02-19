@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+
+    <title>NHL Live Win Predictor</title>
+    <meta name="description" content="A project using shallow learning to both predict, and get the live win percentage of NHL games.">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TTYQKYRKSN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-TTYQKYRKSN');
+    </script>
+
+
+    <link rel="shortcut icon" href="">
+    <link rel="apple-touch-icon" href="projects_files/bloglogo.png">
+    <link rel="stylesheet" type="text/css" href="projects_files/screen.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/css.css">
+    <link rel="stylesheet" type="text/css" href="projects_files/defaulten.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/texme@0.7.0"></script> -->
+    
+    <style>
+    figcaption {
+  background-color: white;
+  color: black;
+  font-style: italic;
+  padding: 2px;
+  text-align: center;
+}
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 10px;
+        text-align: center;
+        /* Center all tables */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .fblogo {
+        display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 30px;
+        width: 75%;
+    }
+
+    /* Define your custom colors */
+    .color1 {
+      background-color: #ffeeba; /* Light Yellow */
+    }
+
+    .color2 {
+      background-color: #c3e6cb; /* Light Green */
+    }
+
+    </style>
+
+
+</head>
+
+<body class="home-template">
+    <!-- Theme modified from the wonderful Coding Horror blog https://blog.codinghorror.com/ -->
+
+    <header class="site-head">
+        <div class="site-head-content">
+            <a class="blog-logo" href="/projects/projects.html"><img src="projects_files/bloglogo.png" alt="Pi Zeya Logo" width="128"
+                    height="64"></a>
+            <h1 class="blog-title"><a href="/projects/projects.html">Dylan Skinner Porfolio</a></h1>
+            <h2 class="blog-description">Projects Involving Math, Data Science, and Machine Learning</h2>
+        </div>
+    </header>
+
+    <div class="wrap clearfix">
+        <div class="clearfix"></div>
+
+        <main class="content" role="main">
+
+            <article class="post">
+                <header class="post-header">
+                    <span class="post-meta"><time datetime="2024-04-13">13 April 2024</time> </span>
+                    <h2 class="post-title"><a href="/projects/nhl_predictor.html">NHL Live Win Predictor</a></h2>
+                </header>
+                <section class="post-content">
+                    <div class="kg-card-markdown">
+                        <blockquote>"I am score."</blockquote>
+                        <p>- Evgeni Malkin</p>
+
+                        <p>This project was a joint effort by me and my friends <a href="https://www.linkedin.com/in/jasonwvasquez/">Jason Vasquez</a>,
+                             <a href="https://www.linkedin.com/in/jeffxhansen/">Jeff Hansen</a>,
+                              and <a href="https://www.linkedin.com/in/benjamin-mcmullin/">BenJ McMullin</a>. When I say "we," I am talking about the four of us.</p>
+
+                        <p>
+                            The goal of this project is simple: predict the outcomes of NHL games from any given state during the game. 
+                            To solve this problem we use three primary methods: Bayesian Network to train a DAG, XGBoost on game states, and an MCMC game simulator. 
+                            We use each of these methods to generate win probabilities for each time step throughout various NHL games, thus emulating a live win probability. 
+                            Finally, we analyze the accuracy of these three methods and considered ethical implications of our results.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/good_xgb_example(2).png" alt="Salt Lake Bees player throwing a pitch." width="90%" height="90%">
+                        </figure>
+                        
+                        <p></p>
+
+                        <h4>
+                            Why this Project
+                        </h4>
+
+                        <p>
+                            In the world of sports analytics, predicting the outcomes of games is a common and challenging problem, 
+                            with live win predictions adding an extra layer of complexity. 
+                            For most sports, there are a plethora of widely accepted—yet hidden—predictive models and methods that are used to predict games. 
+                            In addition to this, most sports have easily accessible statistics and graphics that give current win probabilities for any live game.
+                        </p>
+
+                        <p>
+                            Hockey; however, is a different story. While there are some methods used to predict the outcome of National Hockey League (NHL) games, these models
+                            typically belong to sport books and their nuances are not publicly disclosed. Additionally, hockey analytics is not as
+                            developed as it is in other sports, such as basketball or baseball <a href='#1'>[1]</a>. This lack of model transparency and public interest in hockey analytics
+                            makes predicting the outcomes of NHL games a very underdeveloped and challenging problem. Previous attempts and research into predicting NHL games
+                            has relied on methods such as decision trees and artificial neural networks <a href='#5'>[5]</a> (from 2014), naïve bayes and support vector machines <a href='#6'>[6]</a> (from 2013),
+                            and Monte Carlo simulations <a href='#7'>[7]</a> (from 2014).
+                        </p>
+
+                        <p>
+                            In addition to model research, some effort has also gone into developing new features that can be used to better predict the game outcomes. 
+                            The two biggest engineered classes of features are the Corsi
+                            and Fenwick<sup>1</sup> metrics (both around 2007); however, we do not use these
+                            in our approach because future research shows they do not improve model performance <a href='#4'>[4]</a>.
+                        </p>
+
+                        <p>
+                            Our project seeks a similar outcome to the research mentioned above: predict the outcomes of NHL games. Not only this,
+                            but we seek to provide live, accurate, win probabilities for any given game state. Despite the simplicity of the problem statement, 
+                            the solution is not so straightforward. The NHL provides fast-paced games with many events
+                            occuring in quick succession. Our goal is to use this abundance of data and new approaches to build upon previous research.
+                        </p>
+
+                        <p>
+                            Our motivation for this project exists strictly as fans of the sport and as data scientists. Our model is not intended to be used for gambling or any other
+                            nefarious purposes—any use of this model for such purposes is a misuse of our work.
+                        </p>
+
+                        <sup>1: These metrics were created by sports bloggers Tim Barnes and Mark Fenwick, respectively. 
+                            We were unable to locate the original blog posts talking about these metrics, but a good article to learn more about the math can be
+                            found here https://thehockeywriters.com/corsi-fenwick-stats-what-are-they/.</sup>
+
+                        <h4>The Dataset</h4>
+
+                        <p>
+                            Our data came from the hockeyR Github repository <a href='#3'>[3]</a>. This repository contains an abundance of data about every NHL game
+                            that has occured since the 2010-11 season. This data includes information about the events that transpire in a game (hits, shots, goals, etc.),
+                            which teams are playing, who is on the ice, and the final score of the game. The data is stored in a series of <code>.csv.gz</code> files, allowing for
+                            easy access and manipulation.
+                        </p>
+
+                        <p>
+                            Each game in a season is given a unique identifier (<code>game_id</code>), which is constant across all events in a game. Every event that occurs in a game
+                            will be stored in the <code>event_type</code> column. There are 17 unique event types, including game start, faceoff, shot, hit, and goal.
+                            Most of these event types are not relevant to our analysis, so we remove them from the dataset. After removing the unnecessary events, we are left with
+                            nine: blocked shot, faceoff, giveaway, goal, hit, missed shot, penalty, shot, and takeaway. These events are attributed to the
+                            team and player that perform the event. We only take into consideration the team that performs the event and discard the player information to reduce noise and to avoid many one-hot encoded columns.
+                        </p>
+
+                        <p>
+                            The data also contains information about when the event occured. This appears in a variaty of formats, but we only
+                            use the <code>game_time_remaining</code> column. <code>game_time_remaining</code> starts
+                            at 3600 (60 minutes) and counts down to 0. If the game goes into extra time, i.e., it is tied after 60 minutes, <code>game_time_remaining</code> will
+                            be a negative value.
+                        </p>
+
+                        <p>
+                            We found that our data did not contain any missing values that were not easily explainable. For example, if a game is starting, there will be no
+                            events for penalties, which will result in a <code>NaN</code> value in the penalties column. Additionally, any data that was confusing or not easily explainable
+                            (for example the home team having 7 players on the ice and the away team having 5), was manually verified by watching a clip of the game where
+                            the event occured to make sure the event was recorded correctly. We did not find any incorrectly recorded events, so we 
+                            did not remove any strange events from out dataset.
+                        </p>
+
+                        <p>
+                            The models were each trained on the 2021-2023 seasons (totaling two seasons), and tested on the most recent 2023-2024 season. 
+                            This split was chosen because in practice our model would have access to historical data but not have access to the current season's data as it happens.
+                        </p>
+
+                        <h4>Methods</h4>
+
+                        <h5>Bayesian Network</h5>
+
+                        <p>
+                            We first used a Bayesian network to establish a benchmark for probability using several key features.
+                        </p>
+
+                        <p>
+                            Bayesian networks are probabilistic graphical models that represent probabilistic relationships among a set of variables using a directed acyclic graph (DAG). 
+In a Bayesian network, nodes represent random variables, and directed edges between nodes represent probabilistic dependencies between the variables. Each node in the graph is associated with a conditional probability distribution that quantifies the probability of that variable given its parent variables in the graph.
+                        </p>
+
+                        <p>
+                            For our purposes, we predefined the structure of the network, and used the data to calculate the conditional probabilities for each node. We then used the network to calculate the probability of a team winning given the current state of the game.
+                        </p>
+
+                        <p>
+                            The computational complexity of Bayesian Network inference is high, with exact inference being an NP-hard problem <a href='#2'>[2]</a>. 
+                            Using the python package <code>pgmpy</code>, we originally tried to fit a network with all 26 of our features, but our computational resources failed to fit this network.
+                            Then, to get a baseline for our future predictions, we simply fitted the model with the base features of time remaining (tr), home goals (hg), away goals (ag), home shots (hs), away shots (as), home blocked shots (hbs), and away blocked shots (abs) in order to predict wins (w). 
+                            These features were chosen as priors because of our opinion that they are the most important to the game, based upon our knowledge of hockey.
+                        </p>
+
+                        <p>
+                            The conditional dependencies of the chosen network are shown in the DAG below:
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/dag.png" alt="The Bayesian Network used to predict NHL games." width="100%" height="100%">
+                            <figcaption text-align=center>The Bayesian Network used to predict NHL games.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            This model was chosen for the task because different stats in hockey are conditionally dependent of each other, so by modeling those conditional
+                            dependencies and feeding them into the model, we can hopefully acheive a more accurate prediction of the outcome of the game.
+                        </p>
+
+                        <h5>XGBoost</h5>
+
+                        <p>
+                            In our NHL analysis research, we partitioned the dataset into segments 
+                            corresponding to individual teams' games over multiple seasons. 
+                            This enabled the creation of time series data in the form of a state vector, capturing the 
+                            play-by-play dynamics of each team's matches. We then trained 
+                            separate XGBoost models for each team to learn their unique patterns 
+                            and strategies. We chose to create an XGBoost model for each team
+                            because we felt it would be more accurate than a single model for all teams.
+                            This is because some teams do very well and some teams do very poorly, and
+                            we felt this difference necessitated a model for each team.
+                        </p>
+
+                        <p>
+                            XGBoost was chosen because of its ability to handle large datasets and model complex relationships between features. 
+                            XGBoost is able to attain a high degree of accuracy with a relatively small training time or overhead and was an ideal choice for our research.
+                        </p>
+
+                        <h5>MCMC Game Simulation</h5>
+
+                        <p>
+                            To simulate hockey games, we created a Markov Chain where the states are a tuple of three consecutive
+                            events that occurred. For example, if the home team won a faceoff, lost the puck, and 
+                            then the away team shot the puck and missed, the next potential event in the Markov chain would look like table below:
+                        </p>
+
+                        <div style="text-align: center;">
+                            <table> 
+                              <tr>
+                                <th>Next Event</th>
+                                <th>Transition Probability</th>
+                              </tr>
+                              <tr>
+                                <td>Shot Away</td>
+                                <td>0.1853207</td>
+                              </tr>
+                              <tr>
+                                <td>Blocked Shot Away</td>
+                                <td>0.1138666</td>
+                              </tr>
+                              <tr>
+                                <td>...</td>
+                                <td>...</td>
+                              </tr>
+                              <tr>
+                                <td>Penalty Away</td>
+                                <td>0.0167210</td>
+                              </tr>
+                              <tr>
+                                <td>Goal Home</td>
+                                <td>0.0085793</td>
+                              </tr>
+                            </table>
+                          </div>
+                        
+                        <p>
+                            The probabilities of transitioning from one triple-state to another triple-state is calculated by:
+
+                            $$
+                            \begin{aligned}
+                                P(s_{t+1} &= (B,C,D) | s_t = (A,B,C)) = P(D | (A,B,C)) \\
+                                &= \frac{\{ \text{number of times (A,B,C,D) happend}\}}{\{ \text{number of times (A,B,C) happened}\}} \\
+                            \end{aligned}
+                            $$
+
+                            Where $A,B,C,D$ represent events that can occur in a game, and the tuple $(A,B,C,D)$ represents that "$A$ then 
+                            $B$ then $C$ then $D$" happened right after each other in a game.
+                        </p>
+
+                        <p>
+                            To simulate a game, we performed a Monte Carlo algorithm (see below)
+                            that acts as a random walk through the Markov chain (note that the <code>KDE_times()</code> is a KDE model fit on the amount of seconds that transpired between 
+                            each hockey event for all NHL games over the course of 13 years).
+                        </p>
+
+                        <p>
+                            To predict a team's winning probability, we would simulate 50 hockey games with the initial starting states 
+                            $(s_0, s_1, s_2)$ set to the most recent events in the hockey game. By looking at each games
+                            final event counts we compute the winner. We then compute the 
+                            probability as $P(\text{home winning}) = \{\text{number home simulation wins}\}/50$ and 
+                            $P(\text{away winning}) = 1-P(\text{home winning})$.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/algo.png" alt="The Monte Carlo algorithm used to simulate NHL games." width="100%" height="100%">
+                            <figcaption text-align=center>The Monte Carlo algorithm used to simulate NHL games.
+                            </figcaption>
+                        </figure>
+
+                        <h4>Results and Analysis</h4>
+
+                        <h5>Bayesian Network</h5>
+
+                        <p>
+                            Overall, the Bayesian network performed well and was able to produce realistic win probabilities. Because it defined a joint distribution using a DAG and
+                            then used that distribution to fit the data, it was able to correctly predict accuracies using the few features provided. However, the Bayesian network struggled to capture the intricate dependencies
+                            of factors other than goals that could affect the win probabilities, so the predicted probabilities are little more than an over all probability calculation of goals and time reamining given historical data.
+                            We see this in the probability graph in the figure below, where the changes in probability correspond to the goals scored in the game. 
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/good_bayesian_example.png" alt="The Bayesian Network's predicted win probabilities." width="100%" height="100%">
+                            <figcaption text-align=center>The Bayesian Network's predicted win probabilities.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            Win probability graph using the Bayesian Network. As seen above, the win probability stayed rather stagnant until a goal was scored, where the probability shifted.
+                        </p>
+
+                        <h5>XGBoost</h5>
+
+                        <p>
+                            For XGBoost, we leveraged the <code>.predict_proba()</code> method to predict win probabilities after the model was fit on the data.
+                            Using this method, we generated 
+                            probabilistic predictions at various stages of a game, allowing us to 
+                            plot the evolving probability of each team winning throughout the match
+                            (see the figure below). 
+                            This approach allowed for more insights into momentum shifts (when one team 
+                            has an advantage due to them having more players on the ice due to 
+                            a penalty by the opposing team), and key moments (such as goals and 
+                            penalties, and critical plays influencing game outcomes) than the Bayesian network, resulting in more variance in the win probability graph.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/good_xgb_example.png" alt="The XGBoost model's predicted win probabilities." width="100%" height="100%">
+                            <figcaption text-align=center>The XGBoost model's predicted win probabilities.
+                            </figcaption>
+                        </figure>
+
+                        <p>
+                            We can see a high variance of win probability during this game. It is interesting to
+                            see how a goal being scored impacts the win probability. It is also interesting to see how
+                            the probability shifts without a goal being scored, implying the other events in the game
+                            are important to the win probability.
+                        </p>
+
+                        <h5>MCMC Simulator</h5>
+
+                        <p>
+                            To evaluate our simulation's effectiveness at accurately modeling actual hockey 
+                            games, we combined a dataset with the final event counts for 1500 actual hockey 
+                            games and for 1500 simulated games. We then performed two experiments. First, We 
+                            trained a KMeans, Logistic Regression, RandomForest and XGBoost model on this 
+                            dataset with default parameters, to see 
+                            if they could classify games as simulated or real. With a 70-30 train-test split, 
+                            the accuracies on the test set were $47.9\%$, $48.5\%$, $67.5\%$ and $69.3\%$ respectively. 
+                            Second, we fit and transformed this dataset using PCA, t-SNE and UMAP 
+                            dimensionality reductions using various perplexity and neighbor hyperparameters to see 
+                            if these algorithms clustered the synthetic games and actual games in 
+                            different clusters. As shown in the figure below, the simulated
+                            games and actual games are all clustered together. From these two experiments, we conclude
+                            that our simulator effectively models live NHL games.
+                        </p>
+
+                        <figure>
+                            <img src="projects_files/nhl_predictor/pca_tsne_umap_sim_act.png" alt="PCA, t-SNE, and UMAP clustering of simulated and real NHL games." width="100%" height="100%">
+                            <figcaption text-align=center>A PCA, t-SNA, and UMAP clustering of simulated and real NHL games.
+                            </figcaption>
+                        </figure>
+
+                        <h5>Method Comparison</h5>
+
+                        <p>
+                            Each of our methods has one general purpose: predict the winner of the game regardless of the point of the game. 
+                            To evaluate our models, we randomly selected 100 games outside of the training data. 
+                            To ensure that the test set represented the actual data, we selected the test set with 50 home wins and 50 away wins, 
+                            and we also made sure there was an even representation of each of the 32 NHL teams. 
+                            We then used each model to predict a winner at various points throughout each game. 
+                            From these predictions on the 100 games, we computed each model's accuracy for each point in the game.
+                        </p>
+
+                        <div style="text-align: center;" font-size=11px>
+                            <table>
+                              <tr>
+                                <th>Game Seconds</th>
+                                <th>Game State</th>
+                                <th>MCMC</th>
+                                <th>XGBoost</th>
+                                <th>Bayesian</th>
+                              </tr>
+                              <tr>
+                                <td>0</td>
+                                <td>Beginning of Game</td>
+                                <td>47%</td>
+                                <td>56%</td>
+                                <td>51%</td>
+                              </tr>
+                              <tr>
+                                <td>900</td>
+                                <td>15 Minutes</td>
+                                <td>68%</td>
+                                <td>55%</td>
+                                <td>69%</td>
+                              </tr>
+                              <tr>
+                                <td>1800</td>
+                                <td>30 Minutes</td>
+                                <td>73%</td>
+                                <td>58%</td>
+                                <td>69%</td>
+                              </tr>
+                              <tr>
+                                <td>2700</td>
+                                <td>45 Minutes</td>
+                                <td>79%</td>
+                                <td>77%</td>
+                                <td>80%</td>
+                              </tr>
+                              <tr>
+                                <td>3540</td>
+                                <td>1 Minute Left</td>
+                                <td>94%</td>
+                                <td>86%</td>
+                                <td>91%</td>
+                              </tr>
+                              <tr>
+                                <td>~3800</td>
+                                <td>OT</td>
+                                <td>96%</td>
+                                <td>93%</td>
+                                <td>100%</td>
+                              </tr>
+                            </table>
+                          </div>
+                          
+                          <p>(Results of each model's accuracy at various points throughout 100 games sampled from the test set.)</p>
+
+                          <p>
+                            In the table above, we note that each model increased in accuracy as the game progressed. 
+                            The Bayesian network and MCMC model were the most accurate, while the XGBoost model had lower accuracy.
+                            We infer that the XGBoost models were overfit, as on the training data it would regularly achieve higher than $90\%$ accuracy at most points during the game. 
+                            Also, during experimentation with the models, we noticed that the MCMC simulator tended to produce higher probabilities for the away team winning, 
+                            and the XGBoost model tended to give higher probabilities to the home team winning. 
+                            The Bayesian Network was unbiased towards the home or away team. 
+                            We trained the MCMC model on the flow of events in the game, so it appears that the model picked up on a more predictive flow in how away teams play. 
+                            Though the MCMC model was generally the most accurate, it takes about 2 minutes to simulate 50 games and get a single prediction while XGBoost and the Bayesian network can make a prediction in under two seconds.
+                          </p>
+
+
+                        <h4>Conclusion</h4>
+
+                        <p>
+                            In this project, we used three different methods to predict the outcomes of NHL games. We used a Bayesian Network to model the conditional dependencies of key features, XGBoost to model the play-by-play dynamics of each team, and an MCMC simulator to simulate the flow of events in a hockey game. 
+                            We found that the Bayesian network and MCMC simulator were more accurate than XGBoost, and Bayesian network also was significantly faster than the MCMC simulator. Therefore we can conclude that the Bayesian network is the best performer for this project, implying that the conditional dependencies and potential causal relationships between features are important for predicting the outcome of hockey games.
+                            The win percentages predicted are more for entertainment and educational purposes, and should not be used for gambling or performance purposes, as they do not have a incredibly high degree of accuracy. There are many variables in a hockey game that affect win probability, and given more time and more data we would love to model other factors such as momentum, historical success, coaching, etc. Our project was limited by the data
+                            we had access to and computational resources, but nonetheless we were able to produce a model that can predict the outcome of NHL games with a reasonable degree of accuracy depending on the time of game remaining.
+                        </p>
+
+                        <p>
+                            To see all of our code, please visit our
+                            <a href="https://github.com/jeffxhansen/NHL_Win_Predictor/tree/main">Github</a>.
+                        </p>
+
+                        <h4>Citations</h4>
+
+                        <ul>
+                            <li><a id='1'>[1]</a> Jair Brooks-Davis. Why isn’t hockey as popular as other sports? those who love the game weigh in. 03 2022.</li>
+                            <li><a id='2'>[2]</a> David Maxwell Chickering, Dan Geiger, and David Heckerman. Learning bayesian networks: Search methods and experimental results. In Doug Fisher and Hans-Joachim Lenz, editors, Pre-proceedings of the Fifth International Workshop on Artificial Intelligence and Statistics, volume R0 of Proceedings of Machine Learning Research, pages 112–128. PMLR, 04–07 Jan 1995. Reissued by PMLR on 01 May 2022.</li>
+                            <li><a id='3'>[3]</a> Dan Morse. hockeyR-data: A collection of hockey datasets for use with the hockeyR package. https://github.com/danmorse314/ hockeyR-data, 2024. Accessed: March 2024.</li>
+                            <li><a id='4'>[4]</a> Stephen Pettigrew. Why we should be trying to do better than corsi and fenwick, 05 2014.</li>
+                            <li><a id='5'>[5]</a> Gianni Pischedda. Predicting nhl match outcomes with ml models. International Journal of Computer Applications, 101:15–22, 09 2014.</li>
+                            <li><a id='6'>[6]</a> Jason Weissbock, Herna Viktor, and Diana Inkpen. Use of performance metrics to forecast success in the national hockey league. In European Conference on Machine Learning: Sports Analytics and Machine Learning Workshop, 2013.</li>
+                            <li><a id='7'>[7]</a> Josh Weissbock. Forecasting success in the national hockey league using in-game statistics and textual data. 2014.</li>
+                        </ul>
+
+                        <!-- <ol>
+                            <span id="adams">[1]</span> Collin C. Adams, <em>The Knot Book</em>. American Mathematical Society, 2004. ISBN: 978-0821836781.
+                        </ol>
+                        <ol
+                            <span id="birman">[2]</span> Joan S Birman. <em>Braids, links, and mapping class groups</em>. 82. Princeton University Press, 1974.
+                        </ol>    -->
+
+                        <!-- <ol>
+                            <span id="seifert">[1]</span> Heinrich Seifert. <em>Über das Geschlecht von Knoten</em>. In: <em>Mathematische Annalen</em> 110 (1935), pp. 571–592. DOI: 10.1007/BF01448044.
+                        </ol> -->
+
+                        <!-- <p>
+                            <a id="adams"></a>Adams, C. C. (1994). The Knot Book: An Elementary Introduction to the Mathematical Theory of Knots. W. H. Freeman and Company.
+
+
+                    </div>
+                </section>
+                <!-- <hr />
+                <p id="footnote1">[1] Ok, this is mostly a joke post, but there are some nuggets of truth about the value of being brief.</p> -->
+            </article>
+            <nav class="pagination" role="navigation">
+                <!-- <span class="page-number">Page 1 of 286</span> -->
+                <a class="older-posts" href="/projects/list.html">Other Posts <span aria-hidden="true">→</span></a>
+            </nav>
+
+
+        </main>
+        <aside class="sidebar">
+
+            <!-- Add a hire me link -->
+            <h3>Resources</h3>
+
+            <ul>
+                <li><a href="https://dylanskinner65.github.io/">About Me</a></li>
+                <!-- <li><a href="https://forms.gle/iahqDwnmJWUfA1oL7">Subscribe for email updates</a></li> -->
+                <!-- <li><a href="/blog/feed.xml">RSS Feed</a></li> -->
+            </ul>
+
+            <ul>
+            </ul>
+
+<p>This website has been continuously published since <span id="currentYear"></span>.</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var currentYear = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = currentYear;
+    });
+    </script>
+
+<footer class="site-footer">
+    <section class="copyright">Copyright <a rel="author" href="https://linkedin.com/in/dylanskinner65/">Dylan Skinner</a> © <span id="currentYear"></span><br>
+</footer></aside>
+    </div>
+        </body>
+
+
+<!-- This is how you load math if you want to -->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+    };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script> src="https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+abap+abnf+actionscript+ada+agda+al+antlr4+apacheconf+apex+apl+applescript+aql+arduino+arff+armasm+arturo+asciidoc+aspnet+asm6502+asmatmel+autohotkey+autoit+avisynth+avro-idl+awk+bash+basic+batch+bbcode+bbj+bicep+birb+bison+bnf+bqn+brainfuck+brightscript+bro+bsl+c+csharp+cpp+cfscript+chaiscript+cil+cilkc+cilkcpp+clojure+cmake+cobol+coffeescript+concurnas+csp+cooklang+coq+crystal+css-extras+csv+cue+cypher+d+dart+dataweave+dax+dhall+diff+django+dns-zone-file+docker+dot+ebnf+editorconfig+eiffel+ejs+elixir+elm+etlua+erb+erlang+excel-formula+fsharp+factor+false+firestore-security-rules+flow+fortran+ftl+gml+gap+gcode+gdscript+gedcom+gettext+gherkin+git+glsl+gn+linker-script+go+go-module+gradle+graphql+groovy+haml+handlebars+haskell+haxe+hcl+hlsl+hoon+http+hpkp+hsts+ichigojam+icon+icu-message-format+idris+ignore+inform7+ini+io+j+java+javadoc+javadoclike+javastacktrace+jexl+jolie+jq+jsdoc+js-extras+json+json5+jsonp+jsstacktrace+js-templates+julia+keepalived+keyman+kotlin+kumir+kusto+latex+latte+less+lilypond+liquid+lisp+livescript+llvm+log+lolcode+lua+magma+makefile+markdown+markup-templating+mata+matlab+maxscript+mel+mermaid+metafont+mizar+mongodb+monkey+moonscript+n1ql+n4js+nand2tetris-hdl+naniscript+nasm+neon+nevod+nginx+nim+nix+nsis+objectivec+ocaml+odin+opencl+openqasm+oz+parigp+parser+pascal+pascaligo+psl+pcaxis+peoplecode+perl+php+phpdoc+php-extras+plant-uml+plsql+powerquery+powershell+processing+prolog+promql+properties+protobuf+pug+puppet+pure+purebasic+purescript+python+qsharp+q+qml+qore+r+racket+cshtml+jsx+tsx+reason+regex+rego+renpy+rescript+rest+rip+roboconf+robotframework+ruby+rust+sas+sass+scss+scala+scheme+shell-session+smali+smalltalk+smarty+sml+solidity+solution-file+soy+sparql+splunk-spl+sqf+sql+squirrel+stan+stata+iecst+stylus+supercollider+swift+systemd+t4-templating+t4-cs+t4-vb+tap+tcl+tt2+textile+toml+tremor+turtle+twig+typescript+typoscript+unrealscript+uorazor+uri+v+vala+vbnet+velocity+verilog+vhdl+vim+visual-basic+warpscript+wasm+web-idl+wgsl+wiki+wolfram+wren+xeora+xml-doc+xojo+xquery+yaml+yang+zig&plugins=line-numbers"</script>
+
+
+    </html> 
