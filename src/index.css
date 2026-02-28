@@ -1,0 +1,121 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@theme {
+  --font-serif: "Instrument Serif", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+/* Global Styles */
+:root {
+  --background: #f8f9fa;
+  --foreground: #04211a;
+  --accent: #064e3b;
+  --accent-soft: #f0f4f0;
+  --surface: white;
+  --border: rgba(4, 33, 26, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #04211a;
+    --foreground: #f8f9fa;
+    --accent: #10b981;
+    --accent-soft: #064e3b;
+    --surface: #064e3b;
+    --border: rgba(248, 249, 250, 0.1);
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* MathJax / LaTeX Styles */
+mjx-container[display="true"] {
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+  margin-top: 3rem !important;
+  margin-bottom: 3rem !important;
+  border-top: 1px solid currentColor !important;
+  border-bottom: 1px solid currentColor !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  margin-left: -1.5rem !important;
+  margin-right: -1.5rem !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  color: var(--accent) !important;
+  opacity: 1 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  mjx-container[display="true"] {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+  }
+}
+
+mjx-container:not([display="true"]) {
+  margin: 0 0.2em !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  color: var(--accent) !important;
+}
+
+@media (min-width: 768px) {
+  mjx-container[display="true"] {
+    margin-left: -3rem !important;
+    margin-right: -3rem !important;
+    padding-left: 3rem !important;
+    padding-right: 3rem !important;
+  }
+}
+
+/* Typography & Prose Fixes */
+.prose h2 {
+  @apply text-6xl md:text-8xl mt-32 mb-12 italic border-b-2 border-foreground/5 pb-8;
+}
+
+.prose h3 {
+  @apply text-5xl md:text-7xl mt-24 mb-8 italic;
+}
+
+.prose h4 {
+  @apply text-4xl md:text-5xl mt-20 mb-6 italic opacity-80;
+}
+
+.prose p {
+  @apply mb-12 leading-relaxed font-light italic text-xl md:text-2xl opacity-80;
+}
+
+.prose blockquote {
+  @apply border-l-8 border-accent pl-12 py-4 italic text-foreground bg-accent-soft my-24;
+}
+
+/* Custom UI Elements */
+.btn-primary {
+  @apply bg-emerald-900 text-white font-black uppercase tracking-widest text-xs py-6 px-12 transition-all hover:scale-105;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    @apply bg-emerald-500 text-emerald-950;
+  }
+}
+
+.btn-outline {
+  @apply border-2 border-foreground/20 hover:border-accent hover:text-accent font-black uppercase tracking-widest text-[10px] py-4 px-8 transition-all;
+}
