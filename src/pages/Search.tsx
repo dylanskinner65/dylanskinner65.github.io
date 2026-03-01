@@ -1,23 +1,13 @@
-import { useState, useEffect } from "react";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useSearch } from "../hooks/useSearch";
 
 export function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
-  const [query, setQuery] = useState(initialQuery);
+  const query = searchParams.get("q") || "";
   const results = useSearch(query);
-
-  useEffect(() => {
-    const q = searchParams.get("q");
-    if (q !== null) {
-      setQuery(q);
-    }
-  }, [searchParams]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setQuery(value);
     setSearchParams(value ? { q: value } : {}, { replace: true });
   };
 

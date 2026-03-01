@@ -43,10 +43,6 @@ export function MainLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    setSelectedIndex(-1);
-  }, [searchValue]);
-
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (searchValue.trim()) {
@@ -98,6 +94,7 @@ export function MainLayout() {
                   onChange={(e) => {
                     setSearchValue(e.target.value);
                     setShowResults(true);
+                    setSelectedIndex(-1);
                   }}
                   onFocus={() => setShowResults(true)}
                   onKeyDown={handleKeyDown}
