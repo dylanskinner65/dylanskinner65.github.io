@@ -3,6 +3,7 @@ import { MainLayout } from "./components/MainLayout";
 import { Home } from "./pages/Home";
 import { Blog } from "./pages/Blog";
 import { Projects } from "./pages/Projects";
+import { Search } from "./pages/Search";
 import { DynamicPost } from "./pages/DynamicPost";
 import { DynamicProject } from "./pages/DynamicProject";
 
@@ -16,6 +17,7 @@ function App() {
           <Route path="blog/:slug" element={<DynamicPost />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:slug" element={<DynamicProject />} />
+          <Route path="search" element={<Search />} />
         </Route>
       </Routes>
     </BrowserRouter>
