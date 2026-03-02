@@ -2,6 +2,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import contentData from "../data/content.json";
+import { Magnetic } from "../components/Magnetic";
 
 export function Home() {
   const containerRef = useRef(null);
@@ -29,6 +30,8 @@ export function Home() {
 
   const featured = latestPosts[0];
   const others = latestPosts.slice(1);
+
+  const springConfig = { stiffness: 300, damping: 20 };
 
   const experience = [
     {
@@ -127,20 +130,25 @@ export function Home() {
                   style={{ opacity: bioOpacity, y: bioY }} 
                   className="absolute top-[160px] left-0 w-full z-20"
                 >
-                  <div className="p-12 md:p-16 border border-foreground/5 bg-background shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
+                  <motion.div 
+                    transition={springConfig}
+                    className="p-12 md:p-16 border border-foreground/5 bg-background shadow-[0_40px_100px_rgba(0,0,0,0.1)]"
+                  >
                     <p className="text-3xl md:text-4xl italic font-light leading-relaxed opacity-80 text-foreground text-pretty">
                       I am an <span className="text-accent font-medium italic underline underline-offset-8 decoration-1">AI Engineer</span> currently pursuing my Master's at Georgia Tech. 
                       I focus on autonomous workflows and the geometric foundations of deep reinforcement learning.
                     </p>
                     <div className="mt-16 flex items-center gap-12">
-                      <RouterLink 
-                        to="/blog" 
-                        className="inline-block px-12 py-6 bg-foreground text-background font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-all shadow-xl text-foreground"
-                      >
-                        Explore Research Blog
-                      </RouterLink>
+                      <Magnetic strength={0.2}>
+                        <RouterLink 
+                          to="/blog" 
+                          className="inline-block px-12 py-6 bg-foreground text-background font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-all shadow-xl active:scale-95"
+                        >
+                          Explore Research Blog
+                        </RouterLink>
+                      </Magnetic>
                     </div>
-                  </div>
+                  </motion.div>
                 </motion.div>
               </div>
 
@@ -169,7 +177,14 @@ export function Home() {
         
         <div className="grid gap-px bg-foreground/10 border border-foreground/5 shadow-2xl overflow-hidden">
           {experience.map((exp, i) => (
-            <div key={i} className="bg-background p-12 grid md:grid-cols-12 gap-8 hover:bg-accent-soft transition-colors group border-b border-foreground/5 last:border-0">
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, ...springConfig }}
+              className="bg-background p-12 grid md:grid-cols-12 gap-8 hover:bg-accent-soft transition-colors group border-b border-foreground/5 last:border-0"
+            >
               <div className="md:col-span-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-accent italic opacity-60">{exp.date}</span>
                 <h3 className="mt-2 text-4xl md:text-5xl italic leading-none text-foreground">{exp.company}</h3>
@@ -180,7 +195,7 @@ export function Home() {
                   {exp.desc}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -193,7 +208,10 @@ export function Home() {
         </div>
         
         <div className="grid lg:grid-cols-12 gap-px bg-foreground/10 border border-foreground/5 shadow-2xl overflow-hidden">
-          <div className="lg:col-span-7 bg-background p-12 md:p-20 flex flex-col justify-between gap-16">
+          <motion.div 
+            transition={springConfig}
+            className="lg:col-span-7 bg-background p-12 md:p-20 flex flex-col justify-between gap-16"
+          >
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-accent mb-6 block italic">{featured.date.toUpperCase()}</span>
               <h3 className="text-5xl md:text-7xl italic leading-[0.9] mb-8 text-foreground text-pretty">{featured.title}</h3>
@@ -201,28 +219,35 @@ export function Home() {
                 {featured.description}
               </p>
             </div>
-            <RouterLink 
-              to={`/blog/${featured.slug}`} 
-              className="text-xs font-black uppercase tracking-widest border-b-2 border-accent self-start hover:text-accent transition-colors pb-1 text-foreground"
-            >
-              Read Full Entry
-            </RouterLink>
-          </div>
+            <Magnetic strength={0.1}>
+              <RouterLink 
+                to={`/blog/${featured.slug}`} 
+                className="text-xs font-black uppercase tracking-widest border-b-2 border-accent self-start hover:text-accent transition-colors pb-1 text-foreground"
+              >
+                Read Full Entry
+              </RouterLink>
+            </Magnetic>
+          </motion.div>
 
           <div className="lg:col-span-5 flex flex-col gap-px">
              {others.map((post, i) => (
-               <RouterLink 
-                 key={i} 
-                 to={`/blog/${post.slug}`}
-                 className="bg-background p-12 flex-1 flex flex-col justify-between group hover:bg-accent-soft transition-colors"
+               <motion.div
+                 key={i}
+                 transition={springConfig}
+                 className="flex-1"
                >
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-accent mb-4 block italic">{post.date.toUpperCase()}</span>
-                    <h4 className="text-3xl md:text-4xl italic group-hover:text-accent transition-colors mb-4 text-foreground text-pretty">{post.title}</h4>
-                    <p className="text-base font-light italic opacity-50 line-clamp-2 text-foreground text-pretty">{post.description}</p>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-accent mt-8 opacity-0 group-hover:opacity-100 transition-all">Open Blog →</span>
-               </RouterLink>
+                 <RouterLink 
+                   to={`/blog/${post.slug}`}
+                   className="bg-background h-full p-12 flex flex-col justify-between group hover:bg-accent-soft transition-colors"
+                 >
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-accent mb-4 block italic">{post.date.toUpperCase()}</span>
+                      <h4 className="text-3xl md:text-4xl italic group-hover:text-accent transition-colors mb-4 text-foreground text-pretty">{post.title}</h4>
+                      <p className="text-base font-light italic opacity-50 line-clamp-2 text-foreground text-pretty">{post.description}</p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-accent mt-8 opacity-0 group-hover:opacity-100 transition-all">Open Blog →</span>
+                 </RouterLink>
+               </motion.div>
              ))}
           </div>
         </div>

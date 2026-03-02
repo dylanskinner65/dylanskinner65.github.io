@@ -6,21 +6,24 @@ import { Projects } from "./pages/Projects";
 import { Search } from "./pages/Search";
 import { DynamicPost } from "./pages/DynamicPost";
 import { DynamicProject } from "./pages/DynamicProject";
+import { ThemeProvider } from "./hooks/ThemeContext";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="blog" element={<Blog />} />
-          <Route path="blog/:slug" element={<DynamicPost />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="projects/:slug" element={<DynamicProject />} />
-          <Route path="search" element={<Search />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="blog" element={<Blog />} />
+            <Route path="blog/:slug" element={<DynamicPost />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="projects/:slug" element={<DynamicProject />} />
+            <Route path="search" element={<Search />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
