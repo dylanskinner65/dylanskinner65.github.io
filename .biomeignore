@@ -1,0 +1,8 @@
+blog/
+projects/
+static/
+public/
+dist/
+node_modules/
+package-lock.json
+src/data/content.json
