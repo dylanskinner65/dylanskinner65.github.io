@@ -1,0 +1,51 @@
+/* Code Tabs for Blog Posts */
+.code-tabs {
+	margin: 1.6em 0;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	overflow: hidden;
+	background: #f4f4f4;
+}
+
+.code-tabs-header {
+	display: flex;
+	background: #eee;
+	border-bottom: 1px solid #ddd;
+}
+
+.code-tab-btn {
+	padding: 8px 16px;
+	cursor: pointer;
+	border: none;
+	background: none;
+	font-family: "Open Sans", sans-serif;
+	font-size: 1.4rem;
+	color: #666;
+	transition: all 0.2s;
+}
+
+.code-tab-btn:hover {
+	background: #e0e0e0;
+}
+
+.code-tab-btn.active {
+	background: #fff;
+	color: #222;
+	font-weight: bold;
+	border-bottom: 2px solid #f36d33;
+}
+
+.code-tab-content {
+	display: none;
+}
+
+.code-tab-content.active {
+	display: block;
+}
+
+.code-tab-content pre {
+	margin: 0;
+	border: none;
+	border-left: none;
+	border-radius: 0;
+}

@@ -2,10 +2,197 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-  <title>Dylan Skinner - Math, Data Science, and Machine Learning</title>
-  <link>https://dylanskinner65.github.io/blog/blog.html</link>
-  <description>What I have learned about math, data science, and machine learning.</description>
+  <title>Dylan Skinner - Math, Data Science, and Machine Learning.</title>
+  <link>https://andrewnc.github.io/blog/blog.html</link>
+  <description>What I am learning about math, data science, and machine learning.</description>
+<item>
+<title>Agents Are Just a While Loop</title>
+<link>https://dylanskinner65.github.io/blog/agents_are_just_a_while_loop.html</link>
+<description>
 
+ The term "AI Agent" has become heavily overloaded. In this post, we demystify agents by showing they are just a language model called repeatedly in a loop, with the ability to invoke tools, until it decides it's done.
+                        
+</description>
+</item>
+<item>
+<title>Gradient Descent</title>
+<link>https://dylanskinner65.github.io/blog/gradient_descent.html</link>
+<description>
+
+ Gradient Descent is the backbone of optimization and deep learning. In this blog post, we dig into the math behind gradient descent,
+                            Polyak's heavy ball method, and Nesterov's accelerated gradient descent method. We perform these methods on an example function and see them in action!
+                        
+</description>
+</item>
+<item>
+<title>The Basics of Unconstrained Optimization</title>
+<link>https://dylanskinner65.github.io/blog/unconstrained_opt.html</link>
+<description>
+
+ Behind important things like machine learning, finance, and operations research lies an important concept: optimization.
+                        Optimization is the process of finding the best solution to a problem from all possible solutions. In this blog post, we will
+                        discuss the basics of unconstrained optimization, a fundamental concept in optimization theory. We will specifically discuss
+                        a few necessary and sufficient conditions for optimality, and consider a few examples.
+</description>
+</item>
+<item>
+<title>Maximum Likelihood Estimation</title>
+<link>https://dylanskinner65.github.io/blog/mle.html</link>
+<description>
+
+ Maximum likelihood estimation (MLE) stands as a cornerstone in the realm of statistical inference, 
+                    offering a powerful method for estimating the parameters of a probability distribution. In this blog post, 
+                    we explore the concept of MLE, its mathematical underpinnings, and consider a few
+                    examples.
+</description>
+</item>
+<item>
+<title>Proximal Policy Optimization: A Scenic Tour</title>
+<link>https://dylanskinner65.github.io/blog/ppo.html</link>
+<description>
+
+In this blog post we talk about the deep reinforcement learning algorithm
+                    proximal policy optimization.
+</description>
+</item>
+<item>
+<title>Introduction to Reinforcement Learning: the Markov Decision Process and the Bellman Equation</title>
+<link>https://dylanskinner65.github.io/blog/mdp_bo.html</link>
+<description>
+
+In this blog post we begin a brief introduction to reinforcement learning by
+                    talking about the Markov decision process and the Bellman equation.
+</description>
+</item>
+<item>
+<title>Introduction to Knot Theory: Slice Surfaces and Slice Genus</title>
+<link>https://dylanskinner65.github.io/blog/slice_surface_genus.html</link>
+<description>
+
+In this blog post we build upon previous blog posts. We will be dicussing slice surfaces and slice genus.
+</description>
+</item>
+<item>
+<title>Introduction to Knot Theory: Braids, Alexander's Theorem, and Markov's Theorem</title>
+<link>https://dylanskinner65.github.io/blog/braids.html</link>
+<description>
+
+In this blog post we build upon a previous post. We will be discussing braids, Alexander's theorem, and Markov's theorem.
+</description>
+</item>
+<item>
+<title>Introduction to Knot Theory: Knots, Isotopies, and Reidemeister's Theorem</title>
+<link>https://dylanskinner65.github.io/blog/intro_to_knots.html</link>
+<description>
+
+Knot theory is a branch of topology that studies the properties of mathematical knots. In this blog post, 
+                    we will briefly explore the basics of knot theory and define some common terms used in the field. 
+                    This blog post is a high level introduction to knot theory that is meant to not only be accessible to a general audience, 
+                    but also lays a foundation for more technical topics.
+</description>
+</item>
+<item>
+<title>Kernel Density Estimation</title>
+<link>https://dylanskinner65.github.io/blog/kernel_density_estimation.html</link>
+<description>
+
+Kernel Density Estimators (KDEs) are statistical tools used for 
+                    estimating the probability density function (PDF) of a continuous 
+                    random variable. They provide a smooth, non-parametric representation 
+                    of the underlying distribution of data by placing a kernel (smooth, symmetric function)
+                  at each data point and summing up these kernels to form a continuous probability density 
+                  estimate. KDEs are particularly useful in exploratory data analysis and visualizing the 
+                  distribution of data without making assumptions about the underlying parametric form.
+</description>
+</item>
+<item>
+<title>A Gentle Introduction and Mathematical Foundations of XGBoost</title>
+<link>https://dylanskinner65.github.io/blog/xgboost.html</link>
+<description>
+
+XGBoost is a powerful machine learning algorithm that is used in many data science competitions, combining ideas from
+                    gradient boosting, random forests, and other important topics.
+                    In this blog post, we'll discuss the math behind XGBoost, exploring its inner workings and understanding 
+                    how it stands out among other machine learning algorithms. We'll also shed light on the importance of 
+                    regularization and draw comparisons between XGBoost and random forests through a practical Python example.
+</description>
+</item>
+<item>
+<title>Gradient Boosting in Machine Learning</title>
+<link>https://dylanskinner65.github.io/blog/gradient_boosting.html</link>
+<description>
+
+Gradient boosting is a clever way to improve classification and regression tasks. The main idea is to perform
+                    gradient descent to minimize the loss function of our problem. In this post, we will discuss the math behind
+                    gradient boosting and work through an example comparing gradient boosting and random forests.
+</description>
+</item>
+<item>
+<title>Random Forests for Classification</title>
+<link>https://dylanskinner65.github.io/blog/random_forests.html</link>
+<description>
+
+Random forests are a powerful machine learning tool that can be used for classification and regression. 
+                    In this blog post, we will discuss how random forests work for classification, and we will work through an example of building a random forest for classification.
+</description>
+</item>
+<item>
+<title>Decision Trees for Classification</title>
+<link>https://dylanskinner65.github.io/blog/decision_tress.html</link>
+<description>
+
+Decision trees for classification are foundational for many popular machine learning algorithms such as random forests and XGBoost. In this article,
+                    we learn the math behind decision trees and construct an example tree using the Gini index.
+</description>
+</item>
+<item>
+<title>Feature Selection Using $L^1$ Regularization and Stepwise Feature Removal</title>
+<link>https://dylanskinner65.github.io/blog/feature_selection_l1_aic.html</link>
+<description>
+
+Feature selection is a very important part of machine learning. In this article, we will explore feature selection using $L^1$ regularization and stepwise feature removal, and talk about how $L^1$
+                    regularization often outperforms stepwise feature removal.
+</description>
+</item>
+<item>
+<title>Akaike and Bayesian Information Criterion</title>
+<link>https://dylanskinner65.github.io/blog/aic_bic.html</link>
+<description>
+
+An introduction to Akaike information criterion (AIC), and Bayesian information criterion (BIC).
+</description>
+</item>
+<item>
+<title>Linear Regression</title>
+<link>https://dylanskinner65.github.io/blog/linear_regression.html</link>
+<description>
+
+An introduction to linear regression, model accuracy, and regularization.
+</description>
+</item>
+<item>
+<title>Prime Spiral in Python</title>
+<link>https://dylanskinner65.github.io/blog/prime_spiral.html</link>
+<description>
+
+A cool visualization of the prime spiral in Python using Plotly.
+</description>
+</item>
+<item>
+<title>Convex Linear Optimization Using CVXPY</title>
+<link>https://dylanskinner65.github.io/blog/convex_linear_opt_cvxpy.html</link>
+<description>
+
+An introductory tutorial into CVXPY and convex linear optimization with two worked through examples.
+
+</description>
+</item>
+<item>
+<title>Creating One-Factor ANOVA Tables in R</title>
+<link>https://dylanskinner65.github.io/blog/one_factor_anova_r.html</link>
+<description>
+
+A quick tutorial on how to create one-factor ANOVA tables in R without any external packages.
 
 </description>
 </item>

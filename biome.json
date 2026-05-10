@@ -4,7 +4,7 @@
 	"formatter": { "enabled": true, "indentStyle": "tab" },
 	"linter": {
 		"enabled": true,
-		"rules": { 
+		"rules": {
 			"recommended": true,
 			"complexity": {
 				"noImportantStyles": "off"
@@ -12,7 +12,7 @@
 		}
 	},
 	"javascript": { "formatter": { "quoteStyle": "double" } },
-	"css": { 
+	"css": {
 		"parser": { "allowWrongLineComments": true },
 		"linter": { "enabled": false }
 	}
