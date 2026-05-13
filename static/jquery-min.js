@@ -249,7 +249,7 @@
 			r,
 			s,
 			t,
-			u = `sizzle${1 * new Date()}`,
+			u = `sizzle${1 * Date.now()}`,
 			v = a.document,
 			w = 0,
 			x = 0,

@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Magnetic } from "../components/Magnetic";
+import { MarkdownText } from "../components/MarkdownText";
 import contentData from "../data/content.json";
 
 export function Home() {
@@ -326,10 +327,10 @@ export function Home() {
 								{featured.date.toUpperCase()}
 							</span>
 							<h3 className="text-4xl sm:text-5xl md:text-7xl italic leading-[0.9] mb-6 sm:mb-8 text-foreground text-pretty">
-								{featured.title}
+								<MarkdownText content={featured.title} />
 							</h3>
 							<p className="text-base sm:text-lg md:text-xl lg:text-2xl font-light italic opacity-60 leading-relaxed line-clamp-3 text-pretty text-foreground">
-								{featured.description}
+								<MarkdownText content={featured.description} />
 							</p>
 						</div>
 						<Magnetic strength={0.1}>
@@ -354,10 +355,10 @@ export function Home() {
 										{post.date.toUpperCase()}
 									</span>
 									<h4 className="text-2xl sm:text-3xl md:text-4xl italic group-hover:text-accent transition-colors mb-2 sm:mb-4 text-foreground text-pretty">
-										{post.title}
+										<MarkdownText content={post.title} />
 									</h4>
 									<p className="text-sm sm:text-base font-light italic opacity-50 line-clamp-2 text-foreground text-pretty">
-										{post.description}
+										<MarkdownText content={post.description} />
 									</p>
 								</div>
 								<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-accent mt-6 sm:mt-8 opacity-0 group-hover:opacity-100 transition-all">

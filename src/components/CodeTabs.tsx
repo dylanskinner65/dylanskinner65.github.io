@@ -1,6 +1,11 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+	atomDark,
+	oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useTheme } from "../hooks/ThemeContext";
 
 interface CodeBlock {
 	lang: string;
@@ -12,45 +17,40 @@ interface CodeTabsProps {
 	blocks: CodeBlock[];
 }
 
-const STORAGE_KEY = "preferred-code-lang";
 const DEFAULT_LANG = "python";
-
-// External store for the language preference
-const langStore = {
-	subscribe(callback: () => void) {
-		window.addEventListener("storage", callback);
-		window.addEventListener("code-lang-change", callback);
-		return () => {
-			window.removeEventListener("storage", callback);
-			window.removeEventListener("code-lang-change", callback);
-		};
-	},
-	getSnapshot() {
-		return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANG;
-	},
-	setLang(lang: string) {
-		localStorage.setItem(STORAGE_KEY, lang);
-		// Dispatch event for other tabs and same-tab synchronization
-		window.dispatchEvent(new Event("storage"));
-		window.dispatchEvent(new CustomEvent("code-lang-change", { detail: lang }));
-	},
-};
+const QUERY_PARAM = "lang";
 
 export function CodeTabs({ blocks }: CodeTabsProps) {
-	const activeLang = useSyncExternalStore(
-		langStore.subscribe,
-		langStore.getSnapshot,
+	const [searchParams, setSearchParams] = useSearchParams();
+	const { resolvedTheme } = useTheme();
+
+	// 1. READ: Derive active language directly from URL during render
+	const activeLang = searchParams.get(QUERY_PARAM) || DEFAULT_LANG;
+
+	const handleTabClick = useCallback(
+		(lang: string) => {
+			// 2. UPDATE: Change the URL directly in the event handler
+			setSearchParams(
+				(prev) => {
+					if (lang === DEFAULT_LANG) {
+						prev.delete(QUERY_PARAM);
+					} else {
+						prev.set(QUERY_PARAM, lang);
+					}
+					return prev;
+				},
+				{ replace: true },
+			);
+		},
+		[setSearchParams],
 	);
 
-	const handleTabClick = useCallback((lang: string) => {
-		langStore.setLang(lang);
-	}, []);
-
 	const activeBlock = blocks.find((b) => b.lang === activeLang) || blocks[0];
+	const isDark = resolvedTheme === "dark";
 
 	return (
 		<div className="p-1 bg-foreground/10 my-12 not-prose shadow-xl border border-foreground/5 overflow-hidden">
-			<div className="flex bg-white border-b border-foreground/5">
+			<div className="flex bg-surface border-b border-foreground/5 transition-colors duration-300">
 				{blocks.map((block) => (
 					<button
 						key={block.lang}
@@ -59,7 +59,7 @@ export function CodeTabs({ blocks }: CodeTabsProps) {
 						className={`px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
 							activeLang === block.lang
 								? "bg-accent text-white"
-								: "text-foreground/40 hover:text-foreground hover:bg-foreground/5"
+								: "text-foreground opacity-40 hover:opacity-100 hover:bg-foreground/5"
 						}`}
 					>
 						{block.label}
@@ -68,12 +68,13 @@ export function CodeTabs({ blocks }: CodeTabsProps) {
 			</div>
 			<SyntaxHighlighter
 				language={activeBlock.lang}
-				style={oneLight}
+				style={isDark ? atomDark : oneLight}
 				customStyle={{
 					padding: "2rem",
-					background: "#fff",
+					background: isDark ? "var(--background)" : "#fff",
 					fontSize: "0.9rem",
 					margin: 0,
+					transition: "all 0.3s ease",
 				}}
 			>
 				{activeBlock.code.trim()}

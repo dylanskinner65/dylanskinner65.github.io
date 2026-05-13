@@ -66,6 +66,12 @@ def migrate():
                 html = file.read()
                 title, date, desc = extract_meta(html)
                 content, quote, author = extract_content(html)
+                
+                # Fix image paths: blog_files/ -> /blog_files/
+                # Also handle cases where it might already have /blog/ or just be relative
+                content = re.sub(r'src="(/blog/)?blog_files/', 'src="/blog_files/', content)
+                content = re.sub(r'src="blog_files/', 'src="/blog_files/', content)
+                
                 slug = f.replace(".html", "").replace("_", "-")
                 data["blog"].append({
                     "slug": slug,
@@ -86,6 +92,11 @@ def migrate():
                 html = file.read()
                 title, date, desc = extract_meta(html)
                 content, quote, author = extract_content(html)
+                
+                # Fix image paths: projects_files/ -> /projects_files/
+                content = re.sub(r'src="(/projects/)?projects_files/', 'src="/projects_files/', content)
+                content = re.sub(r'src="projects_files/', 'src="/projects_files/', content)
+
                 slug = f.replace(".html", "").replace("_", "-")
                 meta = get_project_metadata(slug)
                 data["projects"].append({

@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { NavLink, Link as RouterLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, Link as RouterLink } from "react-router-dom";
 import { CommandPalette } from "./CommandPalette";
 import { ThemeToggle } from "./ThemeToggle";
 

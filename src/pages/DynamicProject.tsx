@@ -1,30 +1,42 @@
 import { useLayoutEffect, useRef } from "react";
-import { Navigate, useParams } from "react-router-dom";
-import { renderContent } from "../components/ContentParser";
-import contentData from "../data/content.json";
+import ReactMarkdown from "react-markdown";
+import { Link, Navigate, useParams } from "react-router-dom";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import remarkDirective from "remark-directive";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { visit } from "unist-util-visit";
+import { BlogPostLayout } from "../components/BlogPostLayout";
+import { CodeTabs } from "../components/CodeTabs";
+import { getProjectBySlug } from "../hooks/useContent";
+
+// Custom Remark plugin to transform directives into HTML nodes that react-markdown can handle
+function remarkDirectiveTransformer() {
+	// biome-ignore lint/suspicious/noExplicitAny: complex unist tree type
+	return (tree: any) => {
+		visit(tree, (node) => {
+			if (
+				node.type === "containerDirective" ||
+				node.type === "leafDirective" ||
+				node.type === "textDirective"
+			) {
+				if (!node.data) node.data = {};
+				const data = node.data;
+				data.hName = node.name;
+				data.hProperties = node.attributes || {};
+			}
+		});
+	};
+}
 
 export function DynamicProject() {
 	const { slug } = useParams();
-	const project = contentData.projects.find((p) => p.slug === slug);
+	const project = slug ? getProjectBySlug(slug) : undefined;
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useLayoutEffect(() => {
-		const { MathJax } = window;
-
-		if (MathJax && containerRef.current) {
-			if (MathJax.texLabelsClear) {
-				MathJax.texLabelsClear();
-			}
-			if (MathJax.typesetClear) {
-				MathJax.typesetClear([containerRef.current]);
-			}
-			MathJax.startup.promise = MathJax.startup.promise
-				.then(() => {
-					return MathJax.typesetPromise([containerRef.current]);
-				})
-				// biome-ignore lint/suspicious/noExplicitAny: External library error handler
-				.catch((err: any) => console.error("MathJax typesetting failed:", err));
-		}
+		window.scrollTo(0, 0);
 	}, []);
 
 	if (!project) {
@@ -33,25 +45,127 @@ export function DynamicProject() {
 
 	return (
 		<div ref={containerRef}>
-			<article className="max-w-4xl mx-auto space-y-24 pb-32">
-				<header className="space-y-8">
-					<div className="flex items-center gap-4 text-xs font-black text-accent uppercase tracking-[0.5em]">
-						<time>{project.date}</time>
-						<span className="opacity-30">•</span>
-						<span>PROJECT</span>
-					</div>
-					<h1 className="text-7xl md:text-9xl font-serif font-black tracking-tighter leading-[0.85] uppercase text-foreground">
-						{project.title}
-					</h1>
-					<p className="text-2xl md:text-3xl text-muted-foreground italic font-medium max-w-2xl leading-relaxed">
-						{project.description}
-					</p>
-				</header>
+			<BlogPostLayout
+				title={project.title}
+				date={project.date}
+				slug={project.slug}
+				category={project.category}
+				excerpt={project.description || "Project exploration."}
+				quote={project.quote}
+				quoteAuthor={project.quoteAuthor}
+			>
+				<article className="prose prose-invert max-w-none">
+					<ReactMarkdown
+						remarkPlugins={[
+							remarkGfm,
+							remarkMath,
+							remarkDirective,
+							remarkDirectiveTransformer,
+						]}
+						rehypePlugins={[rehypeRaw, rehypeKatex]}
+						components={{
+							// Map the 'code-tabs' directive to our CodeTabs component
+							// @ts-expect-error
+							// biome-ignore lint/suspicious/noExplicitAny: react-markdown component type
+							"code-tabs": ({ children }: any) => {
+								const blocks = (Array.isArray(children) ? children : [children])
+									// biome-ignore lint/suspicious/noExplicitAny: complex react element type
+									.filter((c: any) => c.type === "pre")
+									// biome-ignore lint/suspicious/noExplicitAny: complex react element type
+									.map((pre: any) => {
+										const codeChild = pre.props.children;
+										const className = codeChild?.props?.className || "";
+										const lang = className.replace("language-", "") || "text";
+										const label =
+											lang === "python"
+												? "Python"
+												: lang === "typescript" || lang === "javascript"
+													? "TypeScript"
+													: lang.toUpperCase();
+										return {
+											lang,
+											label,
+											code: codeChild?.props?.children || "",
+										};
+									});
+								return <CodeTabs blocks={blocks} />;
+							},
+							// Custom Heading styles
+							h2: ({ children }) => (
+								<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
+									{children}
+								</h2>
+							),
+							h3: ({ children }) => (
+								<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
+									{children}
+								</h3>
+							),
+							// Images
+							img: ({ src, alt, className, ...props }) => (
+								<img
+									src={src}
+									alt={alt}
+									{...props}
+									className={
+										className ||
+										"w-full h-auto rounded-none shadow-2xl border border-foreground/5 my-12"
+									}
+								/>
+							),
+							// Links: Use React Router Link for internal links
+							a: ({ href, children, ...props }) => {
+								const isInternal =
+									href?.startsWith("/") ||
+									href?.startsWith("http://localhost") ||
+									href?.startsWith("https://dylanskinner65.github.io");
 
-				<div className="prose prose-xl max-w-none text-foreground/80 leading-[1.8] space-y-12 font-sans">
-					{renderContent(project.content)}
-				</div>
-			</article>
+								let cleanHref =
+									href?.replace("https://dylanskinner65.github.io", "") || "";
+
+								// Sanitize legacy paths: /blog/post_name.html -> /blog/post-name
+								if (
+									isInternal &&
+									(cleanHref.includes("/blog/") ||
+										cleanHref.includes("/projects/"))
+								) {
+									cleanHref = cleanHref.replace(".html", "").replace(/_/g, "-");
+								}
+
+								const className =
+									"text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors";
+
+								if (isInternal) {
+									return (
+										<Link
+											to={cleanHref}
+											className={className}
+											target="_blank"
+											rel="noopener noreferrer"
+											{...props}
+										>
+											{children}
+										</Link>
+									);
+								}
+								return (
+									<a
+										href={href}
+										target="_blank"
+										rel="noopener noreferrer"
+										className={className}
+										{...props}
+									>
+										{children}
+									</a>
+								);
+							},
+						}}
+					>
+						{project.content}
+					</ReactMarkdown>
+				</article>
+			</BlogPostLayout>
 		</div>
 	);
 }

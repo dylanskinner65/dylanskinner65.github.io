@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import contentData from "../data/content.json";
+import { MarkdownText } from "../components/MarkdownText";
+import { getAllPosts } from "../hooks/useContent";
 
 export function Blog() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const postsPerPage = 10;
 
-	const sortedPosts = [...contentData.blog].sort(
+	// Use the new dynamic loader instead of the JSON file
+	const allPosts = getAllPosts();
+
+	const sortedPosts = [...allPosts].sort(
 		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 	);
 
@@ -32,7 +36,7 @@ export function Blog() {
 	return (
 		<div className="space-y-16 sm:space-y-24 md:space-y-32">
 			<header className="border-b-2 border-foreground/5 pb-8 sm:pb-16">
-				<h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] italic leading-none text-foreground tracking-tighter">
+				<h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic leading-none text-foreground tracking-tighter">
 					My Blog.
 				</h1>
 			</header>
@@ -54,11 +58,11 @@ export function Blog() {
 								</span>
 							</div>
 							<div className="md:col-span-7">
-								<h2 className="text-3xl sm:text-5xl md:text-7xl italic md:group-hover:text-accent md:group-hover:translate-x-4 transition-all duration-500 text-foreground leading-tight">
-									{post.title}
+								<h2 className="text-2xl sm:text-4xl md:text-5xl italic md:group-hover:text-accent md:group-hover:translate-x-4 transition-all duration-500 text-foreground leading-tight">
+									<MarkdownText content={post.title} />
 								</h2>
-								<p className="text-lg sm:text-xl md:text-2xl font-light italic mt-4 sm:mt-6 line-clamp-2 text-foreground">
-									{post.description}
+								<p className="text-base sm:text-lg md:text-xl font-light italic mt-4 sm:mt-6 line-clamp-2 text-foreground">
+									<MarkdownText content={post.description} />
 								</p>
 							</div>
 							<div className="md:col-span-2 hidden md:flex justify-end">
@@ -70,7 +74,6 @@ export function Blog() {
 					</RouterLink>
 				))}
 
-				{/* Split Contrast Pagination */}
 				{totalPages > 1 && (
 					<div className="flex flex-col sm:grid sm:grid-cols-12 bg-background border-t border-foreground/10">
 						<button

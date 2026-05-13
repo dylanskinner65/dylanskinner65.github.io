@@ -1,82 +1,117 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { Magnetic } from "../components/Magnetic";
-import contentData from "../data/content.json";
+import { MarkdownText } from "../components/MarkdownText";
+import { getAllProjects } from "../hooks/useContent";
 
 export function Projects() {
-	const springConfig = { stiffness: 300, damping: 20 };
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 6;
+
+	// Use the new dynamic loader
+	const allProjects = getAllProjects();
+
+	const sortedProjects = [...allProjects].sort(
+		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+	);
+
+	const indexOfLastItem = currentPage * itemsPerPage;
+	const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+	const currentProjects = sortedProjects.slice(
+		indexOfFirstItem,
+		indexOfLastItem,
+	);
+	const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
+
+	const handlePrev = () => {
+		if (currentPage > 1) {
+			setCurrentPage(currentPage - 1);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	};
+
+	const handleNext = () => {
+		if (currentPage < totalPages) {
+			setCurrentPage(currentPage + 1);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+	};
 
 	return (
 		<div className="space-y-16 sm:space-y-24 md:space-y-32">
-			<header className="max-w-4xl space-y-4 sm:space-y-8 border-b-2 border-foreground/5 pb-8 sm:pb-16 text-foreground">
-				<h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] italic leading-none tracking-tighter">
+			<header className="border-b-2 border-foreground/5 pb-8 sm:pb-16">
+				<h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic leading-none text-foreground tracking-tighter">
 					Projects.
 				</h1>
-				<p className="text-lg sm:text-xl md:text-2xl lg:text-3xl opacity-40 font-light italic leading-relaxed text-pretty">
-					Computational experiments in topology, predictive modeling, and
-					machine learning research.
-				</p>
 			</header>
 
-			<div className="grid sm:grid-cols-2 gap-6 sm:gap-12">
-				{contentData.projects
-					.sort(
-						(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-					)
-					.map((project, i) => {
-						return (
-							<motion.div
-								key={project.slug}
-								initial={{ opacity: 0, y: 30 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								viewport={{ once: true }}
-								transition={{ delay: i * 0.1, ...springConfig }}
-								whileHover={{ y: -10 }}
-							>
-								<RouterLink
-									to={`/projects/${project.slug}`}
-									className="bg-background border border-foreground/5 p-8 sm:p-16 md:p-24 shadow-xl hover:shadow-2xl transition-all group flex flex-col justify-between min-h-[400px] sm:h-[500px] relative overflow-hidden"
-								>
-									<div>
-										<div className="flex justify-between items-start mb-6 sm:mb-8">
-											<span className="text-[9px] sm:text-[10px] font-black text-accent italic uppercase tracking-[0.2em] sm:tracking-[0.3em]">
-												{project.field || "Research"} {/* // */}{" "}
-												{project.date.split("-")[0]}
-											</span>
-											<span className="text-[8px] sm:text-[9px] font-bold opacity-20 uppercase tracking-widest">
-												PROJ_0{contentData.projects.length - i}
-											</span>
-										</div>
-										<h2 className="text-4xl sm:text-5xl md:text-7xl italic leading-[0.85] tracking-tighter mb-6 sm:mb-8 md:group-hover:translate-x-4 transition-all duration-500 text-foreground text-pretty">
-											{project.title}
-										</h2>
-										<p className="text-base sm:text-lg md:text-xl lg:text-2xl opacity-40 font-light italic leading-relaxed line-clamp-4 sm:line-clamp-3 text-foreground text-pretty">
-											{project.description}
-										</p>
-									</div>
-
-									<div className="pt-6 sm:pt-8 border-t border-foreground/5 flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto gap-4">
-										<div className="flex flex-wrap gap-2 sm:gap-3">
-											{project.tags.slice(0, 3).map((tag) => (
-												<span
-													key={tag}
-													className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-all text-foreground"
-												>
-													{tag}
-												</span>
-											))}
-										</div>
-										<Magnetic strength={0.2}>
-											<span className="text-accent font-bold italic md:group-hover:translate-x-2 transition-transform text-[10px] sm:text-xs">
-												View_Research →
-											</span>
-										</Magnetic>
-									</div>
-								</RouterLink>
-							</motion.div>
-						);
-					})}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-foreground/10 border border-foreground/5 shadow-xl sm:shadow-2xl overflow-hidden">
+				{currentProjects.map((project, i) => (
+					<RouterLink
+						key={project.slug}
+						to={`/projects/${project.slug}`}
+						className="bg-background p-8 sm:p-12 md:p-16 group hover:bg-accent-soft transition-all duration-500 block border-b md:border-b-0 border-foreground/5"
+					>
+						<div className="space-y-6">
+							<div className="flex justify-between items-start">
+								<div className="space-y-1">
+									<span className="text-[9px] font-bold text-accent uppercase tracking-widest italic block">
+										{project.category.toUpperCase()}
+									</span>
+									<span className="text-[8px] font-black opacity-20 uppercase tracking-[0.3em]">
+										PROJ_00{sortedProjects.length - indexOfFirstItem - i}
+									</span>
+								</div>
+								<div className="w-8 h-8 border border-foreground/10 rounded-full flex items-center justify-center group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all text-foreground">
+									→
+								</div>
+							</div>
+							<h2 className="text-2xl sm:text-3xl md:text-4xl italic md:group-hover:text-accent md:group-hover:translate-x-2 transition-all duration-500 text-foreground leading-tight">
+								<MarkdownText content={project.title} />
+							</h2>
+							<p className="text-base sm:text-lg font-light italic text-foreground opacity-60 line-clamp-3">
+								<MarkdownText content={project.description} />
+							</p>
+						</div>
+					</RouterLink>
+				))}
 			</div>
+
+			{totalPages > 1 && (
+				<div className="flex flex-col sm:grid sm:grid-cols-12 bg-background border border-foreground/10 shadow-xl overflow-hidden">
+					<button
+						type="button"
+						onClick={handlePrev}
+						disabled={currentPage === 1}
+						className="sm:col-span-4 p-8 sm:p-12 border-b sm:border-b-0 sm:border-r border-foreground/10 text-left transition-all group disabled:opacity-5"
+					>
+						<span className="text-[9px] font-black uppercase tracking-widest opacity-40 block mb-1">
+							Back
+						</span>
+						<span className="text-lg sm:text-xl font-serif italic text-foreground group-hover:text-accent transition-colors">
+							Previous Page
+						</span>
+					</button>
+
+					<div className="sm:col-span-4 p-8 sm:p-12 flex items-center justify-center text-xs md:text-sm font-black opacity-20 tracking-[0.3em] text-foreground border-b sm:border-b-0 border-foreground/10">
+						{currentPage.toString().padStart(2, "0")} /{" "}
+						{totalPages.toString().padStart(2, "0")}
+					</div>
+
+					<button
+						type="button"
+						onClick={handleNext}
+						disabled={currentPage === totalPages}
+						className="sm:col-span-4 p-8 sm:p-12 text-right transition-all group disabled:opacity-5 hover:bg-foreground hover:text-background"
+					>
+						<span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:text-accent block mb-1">
+							Continue
+						</span>
+						<span className="text-lg sm:text-xl font-serif italic group-hover:text-current">
+							Next Page →
+						</span>
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }

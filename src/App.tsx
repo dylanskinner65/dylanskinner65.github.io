@@ -1,12 +1,12 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MainLayout } from "./components/MainLayout";
+import { ThemeProvider } from "./hooks/ThemeContext";
 import { Blog } from "./pages/Blog";
 import { DynamicPost } from "./pages/DynamicPost";
 import { DynamicProject } from "./pages/DynamicProject";
 import { Home } from "./pages/Home";
 import { Projects } from "./pages/Projects";
 import { Search } from "./pages/Search";
-import { ThemeProvider } from "./hooks/ThemeContext";
 
 function App() {
 	return (

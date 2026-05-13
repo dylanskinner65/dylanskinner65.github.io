@@ -1,6 +1,13 @@
+import {
+	motion,
+	useMotionTemplate,
+	useScroll,
+	useSpring,
+	useTransform,
+} from "framer-motion";
 import { type ReactNode, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { MarkdownText } from "./MarkdownText";
 
 interface BlogPostLayoutProps {
 	title: string;
@@ -34,6 +41,7 @@ export function BlogPostLayout({
 	// Header weight transitions from 400 to 900 as you scroll
 	const headerWeight = useTransform(scrollYProgress, [0, 0.2], [400, 900]);
 	const smoothWeight = useSpring(headerWeight, { stiffness: 100, damping: 30 });
+	const fontVariationSettings = useMotionTemplate`"wght" ${smoothWeight}`;
 
 	return (
 		<article
@@ -49,17 +57,14 @@ export function BlogPostLayout({
 					<span>{category.toUpperCase()}</span>
 				</div>
 				<motion.h1
-					style={{
-						fontVariationSettings: `"wght" ${smoothWeight.get()}`,
-						fontWeight: smoothWeight,
-					}}
-					className="text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] italic tracking-tighter leading-[0.8] uppercase text-foreground"
+					style={{ fontVariationSettings }}
+					className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tighter leading-[0.85] uppercase text-foreground"
 				>
-					{title}
+					<MarkdownText content={title} />
 				</motion.h1>
-				<p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground opacity-40 italic font-light max-w-3xl leading-relaxed">
-					{excerpt}
-				</p>
+				<div className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground opacity-40 italic font-light max-w-3xl leading-relaxed">
+					<MarkdownText content={excerpt} />
+				</div>
 			</header>
 
 			{quote && (
@@ -67,18 +72,18 @@ export function BlogPostLayout({
 					initial={{ opacity: 0, x: -20 }}
 					whileInView={{ opacity: 1, x: 0 }}
 					viewport={{ once: true }}
-					className="p-8 sm:p-16 md:p-24 border-l-[8px] sm:border-l-[16px] md:border-l-[24px] border-accent bg-accent-soft italic text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground tracking-tight leading-snug my-16 sm:my-24 md:my-32"
+					className="p-8 sm:p-12 md:p-16 border-l-4 sm:border-l-8 md:border-l-[12px] border-accent bg-accent-soft italic text-xl sm:text-2xl md:text-3xl text-foreground tracking-tight leading-snug my-12 sm:my-16 md:my-20"
 				>
 					<blockquote>"{quote}"</blockquote>
 					{quoteAuthor && (
-						<cite className="block mt-8 sm:mt-12 text-[10px] font-black not-italic uppercase tracking-[0.5em] opacity-30">
+						<cite className="block mt-4 sm:mt-6 text-[10px] font-black not-italic uppercase tracking-[0.5em] opacity-30">
 							— {quoteAuthor.toUpperCase()}
 						</cite>
 					)}
 				</motion.div>
 			)}
 
-			<div className="prose prose-xl sm:prose-2xl max-w-none text-foreground/80 leading-[1.8] space-y-8 sm:space-y-12 md:space-y-16 font-sans">
+			<div className="prose max-w-none text-foreground/80 leading-[1.8] space-y-6 sm:space-y-8 md:space-y-12 font-sans">
 				{children}
 			</div>
 

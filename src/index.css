@@ -15,6 +15,13 @@
 	--surface: white;
 	--border: rgba(4, 33, 26, 0.1);
 	--header-weight: 400;
+
+	/* Diagram Variables */
+	--diagram-box: #f7fafb;
+	--diagram-stroke: #e3edf3;
+	--diagram-text: #3a4145;
+	--diagram-diamond: #ffffff;
+	--diagram-arrow: #9eabb3;
 }
 
 [data-theme="dark"] {
@@ -24,6 +31,13 @@
 	--accent-soft: #064e3b;
 	--surface: #064e3b;
 	--border: rgba(248, 249, 250, 0.1);
+
+	/* Diagram Variables */
+	--diagram-box: #064e3b;
+	--diagram-stroke: rgba(248, 249, 250, 0.2);
+	--diagram-text: #f8f9fa;
+	--diagram-diamond: #04211a;
+	--diagram-arrow: #10b981;
 }
 
 body {
@@ -49,67 +63,72 @@ h4 {
 		font-weight 0.3s ease;
 }
 
-/* MathJax / LaTeX Styles */
-mjx-container[display="true"] {
-	padding-top: 3rem !important;
-	padding-bottom: 3rem !important;
-	margin-top: 3rem !important;
-	margin-bottom: 3rem !important;
-	border-top: 1px solid currentColor !important;
-	border-bottom: 1px solid currentColor !important;
-	background-color: rgba(0, 0, 0, 0.02) !important;
-	margin-left: -1.5rem !important;
-	margin-right: -1.5rem !important;
-	padding-left: 1.5rem !important;
-	padding-right: 1.5rem !important;
-	overflow-x: auto !important;
-	overflow-y: hidden !important;
-	color: var(--accent) !important;
-	opacity: 1 !important;
-}
-
-[data-theme="dark"] mjx-container[display="true"] {
-	background-color: rgba(255, 255, 255, 0.02) !important;
-}
-
-mjx-container:not([display="true"]) {
-	margin: 0 0.2em !important;
-	padding: 0 !important;
-	border: none !important;
-	background: transparent !important;
-	display: inline-block !important;
-	vertical-align: middle !important;
-	color: var(--accent) !important;
-}
-
-@media (min-width: 768px) {
-	mjx-container[display="true"] {
-		margin-left: -3rem !important;
-		margin-right: -3rem !important;
-		padding-left: 3rem !important;
-		padding-right: 3rem !important;
-	}
-}
-
 /* Typography & Prose Fixes */
 .prose h2 {
-	@apply text-6xl md:text-8xl mt-32 mb-12 italic border-b-2 border-foreground/5 pb-8;
+	@apply text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4;
 }
 
 .prose h3 {
-	@apply text-5xl md:text-7xl mt-24 mb-8 italic;
+	@apply text-3xl md:text-4xl mt-16 mb-6 italic;
 }
 
 .prose h4 {
-	@apply text-4xl md:text-5xl mt-20 mb-6 italic opacity-80;
+	@apply text-2xl md:text-3xl mt-12 mb-4 italic opacity-80;
 }
 
 .prose p {
-	@apply mb-12 leading-relaxed font-light italic text-xl md:text-2xl opacity-80;
+	@apply mb-8 leading-relaxed font-light italic text-base md:text-lg opacity-80;
+}
+
+.prose ul {
+	@apply list-disc list-outside ml-8 mb-12 space-y-4;
+}
+
+.prose ol {
+	@apply list-decimal list-outside ml-8 mb-12 space-y-4;
+}
+
+.prose li {
+	@apply text-base md:text-lg font-light italic opacity-80 leading-relaxed;
+}
+
+.prose li::marker {
+	@apply text-accent font-black not-italic;
 }
 
 .prose blockquote {
-	@apply border-l-8 border-accent pl-12 py-4 italic text-foreground bg-accent-soft my-24;
+	@apply border-l-4 border-accent pl-8 py-2 italic text-foreground bg-accent-soft my-16;
+}
+
+/* Table Styling */
+.prose table {
+	@apply w-full border-collapse my-16 text-sm md:text-base;
+}
+
+.prose th {
+	@apply border-b-2 border-foreground/10 py-4 px-6 text-left font-black uppercase tracking-widest text-accent;
+}
+
+.prose td {
+	@apply border-b border-foreground/5 py-4 px-6 text-foreground/80 font-light italic;
+}
+
+.prose tr:hover td {
+	@apply bg-foreground/2;
+}
+
+/* KaTeX Centering & Spacing */
+.katex-display {
+	@apply my-12 py-4 flex justify-center overflow-x-auto overflow-y-hidden text-center w-full;
+	display: flex !important;
+}
+
+.katex {
+	color: var(--accent) !important;
+}
+
+.thesis {
+	@apply text-xl md:text-2xl font-serif italic border-l-4 border-orange-500 pl-6 my-16 py-1 text-foreground opacity-100;
 }
 
 /* Custom UI Elements */
