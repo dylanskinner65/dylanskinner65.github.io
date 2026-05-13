@@ -17,8 +17,9 @@ export function MarkdownText({
 	className = "",
 	inline = true,
 }: MarkdownTextProps) {
+	const Component = inline ? "span" : "div";
 	return (
-		<div className={className}>
+		<Component className={className}>
 			<ReactMarkdown
 				remarkPlugins={[remarkMath]}
 				rehypePlugins={[rehypeKatex]}
@@ -29,6 +30,6 @@ export function MarkdownText({
 			>
 				{content}
 			</ReactMarkdown>
-		</div>
+		</Component>
 	);
 }
