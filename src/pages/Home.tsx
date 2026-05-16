@@ -48,14 +48,16 @@ export function Home() {
 						</span>
 						. Slashed LLM costs by{" "}
 						<span className="text-accent font-medium italic">$8k/day</span>{" "}
-						through vendor optimization and prompt caching. Built real-time
-						token/cost tracking and mentor an apprentice engineer.
+						through vendor optimization and prompt caching. Built a custom
+						internal Agent SDK and migrated core product workflows to agentic
+						architectures.
 					</p>
 					<div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black uppercase tracking-widest opacity-60">
+						<span>Agent SDK</span>
+						<span>Agentic Workflows</span>
 						<span>LLM Infrastructure</span>
 						<span>Vendor Strategy</span>
-						<span>Model Tracking</span>
-						<span>Mentorship</span>
+						<span>Cost Optimization</span>
 					</div>
 				</div>
 			),
