@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -94,140 +94,144 @@ export function DynamicPost() {
 							remarkDirectiveTransformer,
 						]}
 						rehypePlugins={[rehypeRaw, rehypeKatex]}
-						components={{
-							"code-tabs": ({ children }: any) => {
-								const blocks = (Array.isArray(children) ? children : [children])
-									.filter((c: any) => c.type === "pre")
-									.map((pre: any) => {
-										const codeChild = pre.props.children;
-										const className = codeChild?.props?.className || "";
-										const lang = className.replace("language-", "") || "text";
-										const label =
-											lang === "python"
-												? "Python"
-												: lang === "typescript" || lang === "javascript"
-													? "TypeScript"
-													: lang.toUpperCase();
-										return {
-											lang,
-											label,
-											code: codeChild?.props?.children || "",
-										};
-									});
-								return <CodeTabs blocks={blocks} />;
-							},
-							h2: ({ children }) => (
-								<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
-									{children}
-								</h2>
-							),
-							h3: ({ children }) => (
-								<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
-									{children}
-								</h3>
-							),
-							h4: ({ children }) => (
-								<h4 className="text-2xl md:text-3xl mt-12 mb-4 italic text-foreground">
-									{children}
-								</h4>
-							),
-							h5: ({ children }) => (
-								<h5 className="text-xl md:text-2xl mt-10 mb-4 italic text-foreground">
-									{children}
-								</h5>
-							),
-							figure: ({ children }) => {
-								const childrenArray = React.Children.toArray(children).filter(
-									(child) =>
-										typeof child !== "string" || child.trim().length > 0,
-								);
-								const image = childrenArray[0];
-								const caption = childrenArray.slice(1);
-								return (
-									<figure className="flex flex-col items-center my-12">
-										<div className="w-full flex justify-center">{image}</div>
-										{caption.length > 0 && (
-											<figcaption className="mt-4 text-center italic opacity-60 text-sm md:text-base max-w-3xl">
-												{caption}
-											</figcaption>
-										)}
-									</figure>
-								);
-							},
-							ol: ({ children }) => (
-								<ol className="list-decimal list-outside space-y-4 my-8 ml-8">
-									{children}
-								</ol>
-							),
-							ul: ({ children }) => (
-								<ul className="list-disc list-outside space-y-2 my-8 ml-8">
-									{children}
-								</ul>
-							),
-							li: ({ children }) => (
-								<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
-									{children}
-								</li>
-							),
-							img: ({ src, alt, className, ...props }) => (
-								<img
-									src={src}
-									alt={alt}
-									{...props}
-									className={
-										className ||
-										"w-full h-auto rounded-none shadow-2xl border border-foreground/5"
-									}
-								/>
-							),
-							a: ({ href, children, ...props }) => {
-								const isExternal = href?.startsWith("http");
-								if (isExternal) {
-									return (
-										<a
-											href={href}
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
-											{...props}
-										>
-											{children}
-										</a>
-									);
-								}
-								if (href?.startsWith("#")) {
-									return (
-										<a
-											href={href}
-											onClick={(e) => {
-												e.preventDefault();
-												const id = href.replace("#", "");
-												const element = document.getElementById(id);
-												if (element) {
-													element.scrollIntoView({
-														behavior: "smooth",
-														block: "center",
-													});
-												}
-											}}
-											className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
-											{...props}
-										>
-											{children}
-										</a>
-									);
-								}
-								return (
-									<Link
-										to={href || "#"}
-										className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
-										{...props}
-									>
+						components={
+							{
+								"code-tabs": (({ children }: any) => {
+									const blocks = (
+										Array.isArray(children) ? children : [children]
+									)
+										.filter((c: any) => c.type === "pre")
+										.map((pre: any) => {
+											const codeChild = pre.props.children;
+											const className = codeChild?.props?.className || "";
+											const lang = className.replace("language-", "") || "text";
+											const label =
+												lang === "python"
+													? "Python"
+													: lang === "typescript" || lang === "javascript"
+														? "TypeScript"
+														: lang.toUpperCase();
+											return {
+												lang,
+												label,
+												code: codeChild?.props?.children || "",
+											};
+										});
+									return <CodeTabs blocks={blocks} />;
+								}) as React.ElementType,
+								h2: ({ children }) => (
+									<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
 										{children}
-									</Link>
-								);
-							},
-						}}
+									</h2>
+								),
+								h3: ({ children }) => (
+									<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
+										{children}
+									</h3>
+								),
+								h4: ({ children }) => (
+									<h4 className="text-2xl md:text-3xl mt-12 mb-4 italic text-foreground">
+										{children}
+									</h4>
+								),
+								h5: ({ children }) => (
+									<h5 className="text-xl md:text-2xl mt-10 mb-4 italic text-foreground">
+										{children}
+									</h5>
+								),
+								figure: ({ children }) => {
+									const childrenArray = React.Children.toArray(children).filter(
+										(child) =>
+											typeof child !== "string" || child.trim().length > 0,
+									);
+									const image = childrenArray[0];
+									const caption = childrenArray.slice(1);
+									return (
+										<figure className="flex flex-col items-center my-12">
+											<div className="w-full flex justify-center">{image}</div>
+											{caption.length > 0 && (
+												<figcaption className="mt-4 text-center italic opacity-60 text-sm md:text-base max-w-3xl">
+													{caption}
+												</figcaption>
+											)}
+										</figure>
+									);
+								},
+								ol: ({ children }) => (
+									<ol className="list-decimal list-outside space-y-4 my-8 ml-8">
+										{children}
+									</ol>
+								),
+								ul: ({ children }) => (
+									<ul className="list-disc list-outside space-y-2 my-8 ml-8">
+										{children}
+									</ul>
+								),
+								li: ({ children }) => (
+									<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
+										{children}
+									</li>
+								),
+								img: ({ src, alt, className, ...props }) => (
+									<img
+										src={src}
+										alt={alt}
+										{...props}
+										className={
+											className ||
+											"w-full h-auto rounded-none shadow-2xl border border-foreground/5"
+										}
+									/>
+								),
+								a: ({ href, children, ...props }) => {
+									const isExternal = href?.startsWith("http");
+									if (isExternal) {
+										return (
+											<a
+												href={href}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
+												{...props}
+											>
+												{children}
+											</a>
+										);
+									}
+									if (href?.startsWith("#")) {
+										return (
+											<a
+												href={href}
+												onClick={(e) => {
+													e.preventDefault();
+													const id = href.replace("#", "");
+													const element = document.getElementById(id);
+													if (element) {
+														element.scrollIntoView({
+															behavior: "smooth",
+															block: "center",
+														});
+													}
+												}}
+												className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
+												{...props}
+											>
+												{children}
+											</a>
+										);
+									}
+									return (
+										<Link
+											to={href || "#"}
+											className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
+											{...props}
+										>
+											{children}
+										</Link>
+									);
+								},
+							} as Components
+						}
 					>
 						{post.content}
 					</ReactMarkdown>
