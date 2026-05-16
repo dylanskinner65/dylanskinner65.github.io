@@ -1,10 +1,15 @@
-import { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { useLayoutEffect } from "react";
+import {
+	Link as RouterLink,
+	useLocation,
+	useSearchParams,
+} from "react-router-dom";
 import { MarkdownText } from "../components/MarkdownText";
 import { getAllProjects } from "../hooks/useContent";
 
 export function Projects() {
-	const [currentPage, setCurrentPage] = useState(1);
+	const location = useLocation();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const itemsPerPage = 6;
 
 	// Use the new dynamic loader
@@ -14,26 +19,34 @@ export function Projects() {
 		(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 	);
 
+	// Get current page from URL, defaulting to 1
+	const currentPage = Number.parseInt(searchParams.get("page") || "1", 10);
+	const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
+
+	// Handle scrolling to the project when returning via hash
+	useLayoutEffect(() => {
+		const hash = location.hash.replace("#", "");
+		if (hash) {
+			const element = document.getElementById(hash);
+			if (element) {
+				element.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
+		} else if (!searchParams.has("page")) {
+			// Only scroll to top if we're on the "main" projects page with no specific target
+			window.scrollTo(0, 0);
+		}
+	}, [location.hash, searchParams]);
+
 	const indexOfLastItem = currentPage * itemsPerPage;
 	const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 	const currentProjects = sortedProjects.slice(
 		indexOfFirstItem,
 		indexOfLastItem,
 	);
-	const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
 
-	const handlePrev = () => {
-		if (currentPage > 1) {
-			setCurrentPage(currentPage - 1);
-			window.scrollTo({ top: 0, behavior: "smooth" });
-		}
-	};
-
-	const handleNext = () => {
-		if (currentPage < totalPages) {
-			setCurrentPage(currentPage + 1);
-			window.scrollTo({ top: 0, behavior: "smooth" });
-		}
+	const handlePageChange = (newPage: number) => {
+		setSearchParams({ page: newPage.toString() });
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
 	return (
@@ -48,7 +61,9 @@ export function Projects() {
 				{currentProjects.map((project, i) => (
 					<RouterLink
 						key={project.slug}
-						to={`/projects/${project.slug}`}
+						id={project.slug}
+						// Include the current page in the query so we can construct a return link
+						to={`/projects/${project.slug}?fromPage=${currentPage}`}
 						className="bg-background p-8 sm:p-12 md:p-16 group hover:bg-accent-soft transition-all duration-500 block border-b md:border-b-0 border-foreground/5"
 					>
 						<div className="space-y-6">
@@ -80,7 +95,7 @@ export function Projects() {
 				<div className="flex flex-col sm:grid sm:grid-cols-12 bg-background border border-foreground/10 shadow-xl overflow-hidden">
 					<button
 						type="button"
-						onClick={handlePrev}
+						onClick={() => handlePageChange(currentPage - 1)}
 						disabled={currentPage === 1}
 						className="sm:col-span-4 p-8 sm:p-12 border-b sm:border-b-0 sm:border-r border-foreground/10 text-left transition-all group disabled:opacity-5"
 					>
@@ -99,7 +114,7 @@ export function Projects() {
 
 					<button
 						type="button"
-						onClick={handleNext}
+						onClick={() => handlePageChange(currentPage + 1)}
 						disabled={currentPage === totalPages}
 						className="sm:col-span-4 p-8 sm:p-12 text-right transition-all group disabled:opacity-5 hover:bg-foreground hover:text-background"
 					>

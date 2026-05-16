@@ -1,6 +1,12 @@
-import { useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { Link, Navigate, useParams } from "react-router-dom";
+import {
+	Link,
+	Navigate,
+	useLocation,
+	useParams,
+	useSearchParams,
+} from "react-router-dom";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkDirective from "remark-directive";
@@ -13,7 +19,6 @@ import { getProjectBySlug } from "../hooks/useContent";
 
 // Custom Remark plugin to transform directives into HTML nodes that react-markdown can handle
 function remarkDirectiveTransformer() {
-	// biome-ignore lint/suspicious/noExplicitAny: complex unist tree type
 	return (tree: any) => {
 		visit(tree, (node) => {
 			if (
@@ -21,10 +26,21 @@ function remarkDirectiveTransformer() {
 				node.type === "leafDirective" ||
 				node.type === "textDirective"
 			) {
-				if (!node.data) node.data = {};
-				const data = node.data;
-				data.hName = node.name;
-				data.hProperties = node.attributes || {};
+				if (node.name && /^[a-z]/i.test(node.name)) {
+					if (!node.data) node.data = {};
+					const data = node.data;
+					data.hName = node.name;
+					data.hProperties = node.attributes || {};
+				} else {
+					const prefix =
+						node.type === "containerDirective"
+							? ":::"
+							: node.type === "leafDirective"
+								? "::"
+								: ":";
+					node.type = "text";
+					node.value = prefix + node.name;
+				}
 			}
 		});
 	};
@@ -32,12 +48,36 @@ function remarkDirectiveTransformer() {
 
 export function DynamicProject() {
 	const { slug } = useParams();
+	const location = useLocation();
+	const [searchParams] = useSearchParams();
 	const project = slug ? getProjectBySlug(slug) : undefined;
 	const containerRef = useRef<HTMLDivElement>(null);
 
+	const fromPage = searchParams.get("fromPage") || "1";
+
 	useLayoutEffect(() => {
-		window.scrollTo(0, 0);
-	}, []);
+		if (!location.hash) {
+			window.scrollTo(0, 0);
+		}
+	}, [location.hash]);
+
+	useLayoutEffect(() => {
+		if (location.hash) {
+			const id = location.hash.replace("#", "");
+
+			const scrollToElement = () => {
+				const element = document.getElementById(id);
+				if (element) {
+					element.scrollIntoView({ behavior: "smooth", block: "center" });
+				}
+			};
+
+			// Scroll immediately, then try again after images might have loaded
+			scrollToElement();
+			const timeoutId = setTimeout(scrollToElement, 500);
+			return () => clearTimeout(timeoutId);
+		}
+	}, [location.hash]);
 
 	if (!project) {
 		return <Navigate to="/projects" replace />;
@@ -53,6 +93,8 @@ export function DynamicProject() {
 				excerpt={project.description || "Project exploration."}
 				quote={project.quote}
 				quoteAuthor={project.quoteAuthor}
+				backLink={`/projects?page=${fromPage}#${project.slug}`}
+				backLabel="Back to Projects"
 			>
 				<article className="prose prose-invert max-w-none">
 					<ReactMarkdown
@@ -64,14 +106,9 @@ export function DynamicProject() {
 						]}
 						rehypePlugins={[rehypeRaw, rehypeKatex]}
 						components={{
-							// Map the 'code-tabs' directive to our CodeTabs component
-							// @ts-expect-error
-							// biome-ignore lint/suspicious/noExplicitAny: react-markdown component type
 							"code-tabs": ({ children }: any) => {
 								const blocks = (Array.isArray(children) ? children : [children])
-									// biome-ignore lint/suspicious/noExplicitAny: complex react element type
 									.filter((c: any) => c.type === "pre")
-									// biome-ignore lint/suspicious/noExplicitAny: complex react element type
 									.map((pre: any) => {
 										const codeChild = pre.props.children;
 										const className = codeChild?.props?.className || "";
@@ -90,7 +127,6 @@ export function DynamicProject() {
 									});
 								return <CodeTabs blocks={blocks} />;
 							},
-							// Custom Heading styles
 							h2: ({ children }) => (
 								<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
 									{children}
@@ -101,7 +137,49 @@ export function DynamicProject() {
 									{children}
 								</h3>
 							),
-							// Images
+							h4: ({ children }) => (
+								<h4 className="text-2xl md:text-3xl mt-12 mb-4 italic text-foreground">
+									{children}
+								</h4>
+							),
+							h5: ({ children }) => (
+								<h5 className="text-xl md:text-2xl mt-10 mb-4 italic text-foreground">
+									{children}
+								</h5>
+							),
+							figure: ({ children }) => {
+								const childrenArray = React.Children.toArray(children).filter(
+									(child) =>
+										typeof child !== "string" || child.trim().length > 0,
+								);
+								const image = childrenArray[0];
+								const caption = childrenArray.slice(1);
+								return (
+									<figure className="flex flex-col items-center my-12">
+										<div className="w-full flex justify-center">{image}</div>
+										{caption.length > 0 && (
+											<figcaption className="mt-4 text-center italic opacity-60 text-sm md:text-base max-w-3xl">
+												{caption}
+											</figcaption>
+										)}
+									</figure>
+								);
+							},
+							ol: ({ children }) => (
+								<ol className="list-decimal list-outside space-y-4 my-8 ml-8">
+									{children}
+								</ol>
+							),
+							ul: ({ children }) => (
+								<ul className="list-disc list-outside space-y-2 my-8 ml-8">
+									{children}
+								</ul>
+							),
+							li: ({ children }) => (
+								<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
+									{children}
+								</li>
+							),
 							img: ({ src, alt, className, ...props }) => (
 								<img
 									src={src}
@@ -109,55 +187,55 @@ export function DynamicProject() {
 									{...props}
 									className={
 										className ||
-										"w-full h-auto rounded-none shadow-2xl border border-foreground/5 my-12"
+										"w-full h-auto rounded-none shadow-2xl border border-foreground/5"
 									}
 								/>
 							),
-							// Links: Use React Router Link for internal links
 							a: ({ href, children, ...props }) => {
-								const isInternal =
-									href?.startsWith("/") ||
-									href?.startsWith("http://localhost") ||
-									href?.startsWith("https://dylanskinner65.github.io");
-
-								let cleanHref =
-									href?.replace("https://dylanskinner65.github.io", "") || "";
-
-								// Sanitize legacy paths: /blog/post_name.html -> /blog/post-name
-								if (
-									isInternal &&
-									(cleanHref.includes("/blog/") ||
-										cleanHref.includes("/projects/"))
-								) {
-									cleanHref = cleanHref.replace(".html", "").replace(/_/g, "-");
-								}
-
-								const className =
-									"text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors";
-
-								if (isInternal) {
+								const isExternal = href?.startsWith("http");
+								if (isExternal) {
 									return (
-										<Link
-											to={cleanHref}
-											className={className}
+										<a
+											href={href}
 											target="_blank"
 											rel="noopener noreferrer"
+											className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
 											{...props}
 										>
 											{children}
-										</Link>
+										</a>
+									);
+								}
+								if (href?.startsWith("#")) {
+									return (
+										<a
+											href={href}
+											onClick={(e) => {
+												e.preventDefault();
+												const id = href.replace("#", "");
+												const element = document.getElementById(id);
+												if (element) {
+													element.scrollIntoView({
+														behavior: "smooth",
+														block: "center",
+													});
+												}
+											}}
+											className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
+											{...props}
+										>
+											{children}
+										</a>
 									);
 								}
 								return (
-									<a
-										href={href}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={className}
+									<Link
+										to={href || "#"}
+										className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
 										{...props}
 									>
 										{children}
-									</a>
+									</Link>
 								);
 							},
 						}}

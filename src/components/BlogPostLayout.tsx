@@ -18,6 +18,8 @@ interface BlogPostLayoutProps {
 	quote?: string;
 	quoteAuthor?: string;
 	children: ReactNode;
+	backLink?: string;
+	backLabel?: string;
 }
 
 export function BlogPostLayout({
@@ -29,6 +31,8 @@ export function BlogPostLayout({
 	quote,
 	quoteAuthor,
 	children,
+	backLink = "/blog",
+	backLabel = "Back to Blog",
 }: BlogPostLayoutProps) {
 	const navigate = useNavigate();
 	const containerRef = useRef<HTMLElement>(null);
@@ -91,10 +95,10 @@ export function BlogPostLayout({
 				<motion.button
 					type="button"
 					whileHover={{ x: -10 }}
-					onClick={() => navigate("/blog")}
+					onClick={() => navigate(backLink)}
 					className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 hover:opacity-100 transition-all pb-2 border-b-2 border-transparent hover:border-accent flex items-center gap-4"
 				>
-					<span>←</span> Back to Blog
+					<span>←</span> {backLabel}
 				</motion.button>
 				<div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.3em] opacity-20">
 					{/* Removed redundant generic links */}
