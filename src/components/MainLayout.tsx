@@ -12,7 +12,7 @@ export function MainLayout() {
 		<div className="min-h-screen bg-background text-foreground antialiased font-sans flex flex-col selection:bg-accent selection:text-white ambient-mesh-bg">
 			<CommandPalette />
 
-			<header className="w-full max-w-7xl mx-auto px-8 sm:px-16 md:px-24 pt-8 sm:pt-16 md:pt-24 mb-8 sm:mb-12 text-foreground">
+			<header className="w-full max-w-7xl mx-auto px-4 sm:px-16 md:px-24 pt-8 sm:pt-16 md:pt-24 mb-8 sm:mb-12 text-foreground">
 				<div className="flex flex-col md:flex-row justify-between items-center md:items-baseline gap-6 sm:gap-8 border-b border-foreground/5 pb-8 sm:pb-12">
 					<div className="text-center md:text-left">
 						<RouterLink
@@ -82,11 +82,11 @@ export function MainLayout() {
 				</div>
 			</header>
 
-			<main className="flex-1 w-full max-w-7xl mx-auto px-8 sm:px-16 md:px-24 pb-16 sm:pb-24 md:pb-32">
+			<main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-16 md:px-24 pb-16 sm:pb-24 md:pb-32">
 				<Outlet />
 			</main>
 
-			<footer className="w-full border-t border-foreground/5 py-12 sm:py-16 px-8 sm:px-16 md:px-24 bg-background text-foreground">
+			<footer className="w-full border-t border-foreground/5 py-12 sm:py-16 px-4 sm:px-16 md:px-24 bg-background text-foreground">
 				<div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 sm:gap-12">
 					<div className="text-[10px] sm:text-[11px] md:text-xs font-black uppercase tracking-[0.3em] opacity-30 italic text-center md:text-left">
 						© 2026 DYLAN SKINNER {/* // */} ALL RIGHTS RESERVED

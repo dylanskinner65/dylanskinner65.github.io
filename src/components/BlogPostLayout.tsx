@@ -31,7 +31,7 @@ export function BlogPostLayout({
 	const navigate = useNavigate();
 
 	return (
-		<article className="max-w-4xl mx-auto space-y-16 sm:space-y-24 md:space-y-32 pb-24 sm:pb-32 md:pb-48 selection:bg-accent selection:text-white px-8 sm:px-16 md:px-0">
+		<article className="max-w-4xl mx-auto space-y-16 sm:space-y-24 md:space-y-32 pb-24 sm:pb-32 md:pb-48 selection:bg-accent selection:text-white px-0 sm:px-16 md:px-0">
 			<header className="space-y-8 sm:space-y-12">
 				<div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] font-black text-accent uppercase tracking-[0.4em] italic">
 					<time>{date.toUpperCase()}</time>
