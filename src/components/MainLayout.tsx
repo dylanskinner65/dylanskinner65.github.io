@@ -9,7 +9,7 @@ export function MainLayout() {
 	const inactiveClass = "hover:text-accent transition-colors opacity-60";
 
 	return (
-		<div className="min-h-screen bg-background text-foreground antialiased font-sans flex flex-col selection:bg-accent selection:text-white">
+		<div className="min-h-screen bg-background text-foreground antialiased font-sans flex flex-col selection:bg-accent selection:text-white ambient-mesh-bg">
 			<CommandPalette />
 
 			<header className="w-full max-w-7xl mx-auto px-8 sm:px-16 md:px-24 pt-8 sm:pt-16 md:pt-24 mb-8 sm:mb-12 text-foreground">

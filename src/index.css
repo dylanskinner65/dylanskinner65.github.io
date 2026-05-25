@@ -157,3 +157,87 @@ h4 {
 [cmdk-input] {
 	font-family: var(--font-sans);
 }
+
+/* ==========================================
+   Tactile Grain & Ambient Mesh Visuals
+   ========================================== */
+
+/* Global Editorial Paper Grain Overlay */
+body::after {
+	content: "";
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+	z-index: 9999;
+	filter: url(#editorial-noise);
+	opacity: 0.75;
+}
+
+/* Ambient Radial Mesh Flow (Fluid Background Depth) */
+.ambient-mesh-bg {
+	background-color: var(--background);
+	background-image:
+		radial-gradient(at 15% 15%, rgba(6, 78, 59, 0.04) 0px, transparent 55%),
+		radial-gradient(at 85% 20%, rgba(16, 185, 129, 0.04) 0px, transparent 50%),
+		radial-gradient(at 45% 75%, rgba(4, 33, 26, 0.02) 0px, transparent 60%);
+	background-size: 200% 200%;
+	animation: ambient-flow 25s ease-in-out infinite alternate;
+}
+
+/* Blueprint Drafting Crop Marks & Layout Overlay */
+.drafting-marker {
+	position: relative;
+}
+
+.drafting-marker::before,
+.drafting-marker::after {
+	content: "+";
+	position: absolute;
+	font-family: var(--font-sans);
+	font-weight: 300;
+	font-size: 14px;
+	color: var(--foreground);
+	opacity: 0.15;
+	pointer-events: none;
+	width: 12px;
+	height: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.drafting-marker-tr::before {
+	top: -6px;
+	right: -6px;
+}
+
+.drafting-marker-bl::after {
+	bottom: -6px;
+	left: -6px;
+}
+
+/* Asymmetric staggered lists visual accents */
+.editorial-stagger-item:nth-child(even) {
+	transform: translateY(2rem);
+}
+
+@media (max-width: 768px) {
+	.editorial-stagger-item:nth-child(even) {
+		transform: none;
+	}
+}
+
+@keyframes ambient-flow {
+	0% {
+		background-position: 0% 0%;
+	}
+	50% {
+		background-position: 100% 100%;
+	}
+	100% {
+		background-position: 0% 100%;
+	}
+}

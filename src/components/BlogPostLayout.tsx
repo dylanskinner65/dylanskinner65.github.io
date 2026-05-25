@@ -1,11 +1,5 @@
-import {
-	motion,
-	useMotionTemplate,
-	useScroll,
-	useSpring,
-	useTransform,
-} from "framer-motion";
-import { type ReactNode, useRef } from "react";
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { MarkdownText } from "./MarkdownText";
 
@@ -35,23 +29,9 @@ export function BlogPostLayout({
 	backLabel = "Back to Blog",
 }: BlogPostLayoutProps) {
 	const navigate = useNavigate();
-	const containerRef = useRef<HTMLElement>(null);
-
-	const { scrollYProgress } = useScroll({
-		target: containerRef,
-		offset: ["start start", "end end"],
-	});
-
-	// Header weight transitions from 400 to 900 as you scroll
-	const headerWeight = useTransform(scrollYProgress, [0, 0.2], [400, 900]);
-	const smoothWeight = useSpring(headerWeight, { stiffness: 100, damping: 30 });
-	const fontVariationSettings = useMotionTemplate`"wght" ${smoothWeight}`;
 
 	return (
-		<article
-			ref={containerRef}
-			className="max-w-4xl mx-auto space-y-16 sm:space-y-24 md:space-y-32 pb-24 sm:pb-32 md:pb-48 selection:bg-accent selection:text-white px-8 sm:px-16 md:px-0"
-		>
+		<article className="max-w-4xl mx-auto space-y-16 sm:space-y-24 md:space-y-32 pb-24 sm:pb-32 md:pb-48 selection:bg-accent selection:text-white px-8 sm:px-16 md:px-0">
 			<header className="space-y-8 sm:space-y-12">
 				<div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] font-black text-accent uppercase tracking-[0.4em] italic">
 					<time>{date.toUpperCase()}</time>
@@ -61,7 +41,10 @@ export function BlogPostLayout({
 					<span>{category.toUpperCase()}</span>
 				</div>
 				<motion.h1
-					style={{ fontVariationSettings }}
+					initial={{ opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+					style={{ fontVariationSettings: '"wght" 800' }}
 					className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tighter leading-[0.85] uppercase text-foreground"
 				>
 					<MarkdownText content={title} />

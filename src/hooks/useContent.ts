@@ -43,15 +43,21 @@ function parseFrontmatter(fileContent: string) {
 	}
 }
 
+let cachedPosts: ContentMetadata[] | null = null;
+let cachedProjects: ContentMetadata[] | null = null;
+
 // Blog Functions
 export function getAllPosts(): ContentMetadata[] {
-	return Object.entries(blogModules).map(([_, content]) => {
-		const { data, content: body } = parseFrontmatter(content as string);
-		return {
-			...(data as Omit<ContentMetadata, "content">),
-			content: body,
-		};
-	});
+	if (!cachedPosts) {
+		cachedPosts = Object.entries(blogModules).map(([_, content]) => {
+			const { data, content: body } = parseFrontmatter(content as string);
+			return {
+				...(data as Omit<ContentMetadata, "content">),
+				content: body,
+			};
+		});
+	}
+	return cachedPosts;
 }
 
 export function getPostBySlug(slug: string): ContentMetadata | undefined {
@@ -61,13 +67,16 @@ export function getPostBySlug(slug: string): ContentMetadata | undefined {
 
 // Project Functions
 export function getAllProjects(): ContentMetadata[] {
-	return Object.entries(projectModules).map(([_, content]) => {
-		const { data, content: body } = parseFrontmatter(content as string);
-		return {
-			...(data as Omit<ContentMetadata, "content">),
-			content: body,
-		};
-	});
+	if (!cachedProjects) {
+		cachedProjects = Object.entries(projectModules).map(([_, content]) => {
+			const { data, content: body } = parseFrontmatter(content as string);
+			return {
+				...(data as Omit<ContentMetadata, "content">),
+				content: body,
+			};
+		});
+	}
+	return cachedProjects;
 }
 
 export function getProjectBySlug(slug: string): ContentMetadata | undefined {
