@@ -37,7 +37,7 @@ With these basic definitions and ideas under our belt, we can now discuss some n
 
 If we have our function $f$ as defined above with the additional condition that $f$ is differentiable, then if we know $\textbf{x}^*$ is a local minimizer of $f$, then $Df(\textbf{x}^*) = \mathbf{0}^T$.
 
-To see this, let's suppose that we have a point $\textbf{x}^*$ that is a local minimizer of $f$, but $Df(\textbf{x}^*) \neq \mathbf{0}^T$. If this is true, then we can define a unit vector $\textbf{q} = -\frac{Df(\textbf{x}^*)^T}{\lVert Df(\textbf{x}^*)^T}$. This tells us that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert$. So, by the non-negative property of norms, we have that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert < 0$. Since $\textbf{x}^*$ is a local minimizer, this means that we can find a point $\textbf{x}^* + \alpha\textbf{q}$ such that $f(\textbf{x}^* + \alpha\textbf{q}) < f(\textbf{x}^*)$. By definition of the derivative, we have
+To see this, let's suppose that we have a point $\textbf{x}^*$ that is a local minimizer of $f$, but $Df(\textbf{x}^*) \neq \mathbf{0}^T$. If this is true, then we can define a unit vector $\textbf{q} = -\frac{Df(\textbf{x}^*)^T}{\lVert Df(\textbf{x}^*)^T\rVert}$. This tells us that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert$. So, by the non-negative property of norms, we have that $Df(\textbf{x}^*)\textbf{q} = -\lVert Df(\textbf{x}^*)\rVert < 0$. Since $\textbf{x}^*$ is a local minimizer, this means that we can find a point $\textbf{x}^* + \alpha\textbf{q}$ such that $f(\textbf{x}^* + \alpha\textbf{q}) < f(\textbf{x}^*)$. By definition of the derivative, we have
 
 $$
 \small{\begin{align*}

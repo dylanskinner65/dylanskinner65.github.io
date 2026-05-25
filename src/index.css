@@ -108,7 +108,7 @@ h4 {
 
 /* Table Styling */
 .prose table {
-	@apply w-full border-collapse my-16 text-sm md:text-base;
+	@apply w-full border-collapse my-6 md:my-12 text-sm md:text-base;
 }
 
 .prose th {
@@ -125,12 +125,37 @@ h4 {
 
 /* KaTeX Centering & Spacing */
 .katex-display {
-	@apply my-12 py-4 flex justify-center overflow-x-auto overflow-y-hidden text-center w-full;
-	display: flex !important;
+	@apply my-12 py-4 w-full overflow-x-auto overflow-y-hidden text-center;
+	display: block !important;
 }
 
 .katex {
 	color: var(--accent) !important;
+}
+
+/* Custom Scrollbars for Overflow Containers */
+.overflow-x-auto {
+	scrollbar-width: thin;
+	scrollbar-color: var(--border) transparent;
+	-webkit-overflow-scrolling: touch;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+	height: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: 9999px;
+	transition: background-color 0.3s ease;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+	background: var(--accent);
 }
 
 .thesis {

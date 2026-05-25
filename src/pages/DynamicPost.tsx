@@ -1,6 +1,11 @@
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import {
+	oneDark,
+	oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkDirective from "remark-directive";
@@ -9,7 +14,70 @@ import remarkMath from "remark-math";
 import { visit } from "unist-util-visit";
 import { BlogPostLayout } from "../components/BlogPostLayout";
 import { CodeTabs } from "../components/CodeTabs";
+import { useTheme } from "../hooks/ThemeContext";
 import { getPostBySlug } from "../hooks/useContent";
+
+function CopyCodeBlock({
+	language,
+	value,
+	...props
+}: {
+	language: string;
+	value: string;
+	[key: string]: any;
+}) {
+	const { resolvedTheme } = useTheme();
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = useCallback(async () => {
+		try {
+			await navigator.clipboard.writeText(value);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error("Failed to copy text: ", err);
+		}
+	}, [value]);
+
+	const syntaxTheme = resolvedTheme === "dark" ? oneDark : oneLight;
+
+	return (
+		<div className="my-12 border border-foreground/10 bg-foreground/5 shadow-2xl overflow-hidden rounded-lg font-sans not-prose w-full">
+			<div className="flex justify-between items-center px-6 py-3 bg-foreground/5 border-b border-foreground/5 text-[10px] text-foreground/50 font-bold select-none tracking-widest uppercase">
+				<span>{language || "code"}</span>
+				<button
+					type="button"
+					onClick={handleCopy}
+					className="flex items-center gap-2 hover:text-accent transition-colors duration-200 cursor-pointer active:scale-95 shrink-0"
+				>
+					{copied ? (
+						<span className="text-emerald-500 font-black">COPIED!</span>
+					) : (
+						<span>COPY</span>
+					)}
+				</button>
+			</div>
+			<div className="w-full overflow-hidden">
+				<SyntaxHighlighter
+					language={language}
+					style={syntaxTheme}
+					customStyle={{
+						padding: "1.5rem",
+						background: "transparent",
+						margin: 0,
+						fontSize: "0.85rem",
+						lineHeight: "1.7",
+						overflowX: "auto",
+						maxWidth: "100%",
+					}}
+					{...props}
+				>
+					{value}
+				</SyntaxHighlighter>
+			</div>
+		</div>
+	);
+}
 
 // Custom Remark plugin to transform directives into HTML nodes that react-markdown can handle
 function remarkDirectiveTransformer() {
@@ -183,6 +251,42 @@ export function DynamicPost() {
 										}
 									/>
 								),
+								table: ({ children }) => (
+									<div className="my-6 md:my-12 overflow-x-auto shadow-2xl border border-foreground/10 p-1 bg-foreground/5 w-full">
+										<table className="w-full border-collapse bg-background text-left border-hidden text-sm md:text-base">
+											{children}
+										</table>
+									</div>
+								),
+								th: ({ children }) => (
+									<th className="p-3 md:p-6 border border-foreground/10 bg-emerald-900 !text-white dark:bg-emerald-500 dark:!text-emerald-950 uppercase text-[9px] md:text-[10px] font-black tracking-widest text-left">
+										{children}
+									</th>
+								),
+								td: ({ children }) => (
+									<td className="p-3 md:p-6 border border-foreground/10 text-xs md:text-sm lg:text-base font-light italic opacity-80 leading-relaxed">
+										{children}
+									</td>
+								),
+
+								code: ({ inline, className, children, ...props }: any) => {
+									const match = /language-(\w+)/.exec(className || "");
+									const lang = match ? match[1] : "";
+									return !inline ? (
+										<CopyCodeBlock
+											language={lang}
+											value={String(children).replace(/\n$/, "")}
+											{...props}
+										/>
+									) : (
+										<code
+											className={`${className} px-1.5 py-0.5 rounded bg-foreground/10 text-accent font-semibold text-xs md:text-sm`}
+											{...props}
+										>
+											{children}
+										</code>
+									);
+								},
 								a: ({ href, children, ...props }) => {
 									const isExternal = href?.startsWith("http");
 									if (isExternal) {
