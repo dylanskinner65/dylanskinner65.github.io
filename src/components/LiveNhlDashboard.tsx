@@ -124,6 +124,58 @@ interface GameDetail {
 	trajectory: PlayEvent[];
 }
 
+interface StatRowProps {
+	label: string;
+	homeVal: number;
+	awayVal: number;
+	homeColor: string;
+	awayColor: string;
+}
+
+function StatRow({
+	label,
+	homeVal,
+	awayVal,
+	homeColor,
+	awayColor,
+}: StatRowProps) {
+	const total = homeVal + awayVal;
+	const homePct = total > 0 ? (homeVal / total) * 100 : 50;
+	const awayPct = total > 0 ? (awayVal / total) * 100 : 50;
+
+	return (
+		<div className="space-y-1.5 py-2.5 border-b border-foreground/5 last:border-0">
+			<div className="flex justify-between items-center text-xs md:text-sm font-bold">
+				<span
+					className="tabular-nums font-black transition-all"
+					style={{ color: homeColor }}
+				>
+					{homeVal}
+				</span>
+				<span className="opacity-55 uppercase tracking-wider text-[10px] md:text-xs italic select-none">
+					{label}
+				</span>
+				<span
+					className="tabular-nums font-black transition-all"
+					style={{ color: awayColor }}
+				>
+					{awayVal}
+				</span>
+			</div>
+			<div className="h-2 w-full rounded-full bg-foreground/5 flex overflow-hidden select-none">
+				<div
+					className="h-full rounded-l transition-all duration-300"
+					style={{ width: `${homePct}%`, backgroundColor: homeColor }}
+				/>
+				<div
+					className="h-full rounded-r transition-all duration-300"
+					style={{ width: `${awayPct}%`, backgroundColor: awayColor }}
+				/>
+			</div>
+		</div>
+	);
+}
+
 export function LiveNhlDashboard() {
 	// Reads from the securely injected Vite build-time environment variable VITE_NHL_API_HOST.
 	// This environment variable is populated from your GitHub Repository Secrets during deployment,
@@ -168,6 +220,145 @@ export function LiveNhlDashboard() {
 
 	// Automatically expand the period of the scrubbed/hovered event
 	const activeIndex = hoveredIndex !== null ? hoveredIndex : clickedIndex;
+
+	// Dynamic live team stats aggregation
+	const getAggregatedStats = () => {
+		const stats = {
+			home: {
+				goals: 0,
+				shots: 0,
+				blocked: 0,
+				takeaways: 0,
+				giveaways: 0,
+				faceoffs: 0,
+				penalties: 0,
+				hits: 0,
+				missed: 0,
+			},
+			away: {
+				goals: 0,
+				shots: 0,
+				blocked: 0,
+				takeaways: 0,
+				giveaways: 0,
+				faceoffs: 0,
+				penalties: 0,
+				hits: 0,
+				missed: 0,
+			},
+		};
+
+		if (!gameDetail || !selectedGame) return stats;
+
+		// Aggregate up to active scrubber index, or total game if inactive
+		const limitIdx =
+			activeIndex !== null ? activeIndex : gameDetail.trajectory.length - 1;
+
+		for (let i = 0; i <= limitIdx; i++) {
+			const event = gameDetail.trajectory[i];
+			const desc = event.description || "";
+
+			// Match bracket team prefix like "[BUF]" or "[NSH]"
+			const match = desc.match(/^\[([A-Z0-9]+)\]/);
+			if (!match) continue;
+
+			const teamAbbrev = match[1];
+			const isHome = teamAbbrev === selectedGame.home.abbrev;
+			const target = isHome ? stats.home : stats.away;
+
+			const type = event.event_type;
+			if (type === "GOAL") {
+				target.goals++;
+			} else if (type === "SHOT-ON-GOAL") {
+				target.shots++;
+			} else if (type === "BLOCKED-SHOT") {
+				target.blocked++;
+			} else if (type === "TAKEAWAY") {
+				target.takeaways++;
+			} else if (type === "GIVEAWAY") {
+				target.giveaways++;
+			} else if (type === "FACEOFF") {
+				target.faceoffs++;
+			} else if (type === "PENALTY") {
+				target.penalties++;
+			} else if (type === "HIT") {
+				target.hits++;
+			} else if (type === "MISSED-SHOT") {
+				target.missed++;
+			}
+		}
+
+		return stats;
+	};
+
+	// Dynamic live game status display text resolving period end intermissions
+	const getGameStatusText = () => {
+		if (!gameDetail || !selectedGame) return "VS";
+
+		const activeIdx =
+			activeIndex !== null ? activeIndex : gameDetail.trajectory.length - 1;
+		const event = gameDetail.trajectory[activeIdx];
+		if (!event) return "VS";
+
+		const isTied = event.home_score === event.away_score;
+		const type = event.event_type;
+
+		// Period end or game end events
+		if (
+			type === "PERIOD-END" ||
+			type === "PERIOD_END" ||
+			type === "PERIOD-END-INTERMISSION"
+		) {
+			if (isTied) {
+				if (event.period === 3) return "END OF REGULATION";
+				if (event.period > 3) {
+					const otNum = event.period - 3;
+					return otNum === 1 ? "END OF OT" : `END OF ${otNum}OT`;
+				}
+			} else {
+				if (event.period >= 3) {
+					return event.period === 3
+						? "FINAL"
+						: event.period === 4
+							? "FINAL / OT"
+							: `FINAL / ${event.period - 3}OT`;
+				}
+			}
+		}
+
+		if (type === "GAME-END" || type === "GAME_END") {
+			if (event.period > 3) {
+				return event.period === 4
+					? "FINAL / OT"
+					: `FINAL / ${event.period - 3}OT`;
+			}
+			return "FINAL";
+		}
+
+		// If it's a live game state, display LIVE or period details
+		if (isGameLive) {
+			const periodStr =
+				event.period <= 3
+					? `Period ${event.period}`
+					: event.period === 4
+						? "OT"
+						: `${event.period - 3}OT`;
+			return `LIVE / ${periodStr}`;
+		}
+
+		// Fallback to FINAL for completed games
+		if (selectedGame.status === "FINAL" || selectedGame.status === "OFF") {
+			if (event.period > 3) {
+				return event.period === 4
+					? "FINAL / OT"
+					: `FINAL / ${event.period - 3}OT`;
+			}
+			return "FINAL";
+		}
+
+		return "VS";
+	};
+
 	useEffect(() => {
 		if (activeIndex !== null && gameDetail) {
 			const activeEvent = gameDetail.trajectory[activeIndex];
@@ -298,7 +489,8 @@ export function LiveNhlDashboard() {
 
 		// Poll only if the active game is LIVE and polling is enabled
 		const activeGame = games.find((g) => g.game_id === selectedGameId);
-		const isLive = activeGame?.status === "LIVE";
+		const isLive =
+			activeGame?.status === "LIVE" || activeGame?.status === "CRIT";
 
 		if (isPolling && selectedGameId && isLive) {
 			intervalId = setInterval(() => {
@@ -323,7 +515,8 @@ export function LiveNhlDashboard() {
 
 	// Find game statuses
 	const selectedGame = games.find((g) => g.game_id === selectedGameId);
-	const isGameLive = selectedGame?.status === "LIVE";
+	const isGameLive =
+		selectedGame?.status === "LIVE" || selectedGame?.status === "CRIT";
 
 	// Chart coordinate mapping helpers
 	const getCoordinates = (traj: PlayEvent[]) => {
@@ -549,7 +742,7 @@ export function LiveNhlDashboard() {
 											minute: "2-digit",
 										})}
 									</span>
-									{game.status === "LIVE" ? (
+									{game.status === "LIVE" || game.status === "CRIT" ? (
 										<span className="flex items-center gap-1 text-red-400 font-extrabold animate-pulse">
 											<span className="h-1.5 w-1.5 bg-red-500 rounded-full" />
 											LIVE (
@@ -656,23 +849,19 @@ export function LiveNhlDashboard() {
 								<span className="px-3.5 py-1.5 rounded-lg bg-foreground/5 border border-foreground/5 text-xs font-extrabold uppercase tracking-wider text-neutral-400 italic">
 									VS
 								</span>
-								{isGameLive ? (
-									<p className="text-xs opacity-60 font-bold mt-2 flex items-center gap-1 justify-center">
-										<Clock size={12} />
-										{selectedGame.period <= 3
-											? `Period ${selectedGame.period}`
-											: selectedGame.period === 4
-												? "OT"
-												: `${selectedGame.period - 3}OT`}
-									</p>
-								) : (
-									<p className="text-xs opacity-60 font-bold mt-2 flex items-center gap-1 justify-center">
-										FINAL
-										{selectedGame.period > 3
-											? ` / ${selectedGame.period === 4 ? "OT" : `${selectedGame.period - 3}OT`}`
-											: ""}
-									</p>
-								)}
+								{(() => {
+									const statusText = getGameStatusText();
+									const isLiveBadge = statusText.startsWith("LIVE");
+
+									return (
+										<p
+											className={`text-xs font-black uppercase tracking-widest mt-2.5 flex items-center gap-1 justify-center ${isLiveBadge ? "text-accent animate-pulse" : "text-neutral-400"}`}
+										>
+											{isLiveBadge && <Clock size={12} className="shrink-0" />}
+											{statusText}
+										</p>
+									);
+								})()}
 							</div>
 
 							{/* Home Team Details */}
@@ -725,23 +914,19 @@ export function LiveNhlDashboard() {
 								<span className="px-2 py-0.5 rounded bg-foreground/5 border border-foreground/5 text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">
 									VS
 								</span>
-								{isGameLive ? (
-									<p className="text-[9px] opacity-60 font-bold mt-1 flex items-center gap-0.5 justify-center">
-										<Clock size={9} />
-										{selectedGame.period <= 3
-											? `P${selectedGame.period}`
-											: selectedGame.period === 4
-												? "OT"
-												: `${selectedGame.period - 3}OT`}
-									</p>
-								) : (
-									<p className="text-[9px] opacity-60 font-bold mt-1">
-										FINAL
-										{selectedGame.period > 3
-											? ` / ${selectedGame.period === 4 ? "OT" : `${selectedGame.period - 3}OT`}`
-											: ""}
-									</p>
-								)}
+								{(() => {
+									const statusText = getGameStatusText();
+									const isLiveBadge = statusText.startsWith("LIVE");
+
+									return (
+										<p
+											className={`text-[9px] font-black uppercase tracking-widest mt-1.5 flex items-center gap-0.5 justify-center ${isLiveBadge ? "text-accent animate-pulse" : "text-neutral-400"}`}
+										>
+											{isLiveBadge && <Clock size={9} className="shrink-0" />}
+											{statusText}
+										</p>
+									);
+								})()}
 							</div>
 
 							{/* Home Score */}
@@ -921,57 +1106,104 @@ export function LiveNhlDashboard() {
 											0%
 										</text>
 
-										{/* Period Grid Dividers (at 1200s, 2400s, 3600s) */}
-										<line
-											x1="273.3"
-											y1="20"
-											x2="273.3"
-											y2="230"
-											stroke="currentColor"
-											strokeOpacity="0.15"
-											strokeDasharray="4"
-										/>
-										<text
-											x="278.3"
-											y="32"
-											className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic"
-										>
-											END P1
-										</text>
+										{/* Dynamic Period Grid Dividers */}
+										{(() => {
+											const tMax = gameDetail?.trajectory?.length
+												? Math.max(
+														3600,
+														gameDetail.trajectory[
+															gameDetail.trajectory.length - 1
+														].seconds_elapsed,
+													)
+												: 3600;
 
-										<line
-											x1="526.6"
-											y1="20"
-											x2="526.6"
-											y2="230"
-											stroke="currentColor"
-											strokeOpacity="0.15"
-											strokeDasharray="4"
-										/>
-										<text
-											x="531.6"
-											y="32"
-											className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic"
-										>
-											END P2
-										</text>
+											const xP1 = (1200 / tMax) * 760 + 20;
+											const xP2 = (2400 / tMax) * 760 + 20;
+											const xP3 = (3600 / tMax) * 760 + 20;
 
-										<line
-											x1="780"
-											y1="20"
-											x2="780"
-											y2="230"
-											stroke="currentColor"
-											strokeOpacity="0.15"
-											strokeDasharray="4"
-										/>
-										<text
-											x="740"
-											y="32"
-											className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic"
-										>
-											END P3
-										</text>
+											// Only show the OT divider and label if the OT section has grown wide enough (>= 55px) to not cause label overlap
+											const showOTDivider = tMax > 3600 && 780 - xP3 >= 55;
+
+											return (
+												<>
+													{/* End of Period 1 Divider */}
+													<line
+														x1={xP1}
+														y1="20"
+														x2={xP1}
+														y2="230"
+														stroke="currentColor"
+														strokeOpacity="0.15"
+														strokeDasharray="4"
+													/>
+													<text
+														x={xP1 + 5}
+														y="32"
+														className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic select-none"
+													>
+														END P1
+													</text>
+
+													{/* End of Period 2 Divider */}
+													<line
+														x1={xP2}
+														y1="20"
+														x2={xP2}
+														y2="230"
+														stroke="currentColor"
+														strokeOpacity="0.15"
+														strokeDasharray="4"
+													/>
+													<text
+														x={xP2 + 5}
+														y="32"
+														className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic select-none"
+													>
+														END P2
+													</text>
+
+													{/* End of Period 3 Divider */}
+													<line
+														x1={xP3}
+														y1="20"
+														x2={xP3}
+														y2="230"
+														stroke="currentColor"
+														strokeOpacity="0.15"
+														strokeDasharray="4"
+													/>
+													<text
+														x={xP3 - 48} // Always draw to the left of the line to prevent any overlap
+														y="32"
+														className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic select-none"
+													>
+														END P3
+													</text>
+
+													{/* End of Overtime Divider (Only if OT has sufficient width) */}
+													{showOTDivider && (
+														<>
+															<line
+																x1="780"
+																y1="20"
+																x2="780"
+																y2="230"
+																stroke="currentColor"
+																strokeOpacity="0.15"
+																strokeDasharray="4"
+															/>
+															<text
+																x="740"
+																y="32"
+																className="fill-foreground/45 font-bold text-[11px] md:text-[9px] italic select-none"
+															>
+																END OT
+															</text>
+														</>
+													)}
+												</>
+											);
+										})()}
 
 										{/* Home Area Fill (Top Half - y < 125) using solid home team color */}
 										{coords.length > 0 &&
@@ -1197,205 +1429,352 @@ export function LiveNhlDashboard() {
 						)}
 					</div>
 
-					{/* Interactive Play-by-Play Event Feed Scroller */}
-					<div className="space-y-3">
-						<div className="flex justify-between items-center">
-							<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest italic">
-								Play-by-Play Scroller Log
-							</h3>
-							<div className="flex gap-2 text-xs font-bold text-accent">
-								<button
-									type="button"
-									onClick={() =>
-										setExpandedPeriods({ 1: true, 2: true, 3: true, 4: true })
-									}
-									className="hover:opacity-85"
-								>
-									Expand All
-								</button>
-								<span className="opacity-20">|</span>
-								<button
-									type="button"
-									onClick={() =>
-										setExpandedPeriods({
-											1: false,
-											2: false,
-											3: false,
-											4: false,
-										})
-									}
-									className="hover:opacity-85"
-								>
-									Collapse All
-								</button>
+					{/* Two-column layout for Event Feed and Stats Aggregation */}
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+						{/* Left Column: Interactive Play-by-Play Event Feed Scroller */}
+						<div className="space-y-3">
+							<div className="flex justify-between items-center">
+								<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest italic">
+									Play-by-Play Scroller Log
+								</h3>
+								<div className="flex gap-2 text-xs font-bold text-accent">
+									<button
+										type="button"
+										onClick={() =>
+											setExpandedPeriods({ 1: true, 2: true, 3: true, 4: true })
+										}
+										className="hover:opacity-85"
+									>
+										Expand All
+									</button>
+									<span className="opacity-20">|</span>
+									<button
+										type="button"
+										onClick={() =>
+											setExpandedPeriods({
+												1: false,
+												2: false,
+												3: false,
+												4: false,
+											})
+										}
+										className="hover:opacity-85"
+									>
+										Collapse All
+									</button>
+								</div>
 							</div>
-						</div>
 
-						<div className="max-h-[280px] md:max-h-[350px] overflow-y-auto border border-foreground/5 rounded-2xl p-2 md:p-3 space-y-4 bg-foreground/[0.01] scrollbar-thin">
-							{(() => {
-								// Group events by period chronologically
-								const periods: Record<
-									number,
-									{ event: PlayEvent; realIdx: number }[]
-								> = {};
-								gameDetail.trajectory.forEach((event, idx) => {
-									const p = event.period;
-									if (!periods[p]) periods[p] = [];
-									periods[p].push({ event, realIdx: idx });
-								});
+							<div className="max-h-[280px] md:max-h-[350px] overflow-y-auto border border-foreground/5 rounded-2xl p-2 md:p-3 space-y-4 bg-foreground/[0.01] scrollbar-thin">
+								{(() => {
+									// Group events by period chronologically
+									const periods: Record<
+										number,
+										{ event: PlayEvent; realIdx: number }[]
+									> = {};
+									gameDetail.trajectory.forEach((event, idx) => {
+										const p = event.period;
+										if (!periods[p]) periods[p] = [];
+										periods[p].push({ event, realIdx: idx });
+									});
 
-								return Object.keys(periods)
-									.sort()
-									.map((pStr) => {
-										const p = Number(pStr);
-										const pEvents = periods[p];
+									return Object.keys(periods)
+										.sort()
+										.map((pStr) => {
+											const p = Number(pStr);
+											const pEvents = periods[p];
 
-										return (
-											<div key={p} className="space-y-2">
-												{/* Period Sticky Header */}
-												{/* biome-ignore lint/a11y/useSemanticElements: div acts as an accordion header */}
-												<div
-													onClick={() =>
-														setExpandedPeriods((prev) => ({
-															...prev,
-															[p]: !prev[p],
-														}))
-													}
-													onKeyDown={(e) => {
-														if (e.key === "Enter" || e.key === " ") {
+											return (
+												<div key={p} className="space-y-2">
+													{/* Period Sticky Header */}
+													{/* biome-ignore lint/a11y/useSemanticElements: div acts as an accordion header */}
+													<div
+														onClick={() =>
 															setExpandedPeriods((prev) => ({
 																...prev,
 																[p]: !prev[p],
-															}));
+															}))
 														}
-													}}
-													tabIndex={0}
-													role="button"
-													className="flex justify-between items-center p-2.5 md:p-3 rounded-xl bg-background border border-foreground/10 cursor-pointer hover:bg-foreground/[0.03] select-none transition-all sticky top-0 z-10 shadow-lg shadow-black/20 backdrop-blur-md outline-none text-xs md:text-sm"
-												>
-													<div className="flex items-center gap-2 font-bold italic text-xs md:text-sm text-foreground">
-														<span className="h-2 w-2 rounded-full bg-accent shrink-0"></span>
-														{p <= 3
-															? `Period ${p}`
-															: p === 4
-																? "OT"
-																: `${p - 3}OT`}{" "}
-														<span className="opacity-40 text-[10px] md:text-xs font-normal">
-															({pEvents.length} events)
-														</span>
-													</div>
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														width="14"
-														height="14"
-														viewBox="0 0 24 24"
-														fill="none"
-														stroke="currentColor"
-														strokeWidth="3"
-														className={`text-accent transition-all ${expandedPeriods[p] ? "rotate-180" : ""}`}
-														role="img"
-														aria-label="Toggle Period Section"
+														onKeyDown={(e) => {
+															if (e.key === "Enter" || e.key === " ") {
+																setExpandedPeriods((prev) => ({
+																	...prev,
+																	[p]: !prev[p],
+																}));
+															}
+														}}
+														tabIndex={0}
+														role="button"
+														className="flex justify-between items-center p-2.5 md:p-3 rounded-xl bg-background border border-foreground/10 cursor-pointer hover:bg-foreground/[0.03] select-none transition-all sticky top-0 z-10 shadow-lg shadow-black/20 backdrop-blur-md outline-none text-xs md:text-sm"
 													>
-														<title>Toggle Section</title>
-														<path d="m6 9 6 6 6-6" />
-													</svg>
-												</div>
+														<div className="flex items-center gap-2 font-bold italic text-xs md:text-sm text-foreground">
+															<span className="h-2 w-2 rounded-full bg-accent shrink-0"></span>
+															{p <= 3
+																? `Period ${p}`
+																: p === 4
+																	? "OT"
+																	: `${p - 3}OT`}{" "}
+															<span className="opacity-40 text-[10px] md:text-xs font-normal">
+																({pEvents.length} events)
+															</span>
+														</div>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															width="14"
+															height="14"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="3"
+															className={`text-accent transition-all ${expandedPeriods[p] ? "rotate-180" : ""}`}
+															role="img"
+															aria-label="Toggle Period Section"
+														>
+															<title>Toggle Section</title>
+															<path d="m6 9 6 6 6-6" />
+														</svg>
+													</div>
 
-												{/* Collapsible event list inside period */}
-												{expandedPeriods[p] && (
-													<div className="space-y-2 mt-2">
-														{pEvents.map(({ event, realIdx }) => {
-															const isSelected = activeIndex === realIdx;
+													{/* Collapsible event list inside period */}
+													{expandedPeriods[p] && (
+														<div className="space-y-2 mt-2">
+															{pEvents.map(({ event, realIdx }) => {
+																const isSelected = activeIndex === realIdx;
 
-															return (
-																<button
-																	type="button"
-																	key={realIdx}
-																	onMouseEnter={() => setHoveredIndex(realIdx)}
-																	onMouseLeave={() => setHoveredIndex(null)}
-																	onClick={() =>
-																		setClickedIndex(
-																			realIdx === clickedIndex ? null : realIdx,
-																		)
-																	}
-																	className={`w-full p-2.5 md:p-3.5 rounded-xl border text-left flex items-start justify-between gap-3 md:gap-4 transition-all duration-200 select-none ${
-																		isSelected
-																			? "bg-accent/15 border-accent/40 shadow-lg scale-[0.995]"
-																			: "bg-background/40 border-foreground/5 hover:bg-foreground/[0.02]"
-																	}`}
-																>
-																	<div className="space-y-1 md:space-y-1.5 min-w-0 flex-1">
-																		<div className="flex items-center gap-2">
-																			<span className="text-[10px] md:text-xs opacity-50 font-bold uppercase tracking-wider italic">
-																				{event.period <= 3
-																					? `P${event.period}`
-																					: event.period === 4
-																						? "OT"
-																						: `${event.period - 3}OT`}{" "}
-																				•{" "}
-																				{Math.floor(
-																					((3600 - event.seconds_remaining) %
-																						1200) /
-																						60,
-																				)}
-																				:
-																				{String(
-																					Math.floor(
-																						(3600 - event.seconds_remaining) %
+																return (
+																	<button
+																		type="button"
+																		key={realIdx}
+																		onMouseEnter={() =>
+																			setHoveredIndex(realIdx)
+																		}
+																		onMouseLeave={() => setHoveredIndex(null)}
+																		onClick={() =>
+																			setClickedIndex(
+																				realIdx === clickedIndex
+																					? null
+																					: realIdx,
+																			)
+																		}
+																		className={`w-full p-2.5 md:p-3.5 rounded-xl border text-left flex items-start justify-between gap-3 md:gap-4 transition-all duration-200 select-none ${
+																			isSelected
+																				? "bg-accent/15 border-accent/40 shadow-lg scale-[0.995]"
+																				: "bg-background/40 border-foreground/5 hover:bg-foreground/[0.02]"
+																		}`}
+																	>
+																		<div className="space-y-1 md:space-y-1.5 min-w-0 flex-1">
+																			<div className="flex items-center gap-2">
+																				<span className="text-[10px] md:text-xs opacity-50 font-bold uppercase tracking-wider italic">
+																					{event.period <= 3
+																						? `P${event.period}`
+																						: event.period === 4
+																							? "OT"
+																							: `${event.period - 3}OT`}{" "}
+																					•{" "}
+																					{Math.floor(
+																						((3600 - event.seconds_remaining) %
+																							1200) /
 																							60,
-																					),
-																				).padStart(2, "0")}
-																			</span>
+																					)}
+																					:
+																					{String(
+																						Math.floor(
+																							(3600 - event.seconds_remaining) %
+																								60,
+																						),
+																					).padStart(2, "0")}
+																				</span>
 
-																			{event.event_type === "GOAL" && (
-																				<span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px] md:text-[10px] font-black uppercase italic tracking-widest animate-pulse">
-																					Goal
-																				</span>
-																			)}
-																			{event.event_type === "PENALTY" && (
-																				<span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[9px] md:text-[10px] font-black uppercase italic tracking-widest">
-																					Penalty
-																				</span>
-																			)}
+																				{event.event_type === "GOAL" && (
+																					<span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px] md:text-[10px] font-black uppercase italic tracking-widest animate-pulse">
+																						Goal
+																					</span>
+																				)}
+																				{event.event_type === "PENALTY" && (
+																					<span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[9px] md:text-[10px] font-black uppercase italic tracking-widest">
+																						Penalty
+																					</span>
+																				)}
+																			</div>
+
+																			<p className="text-xs md:text-sm font-semibold italic leading-relaxed opacity-90 truncate md:whitespace-normal">
+																				"{event.description}"
+																			</p>
 																		</div>
 
-																		<p className="text-xs md:text-sm font-semibold italic leading-relaxed opacity-90 truncate md:whitespace-normal">
-																			"{event.description}"
-																		</p>
-																	</div>
+																		{(() => {
+																			const prob = event.home_win_prob;
+																			const isHomeFavored = prob >= 0.5;
+																			const displayProb = isHomeFavored
+																				? prob
+																				: 1 - prob;
+																			const displayTeamAbbrev = isHomeFavored
+																				? selectedGame.home.abbrev
+																				: selectedGame.away.abbrev;
 
-																	{(() => {
-																		const prob = event.home_win_prob;
-																		const isHomeFavored = prob >= 0.5;
-																		const displayProb = isHomeFavored
-																			? prob
-																			: 1 - prob;
-																		const displayTeamAbbrev = isHomeFavored
-																			? selectedGame.home.abbrev
-																			: selectedGame.away.abbrev;
+																			return (
+																				<div className="shrink-0 text-right space-y-0.5 md:space-y-1 font-bold italic pl-2">
+																					<span className="text-[9px] md:text-xs opacity-50">
+																						{displayTeamAbbrev}
+																					</span>
+																					<p
+																						className={`text-sm md:text-base font-black transition-all ${getProbabilityColor(prob)}`}
+																					>
+																						{Math.round(displayProb * 100)}%
+																					</p>
+																				</div>
+																			);
+																		})()}
+																	</button>
+																);
+															})}
+														</div>
+													)}
+												</div>
+											);
+										});
+								})()}
+							</div>
+						</div>
 
-																		return (
-																			<div className="shrink-0 text-right space-y-0.5 md:space-y-1 font-bold italic pl-2">
-																				<span className="text-[9px] md:text-xs opacity-50">
-																					{displayTeamAbbrev}
-																				</span>
-																				<p
-																					className={`text-sm md:text-base font-black transition-all ${getProbabilityColor(prob)}`}
-																				>
-																					{Math.round(displayProb * 100)}%
-																				</p>
-																			</div>
-																		);
-																	})()}
-																</button>
-															);
-														})}
-													</div>
-												)}
+						{/* Right Column: Game Stats Aggregation Card */}
+						<div className="space-y-3">
+							<div className="flex justify-between items-center">
+								<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest italic">
+									Live Team Stats Aggregation
+								</h3>
+								{activeIndex !== null && (
+									<span className="text-xs font-bold text-accent animate-pulse select-none bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+										Scrubber Active
+									</span>
+								)}
+							</div>
+
+							<div className="border border-foreground/5 rounded-2xl p-4 md:p-6 bg-foreground/[0.01] shadow-inner space-y-6">
+								{(() => {
+									const stats = getAggregatedStats();
+									const homeColor = getTeamColor(
+										selectedGame.home.name,
+										selectedGame.home.abbrev,
+									);
+									const awayColor = getTeamColor(
+										selectedGame.away.name,
+										selectedGame.away.abbrev,
+									);
+
+									// Determine status text based on active scrubber
+									let statusText = "Showing Final Game Stats";
+									if (activeIndex !== null && gameDetail) {
+										const activeEvent = gameDetail.trajectory[activeIndex];
+										if (activeEvent) {
+											const p = activeEvent.period;
+											const min = Math.floor(
+												((3600 - activeEvent.seconds_remaining) % 1200) / 60,
+											);
+											const sec = String(
+												Math.floor((3600 - activeEvent.seconds_remaining) % 60),
+											).padStart(2, "0");
+											statusText = `Stats up to: ${p <= 3 ? `P${p}` : p === 4 ? "OT" : `${p - 3}OT`} • ${min}:${sec}`;
+										}
+									}
+
+									return (
+										<>
+											<div className="flex justify-between items-center border-b border-foreground/5 pb-3">
+												<div className="flex items-center gap-2">
+													<img
+														src={selectedGame.home.logo}
+														alt=""
+														className="w-6 h-6 shrink-0"
+													/>
+													<span className="font-extrabold italic text-sm">
+														{selectedGame.home.abbrev}
+													</span>
+												</div>
+												<span className="text-[10px] md:text-xs font-bold opacity-50 px-2.5 py-1 rounded-lg bg-foreground/5 select-none uppercase tracking-wider tabular-nums">
+													{statusText}
+												</span>
+												<div className="flex items-center gap-2">
+													<span className="font-extrabold italic text-sm">
+														{selectedGame.away.abbrev}
+													</span>
+													<img
+														src={selectedGame.away.logo}
+														alt=""
+														className="w-6 h-6 shrink-0"
+													/>
+												</div>
 											</div>
-										);
-									});
-							})()}
+
+											<div className="space-y-1">
+												<StatRow
+													label="Goals"
+													homeVal={stats.home.goals}
+													awayVal={stats.away.goals}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Shots on Goal"
+													homeVal={stats.home.shots}
+													awayVal={stats.away.shots}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Blocked Shots"
+													homeVal={stats.home.blocked}
+													awayVal={stats.away.blocked}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Faceoff Wins"
+													homeVal={stats.home.faceoffs}
+													awayVal={stats.away.faceoffs}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Hits"
+													homeVal={stats.home.hits}
+													awayVal={stats.away.hits}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Takeaways"
+													homeVal={stats.home.takeaways}
+													awayVal={stats.away.takeaways}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Giveaways"
+													homeVal={stats.home.giveaways}
+													awayVal={stats.away.giveaways}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Penalties"
+													homeVal={stats.home.penalties}
+													awayVal={stats.away.penalties}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+												<StatRow
+													label="Missed Shots"
+													homeVal={stats.home.missed}
+													awayVal={stats.away.missed}
+													homeColor={homeColor}
+													awayColor={awayColor}
+												/>
+											</div>
+										</>
+									);
+								})()}
+							</div>
 						</div>
 					</div>
 				</div>
