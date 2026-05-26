@@ -1,106 +1,96 @@
-import { BlogPostLayout } from "../components/BlogPostLayout";
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { LiveNhlDashboard } from "../components/LiveNhlDashboard";
 
 export function NhlPredictor() {
 	return (
-		<BlogPostLayout
-			title="NHL Real-Time Live Win Predictor"
-			date="25 May 2026"
-			slug="nhl-predictor"
-			category="Machine Learning & DevOps"
-			excerpt="A containerized, real-time NHL live win probability engine running on a Raspberry Pi Homelab and visualised with an interactive scrubbing timeline."
-			quote="Data is the new ice. It needs to be clean, smooth, and tracked at all times."
-			quoteAuthor="Pi Zeya Analytics"
-			backLink="/projects"
-			backLabel="Back to Projects"
-		>
-			<div className="space-y-12">
-				{/* Dynamic Real-time Visualizer Dashboard Component */}
-				<section className="not-prose">
-					<LiveNhlDashboard />
-				</section>
+		<div className="space-y-12 pb-24 selection:bg-accent selection:text-white">
+			{/* Page Header */}
+			<header className="space-y-6 border-b border-foreground/5 pb-8">
+				<div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] font-black text-accent uppercase tracking-[0.4em] italic">
+					<span>APPLICATION</span>
+					<span className="opacity-20">/</span>
+					<span>LIVE TRACKING</span>
+					<span className="opacity-20">/</span>
+					<span className="flex items-center gap-1.5 bg-emerald-950/40 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full lowercase not-italic font-bold tracking-wider">
+						<span className="relative flex h-1.5 w-1.5 shrink-0">
+							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+							<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+						</span>
+						pipeline online
+					</span>
+				</div>
 
-				{/* Technical Write-up Section */}
-				<article className="prose prose-invert max-w-none">
-					<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
-						The Architecture & Engineering
-					</h2>
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+					<div className="space-y-4">
+						<motion.h1
+							initial={{ opacity: 0, y: 15 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+							style={{ fontVariationSettings: '"wght" 800' }}
+							className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl italic tracking-tighter leading-[0.9] uppercase text-foreground"
+						>
+							NHL Live Predictor
+						</motion.h1>
+						<p className="text-base sm:text-lg md:text-xl text-foreground/50 italic font-light max-w-3xl leading-relaxed">
+							A containerized, real-time NHL live win probability engine powered
+							by rolling Bayesian Networks and XGBoost, running on a Raspberry
+							Pi Homelab.
+						</p>
+					</div>
 
-					<p className="text-foreground/80 leading-relaxed pl-2 text-lg">
-						This project represents a complete, production-grade refactoring of
-						our sports analytics pipeline. By replacing 32 separate, overfit
-						team-specific models with a single{" "}
-						<strong>Unified Global XGBoost Model</strong>
-						trained over{" "}
-						<strong>1.3 million play-by-play rows (7,000+ games)</strong>, we
-						resolved data sparsity and completely eliminated play-by-play row
-						correlation data leakage through{" "}
-						<strong>GroupKFold validation grouped by game ID</strong>.
-					</p>
+					{/* Quick CTA to write-up in header */}
+					<Link
+						to="/projects/nhl-predictor"
+						className="shrink-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-accent hover:opacity-85 transition-opacity pb-2 border-b-2 border-accent/20 hover:border-accent"
+					>
+						<BookOpen className="w-3.5 h-3.5" />
+						Read Architecture Write-up
+					</Link>
+				</div>
+			</header>
 
-					<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
-						FastAPI Raspberry Pi Homelab Server
-					</h3>
-					<p className="text-foreground/80 leading-relaxed pl-2">
-						The machine learning model is served from a lightweight,
-						containerized <strong>FastAPI server</strong> hosted on a local
-						<strong>Raspberry Pi Homelab</strong>. To run this completely
-						serverless and without ongoing hosting costs, the Pi acts as our
-						CORS proxy and data processing node:
-					</p>
-					<ul className="list-disc list-outside space-y-2 my-8 ml-8">
-						<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
-							<strong>Real-Time Schedule Fetching:</strong> The backend polls
-							the NHL's internal web API to verify today's schedule, retrieving
-							game times, logos, and live scores.
-						</li>
-						<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
-							<strong>Dynamic Event Aggregation:</strong> During active live
-							games, the server downloads raw in-progress play-by-play JSONs,
-							aggregates active game stats (shots, faceoffs, blocked shots,
-							takeaways, penalties), and parses the <code>situationCode</code>{" "}
-							to capture active power-play skater configurations.
-						</li>
-						<li className="text-foreground/80 leading-relaxed pl-2 marker:text-accent marker:font-bold">
-							<strong>Sub-Millisecond Inference:</strong> The compiled XGBoost
-							model computes live win probabilities in less than 1ms per event,
-							running perfectly on ultra-low-power Raspberry Pi CPUs.
-						</li>
-					</ul>
+			{/* Interactive Dashboard Container (Full Width) */}
+			<section className="w-full">
+				<LiveNhlDashboard />
+			</section>
 
-					<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
-						Offseason Carryover & Dynamic Priors
-					</h3>
-					<p className="text-foreground/80 leading-relaxed pl-2">
-						To ensure the model handles year-to-year team quality shifts without
-						overreacting to short-term variance (such as the Florida Panthers
-						winning two Stanley Cups and then collapsing), the pipeline
-						implements a <strong>dynamic rolling quality prior</strong>.
-					</p>
-					<p className="text-foreground/80 leading-relaxed pl-2">
-						The server maintains a dynamic rating of each team's rolling win
-						percentage and average goal differential over their past 10 games.
-						Between seasons, the system applies the industry-standard{" "}
-						<strong>70/30 carryover rule</strong> (retaining 70% of rating
-						strength and reverting 30% to the league mean), allowing the prior
-						to quickly converge to the team's true current strength within the
-						first 10-15 games of the new season.
-					</p>
+			{/* Footer CTA & Navigation Section */}
+			<footer className="mt-20 pt-12 border-t border-foreground/10 flex flex-col md:flex-row justify-between items-stretch gap-8">
+				{/* Back Link */}
+				<Link
+					to="/projects"
+					className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all self-center"
+				>
+					<ArrowLeft className="w-3.5 h-3.5" />
+					Back to Projects
+				</Link>
 
-					<h3 className="text-3xl md:text-4xl mt-16 mb-6 italic text-foreground">
-						Interactive Visualisation Engineering
-					</h3>
-					<p className="text-foreground/80 leading-relaxed pl-2">
-						The frontend dashboard is built using pure custom inline SVGs and{" "}
-						<strong>Framer Motion transitions</strong>. Rather than relying on
-						heavy, bloat-prone charting libraries, this bespoke layout maps
-						time-series coordinates directly into coordinate space, allowing for
-						exceptionally fluid, zero-latency timeline scrubbing and interactive
-						synchronization between the scrollable event log and the win
-						probability line.
-					</p>
-				</article>
-			</div>
-		</BlogPostLayout>
+				{/* Beautiful Math/Write-up CTA Box */}
+				<div className="flex-1 max-w-2xl bg-foreground/[0.02] dark:bg-foreground/[0.01] border border-foreground/5 hover:border-foreground/10 p-8 sm:p-10 rounded-none transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+					<div className="space-y-2">
+						<span className="text-[8px] font-black text-accent uppercase tracking-widest">
+							MATHEMATICS & ENGINEERING
+						</span>
+						<h3 className="text-lg sm:text-xl font-serif italic text-foreground leading-snug">
+							How does the predictor compute live probabilities?
+						</h3>
+						<p className="text-xs text-foreground/60 leading-relaxed max-w-md">
+							Explore the conditional dependencies, GroupKFold validation,
+							carryover ratings, and the three primary modeling approaches
+							(Bayesian Network, XGBoost, and MCMC game simulation).
+						</p>
+					</div>
+					<Link
+						to="/projects/nhl-predictor"
+						className="shrink-0 inline-flex items-center gap-2 px-6 py-4 bg-foreground text-background font-black uppercase tracking-widest text-[9px] hover:scale-[1.02] transition-all hover:bg-accent hover:text-white"
+					>
+						Read Technical Write-Up
+						<ArrowRight className="w-3.5 h-3.5" />
+					</Link>
+				</div>
+			</footer>
+		</div>
 	);
 }

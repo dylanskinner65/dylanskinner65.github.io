@@ -5,6 +5,7 @@ import { Blog } from "./pages/Blog";
 import { DynamicPost } from "./pages/DynamicPost";
 import { DynamicProject } from "./pages/DynamicProject";
 import { Home } from "./pages/Home";
+import { NhlPredictor } from "./pages/NhlPredictor";
 import { Projects } from "./pages/Projects";
 import { Search } from "./pages/Search";
 
@@ -19,6 +20,7 @@ function App() {
 						<Route path="blog/:slug" element={<DynamicPost />} />
 						<Route path="projects" element={<Projects />} />
 						<Route path="projects/:slug" element={<DynamicProject />} />
+						<Route path="live-nhl" element={<NhlPredictor />} />
 						<Route path="search" element={<Search />} />
 					</Route>
 				</Routes>
