@@ -39,6 +39,8 @@ jobs:
       - name: Build
         env:
           VITE_NHL_API_HOST: ${{ secrets.VITE_NHL_API_HOST }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
       - name: Add .nojekyll
         run: touch dist/.nojekyll
