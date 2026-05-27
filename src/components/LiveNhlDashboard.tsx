@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const TEAM_COLORS: Record<string, { main: string; secondary: string }> = {
 	"Anaheim Ducks": { main: "#FF8C00", secondary: "#000000" },
@@ -186,7 +187,7 @@ export function LiveNhlDashboard() {
 			(import.meta.env.VITE_NHL_API_HOST as string) || "http://localhost:8000"
 		);
 	});
-	const [isOnline, setIsOnline] = useState(false);
+	const [isOnline, setIsOnline] = useState(true);
 
 	// Helper to dynamically resolve team color by name or abbreviation
 	const getTeamColor = (teamName: string, abbrev: string) => {
@@ -374,95 +375,227 @@ export function LiveNhlDashboard() {
 		}
 	}, [activeIndex, gameDetail]);
 
-	// Check backend server connection status
-	const checkServerStatus = async (host: string) => {
-		try {
-			const res = await fetch(host, { mode: "cors" });
-			if (res.ok) {
-				setIsOnline(true);
-				setErrorMsg(null);
-				return true;
-			}
-		} catch {
-			setIsOnline(false);
-		}
-		return false;
-	};
-
-	// Fetch today's schedule
+	// Fetch today's schedule from Supabase
 	const fetchSchedule = async (isManual = false) => {
 		if (isManual) setIsLoading(true);
 		try {
-			const isUp = await checkServerStatus(apiHost);
-			if (!isUp) {
-				if (isManual) setIsLoading(false);
-				setGames([]);
-				setSelectedGameId(null);
-				setGameDetail(null);
-				setErrorMsg(
-					"Raspberry Pi prediction server is offline. Verify that the Docker container is running and Tailscale Funnel is active.",
-				);
-				return;
-			}
+			// Query games from today (UTC rolling window or simple today date)
+			const todayStart = new Date();
+			todayStart.setUTCHours(0, 0, 0, 0);
+			const todayEnd = new Date();
+			todayEnd.setUTCHours(23, 59, 59, 999);
 
-			const res = await fetch(`${apiHost}/api/games/today`, { mode: "cors" });
-			if (res.ok) {
-				const data = await res.json();
-				const apiGames = data.games || [];
-				if (apiGames.length > 0) {
-					setGames(apiGames);
-					setErrorMsg(null);
-					if (
-						!selectedGameId ||
-						!apiGames.some((g: Game) => g.game_id === selectedGameId)
-					) {
-						setSelectedGameId(apiGames[0].game_id);
-					}
-				} else {
-					setGames([]);
-					setSelectedGameId(null);
-					setGameDetail(null);
-					setErrorMsg(
-						"No active or scheduled NHL games found in today's schedule.",
-					);
+			const { data: dbGames, error } = await supabase
+				.from("games")
+				.select(
+					"id, game_date, status, home_team, away_team, home_score, away_score, play_by_play",
+				)
+				.gte("game_date", todayStart.toISOString())
+				.lte("game_date", todayEnd.toISOString())
+				.order("game_date", { ascending: true });
+
+			if (error) throw error;
+
+			const apiGames: Game[] = (dbGames || []).map((g) => {
+				const pbp = g.play_by_play
+					? typeof g.play_by_play === "string"
+						? JSON.parse(g.play_by_play)
+						: g.play_by_play
+					: {};
+
+				const period = pbp?.periodDescriptor?.number || 1;
+				const periodType = pbp?.periodDescriptor?.periodType || "REG";
+
+				const homeAbbrev =
+					pbp?.homeTeam?.abbrev || g.home_team.substring(0, 3).toUpperCase();
+				const awayAbbrev =
+					pbp?.awayTeam?.abbrev || g.away_team.substring(0, 3).toUpperCase();
+
+				const homeLogo =
+					pbp?.homeTeam?.logo ||
+					`https://assets.nhle.com/logos/nhl/svg/${homeAbbrev}_dark.svg`;
+				const awayLogo =
+					pbp?.awayTeam?.logo ||
+					`https://assets.nhle.com/logos/nhl/svg/${awayAbbrev}_dark.svg`;
+
+				return {
+					game_id: Number(g.id),
+					start_time: g.game_date,
+					status: g.status,
+					period: period,
+					period_type: periodType,
+					home: {
+						id: pbp?.homeTeam?.id || 0,
+						name: g.home_team,
+						abbrev: homeAbbrev,
+						logo: homeLogo,
+						score: g.home_score || 0,
+					},
+					away: {
+						id: pbp?.awayTeam?.id || 0,
+						name: g.away_team,
+						abbrev: awayAbbrev,
+						logo: awayLogo,
+						score: g.away_score || 0,
+					},
+				};
+			});
+
+			setIsOnline(true);
+			if (apiGames.length > 0) {
+				setGames(apiGames);
+				setErrorMsg(null);
+				if (
+					!selectedGameId ||
+					!apiGames.some((g: Game) => g.game_id === selectedGameId)
+				) {
+					setSelectedGameId(apiGames[0].game_id);
 				}
 			} else {
 				setGames([]);
 				setSelectedGameId(null);
 				setGameDetail(null);
-				setErrorMsg("Failed to fetch game schedule from prediction server.");
+				setErrorMsg(
+					"No active or scheduled NHL games found in today's schedule.",
+				);
 			}
-		} catch {
+		} catch (err: any) {
+			console.error("Error fetching schedule from Supabase:", err);
 			setGames([]);
 			setSelectedGameId(null);
 			setGameDetail(null);
-			setErrorMsg("Error communicating with prediction server.");
+			setErrorMsg(
+				`Error communicating with Supabase database: ${err.message || err}`,
+			);
 		}
 		if (isManual) setIsLoading(false);
 	};
 
-	// Fetch full trajectory for the selected game
+	// Fetch full trajectory for the selected game from Supabase
 	const fetchGameDetail = async (gameId: number) => {
-		if (isOnline) {
-			try {
-				const res = await fetch(`${apiHost}/api/game/${gameId}`, {
-					mode: "cors",
-				});
-				if (res.ok) {
-					const data = await res.json();
-					setGameDetail(data);
-					setErrorMsg(null);
-					return;
+		try {
+			// 1. Fetch the game record from 'games' table
+			const { data: gameRow, error: gameError } = await supabase
+				.from("games")
+				.select(
+					"id, home_team, away_team, home_score, away_score, play_by_play",
+				)
+				.eq("id", String(gameId))
+				.single();
+
+			if (gameError) throw gameError;
+
+			// 2. Fetch all predictions from 'predictions' table
+			const { data: dbPredictions, error: predError } = await supabase
+				.from("predictions")
+				.select("event_count, home_win_probability, away_win_probability")
+				.eq("game_id", String(gameId))
+				.eq("prediction_stage", "in_game")
+				.order("event_count", { ascending: true });
+
+			if (predError) throw predError;
+
+			const pbp = gameRow.play_by_play
+				? typeof gameRow.play_by_play === "string"
+					? JSON.parse(gameRow.play_by_play)
+					: gameRow.play_by_play
+				: {};
+
+			const plays = pbp.plays || [];
+			const homeTeamId = pbp.homeTeam?.id;
+
+			const parseTimeInPeriod = (timeStr: string): number => {
+				if (!timeStr || !timeStr.includes(":")) return 0;
+				const parts = timeStr.split(":");
+				return (
+					Number.parseInt(parts[0], 10) * 60 + Number.parseInt(parts[1], 10)
+				);
+			};
+
+			let runningHomeScore = 0;
+			let runningAwayScore = 0;
+
+			// Map to PlayEvent[]
+			const trajectory: PlayEvent[] = plays.map((play: any, idx: number) => {
+				const eventIndex = idx + 1;
+				const probRow = dbPredictions?.find(
+					(p) => p.event_count === eventIndex,
+				);
+				const homeWinProb = probRow ? probRow.home_win_probability : 0.5;
+
+				const period = play.periodDescriptor?.number || 1;
+				const timeStr = play.timeInPeriod || "00:00";
+				const periodSeconds = parseTimeInPeriod(timeStr);
+
+				let secondsElapsed = 0;
+				let secondsRemaining = 3600;
+				if (period <= 3) {
+					secondsElapsed = (period - 1) * 1200 + periodSeconds;
+					secondsRemaining = Math.max(0, 3600 - secondsElapsed);
+				} else {
+					secondsElapsed = 3600 + periodSeconds;
+					secondsRemaining = 0;
 				}
-			} catch {
-				setErrorMsg("Failed to load trajectory for selected game.");
-			}
-		} else {
+
+				if (play.typeDescKey === "goal") {
+					if (play.details?.eventOwnerTeamId === homeTeamId) {
+						runningHomeScore++;
+					} else {
+						runningAwayScore++;
+					}
+				}
+
+				return {
+					seconds_elapsed: secondsElapsed,
+					seconds_remaining: secondsRemaining,
+					period: period,
+					event_type: play.typeDescKey || "unknown",
+					description: play.details?.desc || play.typeDescKey || "Play Event",
+					home_score: runningHomeScore,
+					away_score: runningAwayScore,
+					home_win_prob: homeWinProb,
+				};
+			});
+
+			const homeAbbrev =
+				pbp?.homeTeam?.abbrev ||
+				gameRow.home_team.substring(0, 3).toUpperCase();
+			const awayAbbrev =
+				pbp?.awayTeam?.abbrev ||
+				gameRow.away_team.substring(0, 3).toUpperCase();
+			const homeLogo =
+				pbp?.homeTeam?.logo ||
+				`https://assets.nhle.com/logos/nhl/svg/${homeAbbrev}_dark.svg`;
+			const awayLogo =
+				pbp?.awayTeam?.logo ||
+				`https://assets.nhle.com/logos/nhl/svg/${awayAbbrev}_dark.svg`;
+
+			setGameDetail({
+				game_id: gameId,
+				home_team: {
+					name: gameRow.home_team,
+					logo: homeLogo,
+					score: gameRow.home_score || 0,
+					rolling_win_pct: 0.5,
+				},
+				away_team: {
+					name: gameRow.away_team,
+					logo: awayLogo,
+					score: gameRow.away_score || 0,
+					rolling_win_pct: 0.5,
+				},
+				trajectory: trajectory,
+			});
+
+			setErrorMsg(null);
+			setIsOnline(true);
+		} catch (err: any) {
+			console.error("Error fetching game detail from Supabase:", err);
 			setErrorMsg(
-				"Cannot load live details while the prediction server is offline.",
+				`Failed to load trajectory from Supabase: ${err.message || err}`,
 			);
+			setGameDetail(null);
 		}
-		setGameDetail(null);
 	};
 
 	// Initial loading
@@ -495,14 +628,8 @@ export function LiveNhlDashboard() {
 		if (isPolling && selectedGameId && isLive) {
 			intervalId = setInterval(() => {
 				fetchGameDetail(selectedGameId);
-				// Also refresh schedule score
-				fetch(`${apiHost}/api/games/today`, { mode: "cors" })
-					.then((res) => res.json())
-					.then((data) => {
-						const apiGames = data.games || [];
-						if (apiGames.length > 0) setGames(apiGames);
-					})
-					.catch(() => {});
+				// Also refresh schedule scores directly from Supabase
+				fetchSchedule();
 			}, 15000); // Poll every 15s
 		} else {
 			setIsPolling(false);
