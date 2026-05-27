@@ -199,6 +199,25 @@ export function LiveNhlDashboard() {
 	const [games, setGames] = useState<Game[]>([]);
 	const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
 	const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
+	const [gameOdds, setGameOdds] = useState<{
+		bookmaker: string;
+		home_moneyline: number;
+		away_moneyline: number;
+		over_under: number;
+		is_closing: boolean;
+	} | null>(null);
+
+	// Helper to format decimal moneyline odds to American format (+150, -110)
+	const formatAmericanOdds = (decimal: number | undefined): string => {
+		if (!decimal) return "";
+		if (decimal >= 2.0) {
+			const val = Math.round((decimal - 1) * 100);
+			return `+${val}`;
+		} else {
+			const val = Math.round(100 / (decimal - 1));
+			return `-${val}`;
+		}
+	};
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [isPolling, setIsPolling] = useState(false);
@@ -302,14 +321,22 @@ export function LiveNhlDashboard() {
 		if (!event) return "VS";
 
 		const isTied = event.home_score === event.away_score;
-		const type = event.event_type;
+		const type = (event.event_type || "").toLowerCase();
+		const selectedGameStatus = (selectedGame.status || "").toLowerCase();
 
-		// Period end or game end events
+		// Period end or intermission handling
 		if (
-			type === "PERIOD-END" ||
-			type === "PERIOD_END" ||
-			type === "PERIOD-END-INTERMISSION"
+			type === "period-end" ||
+			type === "period_end" ||
+			type === "period-end-intermission"
 		) {
+			if (selectedGameStatus === "live" || selectedGameStatus === "crit") {
+				if (event.period === 1) return "1st Intermission";
+				if (event.period === 2) return "2nd Intermission";
+				if (event.period === 3) return "End of Regulation";
+				return `End of Period ${event.period}`;
+			}
+
 			if (isTied) {
 				if (event.period === 3) return "END OF REGULATION";
 				if (event.period > 3) {
@@ -327,7 +354,7 @@ export function LiveNhlDashboard() {
 			}
 		}
 
-		if (type === "GAME-END" || type === "GAME_END") {
+		if (type === "game-end" || type === "game_end") {
 			if (event.period > 3) {
 				return event.period === 4
 					? "FINAL / OT"
@@ -348,7 +375,7 @@ export function LiveNhlDashboard() {
 		}
 
 		// Fallback to FINAL for completed games
-		if (selectedGame.status === "FINAL" || selectedGame.status === "OFF") {
+		if (selectedGameStatus === "final" || selectedGameStatus === "off") {
 			if (event.period > 3) {
 				return event.period === 4
 					? "FINAL / OT"
@@ -485,15 +512,45 @@ export function LiveNhlDashboard() {
 
 			if (gameError) throw gameError;
 
-			// 2. Fetch all predictions from 'predictions' table
+			// 2. Fetch both pregame and in-game predictions from 'predictions' table
 			const { data: dbPredictions, error: predError } = await supabase
 				.from("predictions")
-				.select("event_count, home_win_probability, away_win_probability")
+				.select(
+					"event_count, home_win_probability, away_win_probability, prediction_stage",
+				)
 				.eq("game_id", String(gameId))
-				.eq("prediction_stage", "in_game")
+				.in("prediction_stage", ["pregame", "in_game"])
 				.order("event_count", { ascending: true });
 
 			if (predError) throw predError;
+
+			// Extract all pregame rows and grab the LATEST one to align with the active predictions run
+			const pregameRows =
+				dbPredictions?.filter((p) => p.prediction_stage === "pregame") || [];
+			const pregameRow =
+				pregameRows.length > 0 ? pregameRows[pregameRows.length - 1] : null;
+			const homePregameProb = pregameRow
+				? pregameRow.home_win_probability
+				: 0.5;
+			const awayPregameProb = pregameRow
+				? pregameRow.away_win_probability
+				: 0.5;
+
+			// 3. Fetch initial closing odds from 'game_odds' table (where is_closing = true)
+			const { data: dbOdds, error: oddsError } = await supabase
+				.from("game_odds")
+				.select(
+					"bookmaker, home_moneyline, away_moneyline, over_under, is_closing",
+				)
+				.eq("game_id", String(gameId))
+				.eq("is_closing", true)
+				.order("id", { ascending: true });
+
+			if (!oddsError && dbOdds && dbOdds.length > 0) {
+				setGameOdds(dbOdds[0]);
+			} else {
+				setGameOdds(null);
+			}
 
 			const pbp = gameRow.play_by_play
 				? typeof gameRow.play_by_play === "string"
@@ -504,6 +561,19 @@ export function LiveNhlDashboard() {
 			const plays = pbp.plays || [];
 			const homeTeamId = pbp.homeTeam?.id;
 
+			const homeAbbrev =
+				pbp?.homeTeam?.abbrev ||
+				gameRow.home_team.substring(0, 3).toUpperCase();
+			const awayAbbrev =
+				pbp?.awayTeam?.abbrev ||
+				gameRow.away_team.substring(0, 3).toUpperCase();
+			const homeLogo =
+				pbp?.homeTeam?.logo ||
+				`https://assets.nhle.com/logos/nhl/svg/${homeAbbrev}_dark.svg`;
+			const awayLogo =
+				pbp?.awayTeam?.logo ||
+				`https://assets.nhle.com/logos/nhl/svg/${awayAbbrev}_dark.svg`;
+
 			const parseTimeInPeriod = (timeStr: string): number => {
 				if (!timeStr || !timeStr.includes(":")) return 0;
 				const parts = timeStr.split(":");
@@ -512,16 +582,144 @@ export function LiveNhlDashboard() {
 				);
 			};
 
+			// Build a fast O(1) player lookup mapping from rosterSpots
+			const playerMap: Record<number, string> = {};
+			if (pbp.rosterSpots) {
+				pbp.rosterSpots.forEach((spot: any) => {
+					const first = spot.firstName?.default || "";
+					const last = spot.lastName?.default || "";
+					playerMap[spot.playerId] = `${first} ${last}`.trim();
+				});
+			}
+
+			// Custom play formatter to build granular, human-readable descriptors
+			const formatPlayDescription = (play: any): string => {
+				const type = play.typeDescKey || "";
+				const details = play.details || {};
+				const teamId = details.eventOwnerTeamId;
+				const teamAbbrev =
+					teamId === homeTeamId ? homeAbbrev : teamId ? awayAbbrev : "";
+				const teamPrefix = teamAbbrev ? `[${teamAbbrev}] ` : "";
+
+				const getPlayerName = (id: number | undefined): string => {
+					if (!id) return "";
+					return playerMap[id] || `Player #${id}`;
+				};
+
+				const cleanTypeName = (t: string): string => {
+					return t
+						.split("-")
+						.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+						.join(" ");
+				};
+
+				switch (type) {
+					case "goal": {
+						const scorer = getPlayerName(details.scoringPlayerId);
+						const assist1 = getPlayerName(details.assist1PlayerId);
+						const assist2 = getPlayerName(details.assist2PlayerId);
+						let desc = `${teamPrefix}GOAL: ${scorer}`;
+						const assists = [assist1, assist2].filter(Boolean);
+						if (assists.length > 0) {
+							desc += ` (Assists: ${assists.join(", ")})`;
+						} else {
+							desc += " (Unassisted)";
+						}
+						return desc;
+					}
+					case "hit": {
+						const hitter = getPlayerName(details.hittingPlayerId) || "Player";
+						const hittee = getPlayerName(details.hitteePlayerId) || "Player";
+						return `${teamPrefix}Hit: ${hitter} on ${hittee}`;
+					}
+					case "shot-on-goal": {
+						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
+						const goalie = getPlayerName(details.goalieInNetId);
+						let desc = `${teamPrefix}Shot on Goal: ${shooter}`;
+						if (goalie) desc += ` (Saved by ${goalie})`;
+						return desc;
+					}
+					case "missed-shot": {
+						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
+						return `${teamPrefix}Missed Shot: ${shooter}`;
+					}
+					case "blocked-shot": {
+						const blocker = getPlayerName(details.blockingPlayerId) || "Player";
+						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
+						return `${teamPrefix}Shot Blocked: by ${blocker} (Shot by ${shooter})`;
+					}
+					case "penalty": {
+						const committed =
+							getPlayerName(details.committedByPlayerId) || "Player";
+						const drawn = getPlayerName(details.drawnByPlayerId);
+						const pType = details.descKey
+							? cleanTypeName(details.descKey)
+							: "Penalty";
+						const mins = details.duration ? `${details.duration} min ` : "";
+						let desc = `${teamPrefix}Penalty: ${mins}${pType} on ${committed}`;
+						if (drawn) desc += ` (drawn by ${drawn})`;
+						return desc;
+					}
+					case "faceoff": {
+						const winner = getPlayerName(details.winningPlayerId) || "Player";
+						const loser = getPlayerName(details.losingPlayerId) || "Player";
+						return `${teamPrefix}Faceoff Won: ${winner} (vs ${loser})`;
+					}
+					case "stoppage": {
+						const reason = details.reason
+							? cleanTypeName(details.reason)
+							: "Stoppage";
+						return `Stoppage: ${reason}`;
+					}
+					case "takeaway": {
+						const player = getPlayerName(details.playerId) || "Player";
+						return `${teamPrefix}Takeaway: ${player}`;
+					}
+					case "giveaway": {
+						const player = getPlayerName(details.playerId) || "Player";
+						return `${teamPrefix}Giveaway: ${player}`;
+					}
+					case "period-start":
+						return `Period ${play.periodDescriptor?.number || 1} Start`;
+					case "period-end":
+						return `Period ${play.periodDescriptor?.number || 1} End`;
+					case "game-end":
+						return "Game End";
+					default:
+						return teamPrefix
+							? `${teamPrefix}${cleanTypeName(type)}`
+							: cleanTypeName(type);
+				}
+			};
+
 			let runningHomeScore = 0;
 			let runningAwayScore = 0;
+
+			// Find the first available in-game prediction
+			const inGamePredictions =
+				dbPredictions?.filter((p) => p.prediction_stage === "in_game") || [];
+
+			// Start the timeline win probability at the pregame win probability
+			const initialHomeProb =
+				inGamePredictions.length > 0
+					? inGamePredictions[0].home_win_probability
+					: homePregameProb;
+
+			let lastHomeWinProb = initialHomeProb;
 
 			// Map to PlayEvent[]
 			const trajectory: PlayEvent[] = plays.map((play: any, idx: number) => {
 				const eventIndex = idx + 1;
+				// Filter specifically for in-game predictions matching this event index
 				const probRow = dbPredictions?.find(
-					(p) => p.event_count === eventIndex,
+					(p) =>
+						p.prediction_stage === "in_game" && p.event_count === eventIndex,
 				);
-				const homeWinProb = probRow ? probRow.home_win_probability : 0.5;
+				// Carry forward the last calculated probability if this specific play event index doesn't have an explicit entry
+				const homeWinProb = probRow
+					? probRow.home_win_probability
+					: lastHomeWinProb;
+				lastHomeWinProb = homeWinProb;
 
 				const period = play.periodDescriptor?.number || 1;
 				const timeStr = play.timeInPeriod || "00:00";
@@ -550,25 +748,12 @@ export function LiveNhlDashboard() {
 					seconds_remaining: secondsRemaining,
 					period: period,
 					event_type: play.typeDescKey || "unknown",
-					description: play.details?.desc || play.typeDescKey || "Play Event",
+					description: formatPlayDescription(play),
 					home_score: runningHomeScore,
 					away_score: runningAwayScore,
 					home_win_prob: homeWinProb,
 				};
 			});
-
-			const homeAbbrev =
-				pbp?.homeTeam?.abbrev ||
-				gameRow.home_team.substring(0, 3).toUpperCase();
-			const awayAbbrev =
-				pbp?.awayTeam?.abbrev ||
-				gameRow.away_team.substring(0, 3).toUpperCase();
-			const homeLogo =
-				pbp?.homeTeam?.logo ||
-				`https://assets.nhle.com/logos/nhl/svg/${homeAbbrev}_dark.svg`;
-			const awayLogo =
-				pbp?.awayTeam?.logo ||
-				`https://assets.nhle.com/logos/nhl/svg/${awayAbbrev}_dark.svg`;
 
 			setGameDetail({
 				game_id: gameId,
@@ -576,13 +761,13 @@ export function LiveNhlDashboard() {
 					name: gameRow.home_team,
 					logo: homeLogo,
 					score: gameRow.home_score || 0,
-					rolling_win_pct: 0.5,
+					rolling_win_pct: homePregameProb,
 				},
 				away_team: {
 					name: gameRow.away_team,
 					logo: awayLogo,
 					score: gameRow.away_score || 0,
-					rolling_win_pct: 0.5,
+					rolling_win_pct: awayPregameProb,
 				},
 				trajectory: trajectory,
 			});
@@ -642,8 +827,9 @@ export function LiveNhlDashboard() {
 
 	// Find game statuses
 	const selectedGame = games.find((g) => g.game_id === selectedGameId);
+	const selectedGameStatus = (selectedGame?.status || "").toLowerCase();
 	const isGameLive =
-		selectedGame?.status === "LIVE" || selectedGame?.status === "CRIT";
+		selectedGameStatus === "live" || selectedGameStatus === "crit";
 
 	// Chart coordinate mapping helpers
 	const getCoordinates = (traj: PlayEvent[]) => {
@@ -869,27 +1055,34 @@ export function LiveNhlDashboard() {
 											minute: "2-digit",
 										})}
 									</span>
-									{game.status === "LIVE" || game.status === "CRIT" ? (
-										<span className="flex items-center gap-1 text-red-400 font-extrabold animate-pulse">
-											<span className="h-1.5 w-1.5 bg-red-500 rounded-full" />
-											LIVE (
-											{game.period <= 3
-												? `P${game.period}`
-												: game.period === 4
-													? "OT"
-													: `${game.period - 3}OT`}
-											)
-										</span>
-									) : game.status === "FINAL" || game.status === "OFF" ? (
-										<span className="text-neutral-400 font-extrabold">
-											FINAL
-											{game.period > 3
-												? ` / ${game.period === 4 ? "OT" : `${game.period - 3}OT`}`
-												: ""}
-										</span>
-									) : (
-										<span className="text-blue-400">PRE-GAME</span>
-									)}
+									{(() => {
+										const statusLower = (game.status || "").toLowerCase();
+										if (statusLower === "live" || statusLower === "crit") {
+											return (
+												<span className="flex items-center gap-1 text-red-400 font-extrabold animate-pulse">
+													<span className="h-1.5 w-1.5 bg-red-500 rounded-full" />
+													LIVE (
+													{game.period <= 3
+														? `P${game.period}`
+														: game.period === 4
+															? "OT"
+															: `${game.period - 3}OT`}
+													)
+												</span>
+											);
+										}
+										if (statusLower === "final" || statusLower === "off") {
+											return (
+												<span className="text-neutral-400 font-extrabold">
+													FINAL
+													{game.period > 3
+														? ` / ${game.period === 4 ? "OT" : `${game.period - 3}OT`}`
+														: ""}
+												</span>
+											);
+										}
+										return <span className="text-blue-400">PRE-GAME</span>;
+									})()}
 								</div>
 
 								<div className="space-y-2 font-bold italic">
@@ -972,23 +1165,52 @@ export function LiveNhlDashboard() {
 							</div>
 
 							{/* Matchup Mid-Separator */}
-							<div className="text-center shrink-0">
-								<span className="px-3.5 py-1.5 rounded-lg bg-foreground/5 border border-foreground/5 text-xs font-extrabold uppercase tracking-wider text-neutral-400 italic">
-									VS
-								</span>
+							<div className="text-center shrink-0 flex flex-col items-center justify-center">
 								{(() => {
 									const statusText = getGameStatusText();
-									const isLiveBadge = statusText.startsWith("LIVE");
+									const isLiveOrIntermission =
+										statusText.startsWith("LIVE") ||
+										statusText.includes("Intermission") ||
+										statusText.includes("Period");
+									const isFinal = statusText.includes("FINAL");
 
 									return (
-										<p
-											className={`text-xs font-black uppercase tracking-widest mt-2.5 flex items-center gap-1 justify-center ${isLiveBadge ? "text-accent animate-pulse" : "text-neutral-400"}`}
+										<span
+											className={`px-3.5 py-1.5 rounded-lg border text-xs font-extrabold uppercase tracking-wider italic ${
+												isLiveOrIntermission
+													? "bg-accent/10 border-accent/20 text-accent animate-pulse"
+													: isFinal
+														? "bg-foreground/5 border-foreground/5 text-neutral-400 font-extrabold"
+														: "bg-foreground/5 border-foreground/5 text-neutral-400"
+											}`}
 										>
-											{isLiveBadge && <Clock size={12} className="shrink-0" />}
 											{statusText}
-										</p>
+										</span>
 									);
 								})()}
+								{gameOdds && (
+									<div className="mt-3.5 inline-flex flex-col items-center px-3 py-1.5 rounded-xl bg-foreground/[0.03] border border-foreground/5 text-[10px] font-extrabold text-neutral-400 select-none italic">
+										<div className="uppercase tracking-widest text-[8px] opacity-50 mb-0.5 font-black">
+											Vegas Closing Line (Puck Drop)
+										</div>
+										<div className="flex gap-2">
+											<span>
+												{selectedGame.away.abbrev}{" "}
+												{formatAmericanOdds(gameOdds.away_moneyline)}
+											</span>
+											<span className="opacity-35 font-normal">|</span>
+											<span>
+												{selectedGame.home.abbrev}{" "}
+												{formatAmericanOdds(gameOdds.home_moneyline)}
+											</span>
+										</div>
+										{gameOdds.over_under && (
+											<div className="text-[9px] opacity-65 mt-0.5">
+												O/U {gameOdds.over_under}
+											</div>
+										)}
+									</div>
+								)}
 							</div>
 
 							{/* Home Team Details */}
@@ -1037,21 +1259,27 @@ export function LiveNhlDashboard() {
 							</div>
 
 							{/* Mid Divider & Time */}
-							<div className="flex flex-col items-center shrink-0 px-1 text-center">
-								<span className="px-2 py-0.5 rounded bg-foreground/5 border border-foreground/5 text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">
-									VS
-								</span>
+							<div className="flex flex-col items-center shrink-0 px-1 text-center justify-center">
 								{(() => {
 									const statusText = getGameStatusText();
-									const isLiveBadge = statusText.startsWith("LIVE");
+									const isLiveOrIntermission =
+										statusText.startsWith("LIVE") ||
+										statusText.includes("Intermission") ||
+										statusText.includes("Period");
+									const isFinal = statusText.includes("FINAL");
 
 									return (
-										<p
-											className={`text-[9px] font-black uppercase tracking-widest mt-1.5 flex items-center gap-0.5 justify-center ${isLiveBadge ? "text-accent animate-pulse" : "text-neutral-400"}`}
+										<span
+											className={`px-2 py-0.5 rounded border text-[8px] font-extrabold uppercase tracking-widest ${
+												isLiveOrIntermission
+													? "bg-accent/10 border-accent/20 text-accent animate-pulse"
+													: isFinal
+														? "bg-foreground/5 border-foreground/5 text-neutral-400 font-extrabold"
+														: "bg-foreground/5 border-foreground/5 text-neutral-400"
+											}`}
 										>
-											{isLiveBadge && <Clock size={9} className="shrink-0" />}
 											{statusText}
-										</p>
+										</span>
 									);
 								})()}
 							</div>
@@ -1076,6 +1304,31 @@ export function LiveNhlDashboard() {
 								</span>
 							</div>
 						</div>
+
+						{gameOdds && (
+							<div className="flex md:hidden flex-col items-center mt-4 p-2.5 rounded-xl bg-foreground/[0.03] border border-foreground/5 text-[9px] font-extrabold text-neutral-400 w-full select-none italic">
+								<div className="uppercase tracking-widest text-[8px] opacity-50 mb-0.5 font-black">
+									Vegas Closing Line (Puck Drop)
+								</div>
+								<div className="flex gap-2">
+									<span>
+										{selectedGame.away.abbrev}{" "}
+										{formatAmericanOdds(gameOdds.away_moneyline)}
+									</span>
+									<span className="opacity-35 font-normal">|</span>
+									<span>
+										{selectedGame.home.abbrev}{" "}
+										{formatAmericanOdds(gameOdds.home_moneyline)}
+									</span>
+									{gameOdds.over_under && (
+										<>
+											<span className="opacity-35 font-normal">|</span>
+											<span>O/U {gameOdds.over_under}</span>
+										</>
+									)}
+								</div>
+							</div>
+						)}
 
 						{/* Glowing Live Win Probability Gauge */}
 						<div className="border-t border-foreground/5 mt-6 pt-5 flex flex-col items-center justify-center">
@@ -1150,7 +1403,7 @@ export function LiveNhlDashboard() {
 					{/* Interactive Chart Container */}
 					<div className="bg-foreground/[0.01] border border-foreground/5 rounded-2xl p-4 md:p-6 shadow-inner relative">
 						<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest mb-4 italic">
-							Live Win Probability Scrubber Timeline
+							Win Probability
 						</h3>
 
 						{gameDetail.trajectory.length >= 2 ? (
