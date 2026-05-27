@@ -279,15 +279,14 @@ export function LiveNhlDashboard() {
 				? pregameRow.away_win_probability
 				: 0.5;
 
-			// 3. Fetch initial closing odds from 'game_odds' table (where is_closing = true)
+			// 3. Fetch odds from 'game_odds' table (favor closing odds, fallback to opening/pregame odds)
 			const { data: dbOdds, error: oddsError } = await supabase
 				.from("game_odds")
 				.select(
 					"bookmaker, home_moneyline, away_moneyline, over_under, is_closing",
 				)
 				.eq("game_id", String(gameId))
-				.eq("is_closing", true)
-				.order("id", { ascending: true });
+				.order("is_closing", { ascending: false });
 
 			if (!oddsError && dbOdds && dbOdds.length > 0) {
 				setGameOdds(dbOdds[0]);
