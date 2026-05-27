@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { getTeamColor } from "../lib/nhlConstants";
+import { getTeamAbbreviation, getTeamColor } from "../lib/nhlConstants";
 import {
 	formatAmericanOdds,
 	formatPlayDescription,
@@ -84,6 +84,23 @@ export function LiveNhlDashboard() {
 		);
 	});
 	const [isOnline, setIsOnline] = useState(true);
+	const [dateOffset, setDateOffset] = useState<number>(0); // Horizontal calendar offset range (-3 to 3)
+
+	const getLocalDateBounds = (offsetDays: number) => {
+		const d = new Date();
+		d.setDate(d.getDate() + offsetDays);
+
+		const start = new Date(d);
+		start.setHours(0, 0, 0, 0);
+
+		const end = new Date(d);
+		end.setHours(23, 59, 59, 999);
+
+		return {
+			start: start.toISOString(),
+			end: end.toISOString(),
+		};
+	};
 
 	const [games, setGames] = useState<Game[]>([]);
 	const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
@@ -130,22 +147,18 @@ export function LiveNhlDashboard() {
 	}, [activeIndex, gameDetail]);
 
 	// Fetch today's schedule from Supabase
-	const fetchSchedule = async (isManual = false) => {
+	const fetchSchedule = async (isManual = false, offset = dateOffset) => {
 		if (isManual) setIsLoading(true);
 		try {
-			// Query games from today (UTC rolling window or simple today date)
-			const todayStart = new Date();
-			todayStart.setUTCHours(0, 0, 0, 0);
-			const todayEnd = new Date();
-			todayEnd.setUTCHours(23, 59, 59, 999);
+			const bounds = getLocalDateBounds(offset);
 
 			const { data: dbGames, error } = await supabase
 				.from("games")
 				.select(
 					"id, game_date, status, home_team, away_team, home_score, away_score, play_by_play",
 				)
-				.gte("game_date", todayStart.toISOString())
-				.lte("game_date", todayEnd.toISOString())
+				.gte("game_date", bounds.start)
+				.lte("game_date", bounds.end)
 				.order("game_date", { ascending: true });
 
 			if (error) throw error;
@@ -161,9 +174,9 @@ export function LiveNhlDashboard() {
 				const periodType = pbp?.periodDescriptor?.periodType || "REG";
 
 				const homeAbbrev =
-					pbp?.homeTeam?.abbrev || g.home_team.substring(0, 3).toUpperCase();
+					pbp?.homeTeam?.abbrev || getTeamAbbreviation(g.home_team);
 				const awayAbbrev =
-					pbp?.awayTeam?.abbrev || g.away_team.substring(0, 3).toUpperCase();
+					pbp?.awayTeam?.abbrev || getTeamAbbreviation(g.away_team);
 
 				const homeLogo =
 					pbp?.homeTeam?.logo ||
@@ -203,26 +216,29 @@ export function LiveNhlDashboard() {
 					!selectedGameId ||
 					!apiGames.some((g: Game) => g.game_id === selectedGameId)
 				) {
-					setSelectedGameId(apiGames[0].game_id);
+					handleSelectGame(apiGames[0].game_id);
 				}
 			} else {
 				setGames([]);
-				setSelectedGameId(null);
-				setGameDetail(null);
+				handleSelectGame(null);
 				setErrorMsg(
-					"No active or scheduled NHL games found in today's schedule.",
+					"No active or scheduled NHL games found in this date's schedule.",
 				);
 			}
 		} catch (err: any) {
 			console.error("Error fetching schedule from Supabase:", err);
 			setGames([]);
-			setSelectedGameId(null);
-			setGameDetail(null);
+			handleSelectGame(null);
 			setErrorMsg(
 				`Error communicating with Supabase database: ${err.message || err}`,
 			);
 		}
 		if (isManual) setIsLoading(false);
+	};
+
+	const handleDateTabChange = (offset: number) => {
+		setDateOffset(offset);
+		fetchSchedule(false, offset);
 	};
 
 	// Fetch full trajectory for the selected game from Supabase
@@ -289,11 +305,9 @@ export function LiveNhlDashboard() {
 			const homeTeamId = pbp.homeTeam?.id;
 
 			const homeAbbrev =
-				pbp?.homeTeam?.abbrev ||
-				gameRow.home_team.substring(0, 3).toUpperCase();
+				pbp?.homeTeam?.abbrev || getTeamAbbreviation(gameRow.home_team);
 			const awayAbbrev =
-				pbp?.awayTeam?.abbrev ||
-				gameRow.away_team.substring(0, 3).toUpperCase();
+				pbp?.awayTeam?.abbrev || getTeamAbbreviation(gameRow.away_team);
 			const homeLogo =
 				pbp?.homeTeam?.logo ||
 				`https://assets.nhle.com/logos/nhl/svg/${homeAbbrev}_dark.svg`;
@@ -411,22 +425,22 @@ export function LiveNhlDashboard() {
 		}
 	};
 
+	const handleSelectGame = (gameId: number | null) => {
+		setSelectedGameId(gameId);
+		setGameDetail(null); // Clear previous detail instantly to avoid visual lag/jitter
+		setGameOdds(null); // Clear previous odds instantly
+		setHoveredIndex(null);
+		setClickedIndex(null);
+		if (gameId) {
+			fetchGameDetail(gameId);
+		}
+	};
+
 	// Initial loading
 	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchSchedule is stable and initial load only needs apiHost change
 	useEffect(() => {
 		fetchSchedule();
 	}, [apiHost]);
-
-	// Load game details when game changes
-	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchGameDetail is stable and game changes trigger once
-	useEffect(() => {
-		if (selectedGameId) {
-			fetchGameDetail(selectedGameId);
-			// Reset scrubber indexes
-			setHoveredIndex(null);
-			setClickedIndex(null);
-		}
-	}, [selectedGameId]);
 
 	// Real-time polling logic
 	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchGameDetail is stable and polling triggers periodically
@@ -602,16 +616,88 @@ export function LiveNhlDashboard() {
 				</div>
 			)}
 
+			{/* NHL-Style Horizontal Rolling Date Strip */}
+			<div className="w-full overflow-hidden mb-6 border-b border-foreground/5 pb-2">
+				<div className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-thin select-none snap-x snap-mandatory">
+					{(() => {
+						const dates = [];
+						for (let i = -1; i <= 0; i++) {
+							const d = new Date();
+							d.setDate(d.getDate() + i);
+							dates.push({
+								offset: i,
+								dayName:
+									i === 0
+										? "TODAY"
+										: i === -1
+											? "YESTERDAY"
+											: d
+													.toLocaleDateString([], { weekday: "short" })
+													.toUpperCase(),
+								dayNum: d.getDate(),
+								monthName: d
+									.toLocaleDateString([], { month: "short" })
+									.toUpperCase(),
+								isToday: i === 0,
+							});
+						}
+						return dates.map((d) => (
+							<button
+								key={d.offset}
+								type="button"
+								onClick={() => handleDateTabChange(d.offset)}
+								className={`flex flex-col items-center p-3 px-4 rounded-xl border shrink-0 w-24 snap-center transition-all cursor-pointer select-none outline-none ${
+									dateOffset === d.offset
+										? "bg-accent/15 border-accent text-accent shadow-lg shadow-accent/5 scale-105"
+										: "bg-foreground/[0.02] border-foreground/5 hover:bg-foreground/[0.04] text-foreground/60"
+								}`}
+							>
+								<span className="text-[9px] font-black tracking-widest leading-none mb-1">
+									{d.dayName}
+								</span>
+								<span className="text-lg font-black leading-none my-0.5">
+									{d.dayNum}
+								</span>
+								<span className="text-[8px] font-bold opacity-50 tracking-wider leading-none">
+									{d.monthName}
+								</span>
+							</button>
+						));
+					})()}
+				</div>
+			</div>
+
 			{/* Games Selector (Horizontal Carousel) */}
 			<div className="mb-8 w-full overflow-hidden">
 				<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest mb-3 italic">
-					Today's NHL Matchups
+					{(() => {
+						if (dateOffset === 0) return "Today's NHL Matchups";
+						if (dateOffset === -1) return "Yesterday's NHL Matchups";
+						if (dateOffset === 1) return "Tomorrow's NHL Matchups";
+						const d = new Date();
+						d.setDate(d.getDate() + dateOffset);
+						return `${d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}'s NHL Matchups`;
+					})()}
 				</h3>
 				{games.length === 0 ? (
 					<div className="p-8 rounded-xl bg-foreground/[0.02] border border-foreground/5 text-center text-sm opacity-50">
 						{isLoading
 							? "Loading schedule..."
-							: "No games scheduled for today."}
+							: (() => {
+									if (dateOffset === 0) return "No games scheduled for today.";
+									if (dateOffset === -1)
+										return "No games scheduled for yesterday.";
+									if (dateOffset === 1)
+										return "No games scheduled for tomorrow.";
+									const d = new Date();
+									d.setDate(d.getDate() + dateOffset);
+									const dateStr = d.toLocaleDateString([], {
+										weekday: "long",
+										month: "short",
+										day: "numeric",
+									});
+									return `No games scheduled for ${dateStr}.`;
+								})()}
 					</div>
 				) : (
 					<div className="flex gap-4 overflow-x-auto pb-3 w-full snap-x snap-mandatory scroll-smooth">
@@ -619,7 +705,7 @@ export function LiveNhlDashboard() {
 							<button
 								type="button"
 								key={game.game_id}
-								onClick={() => setSelectedGameId(game.game_id)}
+								onClick={() => handleSelectGame(game.game_id)}
 								className={`p-4 rounded-xl border shrink-0 w-56 md:w-64 text-left transition-all snap-center ${
 									selectedGameId === game.game_id
 										? "bg-accent/10 border-accent shadow-lg shadow-accent/5"
