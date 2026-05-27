@@ -8,130 +8,26 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { getTeamColor } from "../lib/nhlConstants";
+import {
+	formatAmericanOdds,
+	formatPlayDescription,
+	getAggregatedStats,
+	getCoordinates,
+	getGameStatusText,
+	getGoalScorerColor,
+	getProbabilityColor,
+	parseTimeInPeriod,
+} from "../lib/nhlUtils";
 import { supabase } from "../lib/supabase";
-
-const TEAM_COLORS: Record<string, { main: string; secondary: string }> = {
-	"Anaheim Ducks": { main: "#FF8C00", secondary: "#000000" },
-	"Arizona Coyotes": { main: "#8C2633", secondary: "#E2D6B5" },
-	"Boston Bruins": { main: "#FFB81C", secondary: "#000000" },
-	"Buffalo Sabres": { main: "#00539b", secondary: "#FCB514" },
-	"Calgary Flames": { main: "#C8102E", secondary: "#F1BE48" },
-	"Carolina Hurricanes": { main: "#CC0000", secondary: "#8E8E90" },
-	"Chicago Blackhawks": { main: "#CF0A2C", secondary: "#000000" },
-	"Colorado Avalanche": { main: "#6F263D", secondary: "#236192" },
-	"Columbus Blue Jackets": { main: "#002654", secondary: "#CE1126" },
-	"Dallas Stars": { main: "#006847", secondary: "#8F8F8C" },
-	"Detroit Red Wings": { main: "#CE1126", secondary: "#FFFFFF" },
-	"Edmonton Oilers": { main: "#FF4C00", secondary: "#041E42" },
-	"Florida Panthers": { main: "#C8102E", secondary: "#041E42" },
-	"Los Angeles Kings": { main: "#A2AAAD", secondary: "#111111" },
-	"Minnesota Wild": { main: "#154734", secondary: "#A6192E" },
-	"Montreal Canadiens": { main: "#AF1E2D", secondary: "#192168" },
-	"Nashville Predators": { main: "#FFB81C", secondary: "#041E42" },
-	"New Jersey Devils": { main: "#CE1126", secondary: "#000000" },
-	"New York Islanders": { main: "#00539B", secondary: "#F47D30" },
-	"New York Rangers": { main: "#0038A8", secondary: "#CE1126" },
-	"Ottawa Senators": { main: "#E31837", secondary: "#C69214" },
-	"Philadelphia Flyers": { main: "#F74902", secondary: "#000000" },
-	"Pittsburgh Penguins": { main: "#FCB514", secondary: "#000000" },
-	"San Jose Sharks": { main: "#006D75", secondary: "#EA7200" },
-	"Seattle Kraken": { main: "#35a4b8", secondary: "#001628" },
-	"St. Louis Blues": { main: "#002F87", secondary: "#FCB514" },
-	"Tampa Bay Lightning": { main: "#002868", secondary: "#FFFFFF" },
-	"Toronto Maple Leafs": { main: "#003E7E", secondary: "#FFFFFF" },
-	"Vancouver Canucks": { main: "#00205B", secondary: "#00843D" },
-	"Vegas Golden Knights": { main: "#B4975A", secondary: "#333F42" },
-	"Washington Capitals": { main: "#CF0A2C", secondary: "#041E42" },
-	"Winnipeg Jets": { main: "#004C97", secondary: "#041E42" },
-
-	// Abbreviation mappings for robust matching
-	ANA: { main: "#FF8C00", secondary: "#000000" },
-	ARI: { main: "#8C2633", secondary: "#E2D6B5" },
-	BOS: { main: "#FFB81C", secondary: "#000000" },
-	BUF: { main: "#00539b", secondary: "#FCB514" },
-	CGY: { main: "#C8102E", secondary: "#F1BE48" },
-	CAR: { main: "#CC0000", secondary: "#8E8E90" },
-	CHI: { main: "#CF0A2C", secondary: "#000000" },
-	COL: { main: "#6F263D", secondary: "#236192" },
-	CBJ: { main: "#002654", secondary: "#CE1126" },
-	DAL: { main: "#006847", secondary: "#8F8F8C" },
-	DET: { main: "#CE1126", secondary: "#FFFFFF" },
-	EDM: { main: "#FF4C00", secondary: "#041E42" },
-	FLA: { main: "#C8102E", secondary: "#041E42" },
-	LAK: { main: "#A2AAAD", secondary: "#111111" },
-	MIN: { main: "#154734", secondary: "#A6192E" },
-	MTL: { main: "#AF1E2D", secondary: "#192168" },
-	NSH: { main: "#FFB81C", secondary: "#041E42" },
-	NJD: { main: "#CE1126", secondary: "#000000" },
-	NYI: { main: "#00539B", secondary: "#F47D30" },
-	NYR: { main: "#0038A8", secondary: "#CE1126" },
-	OTT: { main: "#E31837", secondary: "#C69214" },
-	PHI: { main: "#F74902", secondary: "#000000" },
-	PIT: { main: "#FCB514", secondary: "#000000" },
-	SJS: { main: "#006D75", secondary: "#EA7200" },
-	SEA: { main: "#35a4b8", secondary: "#001628" },
-	STL: { main: "#002F87", secondary: "#FCB514" },
-	TBL: { main: "#002868", secondary: "#FFFFFF" },
-	TOR: { main: "#003E7E", secondary: "#FFFFFF" },
-	VAN: { main: "#00205B", secondary: "#00843D" },
-	VGK: { main: "#B4975A", secondary: "#333F42" },
-	WSH: { main: "#CF0A2C", secondary: "#041E42" },
-	WPG: { main: "#004C97", secondary: "#041E42" },
-};
-
-interface Team {
-	id: number;
-	name: string;
-	abbrev: string;
-	logo: string;
-	score: number;
-}
-
-interface Game {
-	game_id: number;
-	start_time: string;
-	status: string;
-	period: number;
-	period_type: string;
-	home: Team;
-	away: Team;
-}
-
-interface PlayEvent {
-	seconds_elapsed: number;
-	seconds_remaining: number;
-	period: number;
-	event_type: string;
-	description: string;
-	home_score: number;
-	away_score: number;
-	home_win_prob: number;
-}
-
-interface GameDetail {
-	game_id: number;
-	home_team: {
-		name: string;
-		logo: string;
-		score: number;
-		rolling_win_pct: number;
-	};
-	away_team: {
-		name: string;
-		logo: string;
-		score: number;
-		rolling_win_pct: number;
-	};
-	trajectory: PlayEvent[];
-}
-
-interface StatRowProps {
-	label: string;
-	homeVal: number;
-	awayVal: number;
-	homeColor: string;
-	awayColor: string;
-}
+import type {
+	Game,
+	GameDetail,
+	GameOdds,
+	NhlEventType,
+	PlayEvent,
+	StatRowProps,
+} from "../types/nhl";
 
 function StatRow({
 	label,
@@ -189,35 +85,10 @@ export function LiveNhlDashboard() {
 	});
 	const [isOnline, setIsOnline] = useState(true);
 
-	// Helper to dynamically resolve team color by name or abbreviation
-	const getTeamColor = (teamName: string, abbrev: string) => {
-		return (
-			TEAM_COLORS[teamName]?.main || TEAM_COLORS[abbrev]?.main || "#3b82f6"
-		);
-	};
-
 	const [games, setGames] = useState<Game[]>([]);
 	const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
 	const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
-	const [gameOdds, setGameOdds] = useState<{
-		bookmaker: string;
-		home_moneyline: number;
-		away_moneyline: number;
-		over_under: number;
-		is_closing: boolean;
-	} | null>(null);
-
-	// Helper to format decimal moneyline odds to American format (+150, -110)
-	const formatAmericanOdds = (decimal: number | undefined): string => {
-		if (!decimal) return "";
-		if (decimal >= 2.0) {
-			const val = Math.round((decimal - 1) * 100);
-			return `+${val}`;
-		} else {
-			const val = Math.round(100 / (decimal - 1));
-			return `-${val}`;
-		}
-	};
+	const [gameOdds, setGameOdds] = useState<GameOdds | null>(null);
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [isPolling, setIsPolling] = useState(false);
@@ -241,151 +112,7 @@ export function LiveNhlDashboard() {
 	// Automatically expand the period of the scrubbed/hovered event
 	const activeIndex = hoveredIndex !== null ? hoveredIndex : clickedIndex;
 
-	// Dynamic live team stats aggregation
-	const getAggregatedStats = () => {
-		const stats = {
-			home: {
-				goals: 0,
-				shots: 0,
-				blocked: 0,
-				takeaways: 0,
-				giveaways: 0,
-				faceoffs: 0,
-				penalties: 0,
-				hits: 0,
-				missed: 0,
-			},
-			away: {
-				goals: 0,
-				shots: 0,
-				blocked: 0,
-				takeaways: 0,
-				giveaways: 0,
-				faceoffs: 0,
-				penalties: 0,
-				hits: 0,
-				missed: 0,
-			},
-		};
-
-		if (!gameDetail || !selectedGame) return stats;
-
-		// Aggregate up to active scrubber index, or total game if inactive
-		const limitIdx =
-			activeIndex !== null ? activeIndex : gameDetail.trajectory.length - 1;
-
-		for (let i = 0; i <= limitIdx; i++) {
-			const event = gameDetail.trajectory[i];
-			const desc = event.description || "";
-
-			// Match bracket team prefix like "[BUF]" or "[NSH]"
-			const match = desc.match(/^\[([A-Z0-9]+)\]/);
-			if (!match) continue;
-
-			const teamAbbrev = match[1];
-			const isHome = teamAbbrev === selectedGame.home.abbrev;
-			const target = isHome ? stats.home : stats.away;
-
-			const type = event.event_type;
-			if (type === "GOAL") {
-				target.goals++;
-			} else if (type === "SHOT-ON-GOAL") {
-				target.shots++;
-			} else if (type === "BLOCKED-SHOT") {
-				target.blocked++;
-			} else if (type === "TAKEAWAY") {
-				target.takeaways++;
-			} else if (type === "GIVEAWAY") {
-				target.giveaways++;
-			} else if (type === "FACEOFF") {
-				target.faceoffs++;
-			} else if (type === "PENALTY") {
-				target.penalties++;
-			} else if (type === "HIT") {
-				target.hits++;
-			} else if (type === "MISSED-SHOT") {
-				target.missed++;
-			}
-		}
-
-		return stats;
-	};
-
-	// Dynamic live game status display text resolving period end intermissions
-	const getGameStatusText = () => {
-		if (!gameDetail || !selectedGame) return "VS";
-
-		const activeIdx =
-			activeIndex !== null ? activeIndex : gameDetail.trajectory.length - 1;
-		const event = gameDetail.trajectory[activeIdx];
-		if (!event) return "VS";
-
-		const isTied = event.home_score === event.away_score;
-		const type = (event.event_type || "").toLowerCase();
-		const selectedGameStatus = (selectedGame.status || "").toLowerCase();
-
-		// Period end or intermission handling
-		if (
-			type === "period-end" ||
-			type === "period_end" ||
-			type === "period-end-intermission"
-		) {
-			if (selectedGameStatus === "live" || selectedGameStatus === "crit") {
-				if (event.period === 1) return "1st Intermission";
-				if (event.period === 2) return "2nd Intermission";
-				if (event.period === 3) return "End of Regulation";
-				return `End of Period ${event.period}`;
-			}
-
-			if (isTied) {
-				if (event.period === 3) return "END OF REGULATION";
-				if (event.period > 3) {
-					const otNum = event.period - 3;
-					return otNum === 1 ? "END OF OT" : `END OF ${otNum}OT`;
-				}
-			} else {
-				if (event.period >= 3) {
-					return event.period === 3
-						? "FINAL"
-						: event.period === 4
-							? "FINAL / OT"
-							: `FINAL / ${event.period - 3}OT`;
-				}
-			}
-		}
-
-		if (type === "game-end" || type === "game_end") {
-			if (event.period > 3) {
-				return event.period === 4
-					? "FINAL / OT"
-					: `FINAL / ${event.period - 3}OT`;
-			}
-			return "FINAL";
-		}
-
-		// If it's a live game state, display LIVE or period details
-		if (isGameLive) {
-			const periodStr =
-				event.period <= 3
-					? `Period ${event.period}`
-					: event.period === 4
-						? "OT"
-						: `${event.period - 3}OT`;
-			return `LIVE / ${periodStr}`;
-		}
-
-		// Fallback to FINAL for completed games
-		if (selectedGameStatus === "final" || selectedGameStatus === "off") {
-			if (event.period > 3) {
-				return event.period === 4
-					? "FINAL / OT"
-					: `FINAL / ${event.period - 3}OT`;
-			}
-			return "FINAL";
-		}
-
-		return "VS";
-	};
+	// Definitions removed - imported from src/lib/nhlUtils.ts
 
 	useEffect(() => {
 		if (activeIndex !== null && gameDetail) {
@@ -574,14 +301,6 @@ export function LiveNhlDashboard() {
 				pbp?.awayTeam?.logo ||
 				`https://assets.nhle.com/logos/nhl/svg/${awayAbbrev}_dark.svg`;
 
-			const parseTimeInPeriod = (timeStr: string): number => {
-				if (!timeStr || !timeStr.includes(":")) return 0;
-				const parts = timeStr.split(":");
-				return (
-					Number.parseInt(parts[0], 10) * 60 + Number.parseInt(parts[1], 10)
-				);
-			};
-
 			// Build a fast O(1) player lookup mapping from rosterSpots
 			const playerMap: Record<number, string> = {};
 			if (pbp.rosterSpots) {
@@ -591,106 +310,6 @@ export function LiveNhlDashboard() {
 					playerMap[spot.playerId] = `${first} ${last}`.trim();
 				});
 			}
-
-			// Custom play formatter to build granular, human-readable descriptors
-			const formatPlayDescription = (play: any): string => {
-				const type = play.typeDescKey || "";
-				const details = play.details || {};
-				const teamId = details.eventOwnerTeamId;
-				const teamAbbrev =
-					teamId === homeTeamId ? homeAbbrev : teamId ? awayAbbrev : "";
-				const teamPrefix = teamAbbrev ? `[${teamAbbrev}] ` : "";
-
-				const getPlayerName = (id: number | undefined): string => {
-					if (!id) return "";
-					return playerMap[id] || `Player #${id}`;
-				};
-
-				const cleanTypeName = (t: string): string => {
-					return t
-						.split("-")
-						.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-						.join(" ");
-				};
-
-				switch (type) {
-					case "goal": {
-						const scorer = getPlayerName(details.scoringPlayerId);
-						const assist1 = getPlayerName(details.assist1PlayerId);
-						const assist2 = getPlayerName(details.assist2PlayerId);
-						let desc = `${teamPrefix}GOAL: ${scorer}`;
-						const assists = [assist1, assist2].filter(Boolean);
-						if (assists.length > 0) {
-							desc += ` (Assists: ${assists.join(", ")})`;
-						} else {
-							desc += " (Unassisted)";
-						}
-						return desc;
-					}
-					case "hit": {
-						const hitter = getPlayerName(details.hittingPlayerId) || "Player";
-						const hittee = getPlayerName(details.hitteePlayerId) || "Player";
-						return `${teamPrefix}Hit: ${hitter} on ${hittee}`;
-					}
-					case "shot-on-goal": {
-						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
-						const goalie = getPlayerName(details.goalieInNetId);
-						let desc = `${teamPrefix}Shot on Goal: ${shooter}`;
-						if (goalie) desc += ` (Saved by ${goalie})`;
-						return desc;
-					}
-					case "missed-shot": {
-						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
-						return `${teamPrefix}Missed Shot: ${shooter}`;
-					}
-					case "blocked-shot": {
-						const blocker = getPlayerName(details.blockingPlayerId) || "Player";
-						const shooter = getPlayerName(details.shootingPlayerId) || "Player";
-						return `${teamPrefix}Shot Blocked: by ${blocker} (Shot by ${shooter})`;
-					}
-					case "penalty": {
-						const committed =
-							getPlayerName(details.committedByPlayerId) || "Player";
-						const drawn = getPlayerName(details.drawnByPlayerId);
-						const pType = details.descKey
-							? cleanTypeName(details.descKey)
-							: "Penalty";
-						const mins = details.duration ? `${details.duration} min ` : "";
-						let desc = `${teamPrefix}Penalty: ${mins}${pType} on ${committed}`;
-						if (drawn) desc += ` (drawn by ${drawn})`;
-						return desc;
-					}
-					case "faceoff": {
-						const winner = getPlayerName(details.winningPlayerId) || "Player";
-						const loser = getPlayerName(details.losingPlayerId) || "Player";
-						return `${teamPrefix}Faceoff Won: ${winner} (vs ${loser})`;
-					}
-					case "stoppage": {
-						const reason = details.reason
-							? cleanTypeName(details.reason)
-							: "Stoppage";
-						return `Stoppage: ${reason}`;
-					}
-					case "takeaway": {
-						const player = getPlayerName(details.playerId) || "Player";
-						return `${teamPrefix}Takeaway: ${player}`;
-					}
-					case "giveaway": {
-						const player = getPlayerName(details.playerId) || "Player";
-						return `${teamPrefix}Giveaway: ${player}`;
-					}
-					case "period-start":
-						return `Period ${play.periodDescriptor?.number || 1} Start`;
-					case "period-end":
-						return `Period ${play.periodDescriptor?.number || 1} End`;
-					case "game-end":
-						return "Game End";
-					default:
-						return teamPrefix
-							? `${teamPrefix}${cleanTypeName(type)}`
-							: cleanTypeName(type);
-				}
-			};
 
 			let runningHomeScore = 0;
 			let runningAwayScore = 0;
@@ -747,8 +366,17 @@ export function LiveNhlDashboard() {
 					seconds_elapsed: secondsElapsed,
 					seconds_remaining: secondsRemaining,
 					period: period,
-					event_type: play.typeDescKey || "unknown",
-					description: formatPlayDescription(play),
+					// Fix: Force uppercase event types so that chart nodes and stats counters match correctly
+					event_type: (
+						play.typeDescKey || "unknown"
+					).toUpperCase() as NhlEventType,
+					description: formatPlayDescription(
+						play,
+						playerMap,
+						homeTeamId,
+						homeAbbrev,
+						awayAbbrev,
+					),
 					home_score: runningHomeScore,
 					away_score: runningAwayScore,
 					home_win_prob: homeWinProb,
@@ -830,28 +458,6 @@ export function LiveNhlDashboard() {
 	const selectedGameStatus = (selectedGame?.status || "").toLowerCase();
 	const isGameLive =
 		selectedGameStatus === "live" || selectedGameStatus === "crit";
-
-	// Chart coordinate mapping helpers
-	const getCoordinates = (traj: PlayEvent[]) => {
-		if (!traj || traj.length === 0) return [];
-
-		const svgWidth = 800;
-		const svgHeight = 250;
-		const maxTime = 3600; // 60 minutes
-
-		return traj.map((pt, i) => {
-			// Map X based on elapsed time (up to 3600s or maximum elapsed in OT)
-			const seconds = pt.seconds_elapsed;
-			const tMax = Math.max(maxTime, traj[traj.length - 1].seconds_elapsed);
-			const x = (seconds / tMax) * (svgWidth - 40) + 20; // 20px padding left/right
-
-			// Map Y based on win probability (0 is at top, so subtract from height)
-			// Y coordinates: 20px padding top/bottom
-			const y = svgHeight - (pt.home_win_prob * (svgHeight - 40) + 20);
-
-			return { x, y, pt, idx: i };
-		});
-	};
 
 	const coords = gameDetail ? getCoordinates(gameDetail.trajectory) : [];
 
@@ -940,34 +546,6 @@ export function LiveNhlDashboard() {
 		if (!isDraggingRef.current) {
 			setHoveredIndex(null);
 		}
-	};
-
-	// Get dynamic coloring representing home win probability strengths
-	const getProbabilityColor = (prob: number) => {
-		if (prob >= 0.75) return "text-emerald-500 shadow-emerald-500/20";
-		if (prob >= 0.55) return "text-blue-500 shadow-blue-500/20";
-		if (prob >= 0.45) return "text-neutral-400 shadow-neutral-400/20";
-		if (prob >= 0.25) return "text-amber-500 shadow-amber-500/20";
-		return "text-red-500 shadow-red-500/20";
-	};
-
-	// Determine scoring team's color for goal marker
-	const getGoalScorerColor = (
-		idx: number,
-		homeColor: string,
-		awayColor: string,
-	) => {
-		if (idx === 0) {
-			const curr = coords[0].pt;
-			if (curr.home_score > 0) return homeColor;
-			if (curr.away_score > 0) return awayColor;
-			return "#3b82f6";
-		}
-		const curr = coords[idx].pt;
-		const prev = coords[idx - 1].pt;
-		if (curr.home_score > prev.home_score) return homeColor;
-		if (curr.away_score > prev.away_score) return awayColor;
-		return curr.home_win_prob >= 0.5 ? homeColor : awayColor;
 	};
 
 	return (
@@ -1167,7 +745,12 @@ export function LiveNhlDashboard() {
 							{/* Matchup Mid-Separator */}
 							<div className="text-center shrink-0 flex flex-col items-center justify-center">
 								{(() => {
-									const statusText = getGameStatusText();
+									const statusText = getGameStatusText(
+										gameDetail,
+										selectedGame,
+										activeIndex,
+										isGameLive,
+									);
 									const isLiveOrIntermission =
 										statusText.startsWith("LIVE") ||
 										statusText.includes("Intermission") ||
@@ -1261,7 +844,12 @@ export function LiveNhlDashboard() {
 							{/* Mid Divider & Time */}
 							<div className="flex flex-col items-center shrink-0 px-1 text-center justify-center">
 								{(() => {
-									const statusText = getGameStatusText();
+									const statusText = getGameStatusText(
+										gameDetail,
+										selectedGame,
+										activeIndex,
+										isGameLive,
+									);
 									const isLiveOrIntermission =
 										statusText.startsWith("LIVE") ||
 										statusText.includes("Intermission") ||
@@ -1646,6 +1234,7 @@ export function LiveNhlDashboard() {
 											return goalEvents.map((goal) => {
 												const scorerColor = getGoalScorerColor(
 													goal.idx,
+													coords,
 													homeColor,
 													awayColor,
 												);
@@ -2032,7 +1621,11 @@ export function LiveNhlDashboard() {
 
 							<div className="border border-foreground/5 rounded-2xl p-4 md:p-6 bg-foreground/[0.01] shadow-inner space-y-6">
 								{(() => {
-									const stats = getAggregatedStats();
+									const stats = getAggregatedStats(
+										gameDetail,
+										selectedGame,
+										activeIndex,
+									);
 									const homeColor = getTeamColor(
 										selectedGame.home.name,
 										selectedGame.home.abbrev,
