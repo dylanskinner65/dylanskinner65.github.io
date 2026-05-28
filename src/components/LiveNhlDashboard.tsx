@@ -73,6 +73,52 @@ function StatRow({
 	);
 }
 
+const getLocalDateString = (d: Date) => {
+	const yyyy = d.getFullYear();
+	const mm = String(d.getMonth() + 1).padStart(2, "0");
+	const dd = String(d.getDate()).padStart(2, "0");
+	return `${yyyy}-${mm}-${dd}`;
+};
+
+const parseLocalDateString = (dateStr: string) => {
+	const parts = dateStr.split("-");
+	const year = parseInt(parts[0], 10);
+	const month = parseInt(parts[1], 10) - 1;
+	const day = parseInt(parts[2], 10);
+	return new Date(year, month, day);
+};
+
+const getDayInfo = (dateStr: string) => {
+	const d = parseLocalDateString(dateStr);
+	const today = new Date();
+	const yesterday = new Date(Date.now() - 86400000);
+	const tomorrow = new Date(Date.now() + 86400000);
+
+	const isSameDay = (d1: Date, d2: Date) => {
+		return (
+			d1.getFullYear() === d2.getFullYear() &&
+			d1.getMonth() === d2.getMonth() &&
+			d1.getDate() === d2.getDate()
+		);
+	};
+
+	let dayName = d.toLocaleDateString([], { weekday: "short" }).toUpperCase();
+	if (isSameDay(d, today)) {
+		dayName = "TODAY";
+	} else if (isSameDay(d, yesterday)) {
+		dayName = "YESTERDAY";
+	} else if (isSameDay(d, tomorrow)) {
+		dayName = "TOMORROW";
+	}
+
+	return {
+		dateStr,
+		dayName,
+		dayNum: d.getDate(),
+		monthName: d.toLocaleDateString([], { month: "short" }).toUpperCase(),
+	};
+};
+
 export function LiveNhlDashboard() {
 	// Reads from the securely injected Vite build-time environment variable VITE_NHL_API_HOST.
 	// This environment variable is populated from your GitHub Repository Secrets during deployment,
@@ -84,17 +130,19 @@ export function LiveNhlDashboard() {
 		);
 	});
 	const [isOnline, setIsOnline] = useState(true);
-	const [dateOffset, setDateOffset] = useState<number>(0); // Horizontal calendar offset range (-3 to 3)
+	const [selectedDate, setSelectedDate] = useState<string>(() =>
+		getLocalDateString(new Date()),
+	);
+	const [availableDates, setAvailableDates] = useState<string[]>([]);
 
-	const getLocalDateBounds = (offsetDays: number) => {
-		const d = new Date();
-		d.setDate(d.getDate() + offsetDays);
+	const getLocalDateBounds = (dateStr: string) => {
+		const parts = dateStr.split("-");
+		const year = parseInt(parts[0], 10);
+		const month = parseInt(parts[1], 10) - 1;
+		const day = parseInt(parts[2], 10);
 
-		const start = new Date(d);
-		start.setHours(0, 0, 0, 0);
-
-		const end = new Date(d);
-		end.setHours(23, 59, 59, 999);
+		const start = new Date(year, month, day, 0, 0, 0, 0);
+		const end = new Date(year, month, day, 23, 59, 59, 999);
 
 		return {
 			start: start.toISOString(),
@@ -146,11 +194,59 @@ export function LiveNhlDashboard() {
 		}
 	}, [activeIndex, gameDetail]);
 
+	// Fetch all unique game dates from the database
+	useEffect(() => {
+		const fetchAvailableDates = async () => {
+			try {
+				const { data, error } = await supabase
+					.from("games")
+					.select("game_date")
+					.order("game_date", { ascending: true });
+
+				if (error) throw error;
+
+				const todayStr = getLocalDateString(new Date());
+				const yesterdayStr = getLocalDateString(
+					new Date(Date.now() - 86400000),
+				);
+
+				const dateSet = new Set<string>();
+				// Always ensure yesterday and today are options
+				dateSet.add(yesterdayStr);
+				dateSet.add(todayStr);
+
+				if (data) {
+					for (const row of data) {
+						if (row.game_date) {
+							const localStr = getLocalDateString(new Date(row.game_date));
+							dateSet.add(localStr);
+						}
+					}
+				}
+
+				const sortedDates = Array.from(dateSet).sort((a, b) =>
+					a.localeCompare(b),
+				);
+				setAvailableDates(sortedDates);
+			} catch (err) {
+				console.error("Error fetching available dates:", err);
+				const todayStr = getLocalDateString(new Date());
+				const yesterdayStr = getLocalDateString(
+					new Date(Date.now() - 86400000),
+				);
+				setAvailableDates([yesterdayStr, todayStr]);
+			}
+		};
+
+		fetchAvailableDates();
+	}, []);
+
 	// Fetch today's schedule from Supabase
-	const fetchSchedule = async (isManual = false, offset = dateOffset) => {
+	const fetchSchedule = async (isManual = false, dateStr = selectedDate) => {
+		if (!dateStr) return;
 		if (isManual) setIsLoading(true);
 		try {
-			const bounds = getLocalDateBounds(offset);
+			const bounds = getLocalDateBounds(dateStr);
 
 			const { data: dbGames, error } = await supabase
 				.from("games")
@@ -236,9 +332,9 @@ export function LiveNhlDashboard() {
 		if (isManual) setIsLoading(false);
 	};
 
-	const handleDateTabChange = (offset: number) => {
-		setDateOffset(offset);
-		fetchSchedule(false, offset);
+	const handleDateTabChange = (dateStr: string) => {
+		setSelectedDate(dateStr);
+		fetchSchedule(false, dateStr);
 	};
 
 	// Fetch full trajectory for the selected game from Supabase
@@ -435,11 +531,13 @@ export function LiveNhlDashboard() {
 		}
 	};
 
-	// Initial loading
-	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchSchedule is stable and initial load only needs apiHost change
+	// Initial loading and date changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchSchedule is stable and handles fetching
 	useEffect(() => {
-		fetchSchedule();
-	}, [apiHost]);
+		if (selectedDate) {
+			fetchSchedule(false, selectedDate);
+		}
+	}, [selectedDate, apiHost]);
 
 	// Real-time polling logic
 	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchGameDetail is stable and polling triggers periodically
@@ -455,7 +553,7 @@ export function LiveNhlDashboard() {
 			intervalId = setInterval(() => {
 				fetchGameDetail(selectedGameId);
 				// Also refresh schedule scores directly from Supabase
-				fetchSchedule();
+				fetchSchedule(false, selectedDate);
 			}, 15000); // Poll every 15s
 		} else {
 			setIsPolling(false);
@@ -464,7 +562,7 @@ export function LiveNhlDashboard() {
 		return () => {
 			if (intervalId) clearInterval(intervalId);
 		};
-	}, [isPolling, selectedGameId, games]);
+	}, [isPolling, selectedGameId, games, selectedDate]);
 
 	// Find game statuses
 	const selectedGame = games.find((g) => g.game_id === selectedGameId);
@@ -618,35 +716,15 @@ export function LiveNhlDashboard() {
 			{/* NHL-Style Horizontal Rolling Date Strip */}
 			<div className="w-full overflow-hidden mb-6 border-b border-foreground/5 pb-2">
 				<div className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-thin select-none snap-x snap-mandatory">
-					{(() => {
-						const dates = [];
-						for (let i = -1; i <= 0; i++) {
-							const d = new Date();
-							d.setDate(d.getDate() + i);
-							dates.push({
-								offset: i,
-								dayName:
-									i === 0
-										? "TODAY"
-										: i === -1
-											? "YESTERDAY"
-											: d
-													.toLocaleDateString([], { weekday: "short" })
-													.toUpperCase(),
-								dayNum: d.getDate(),
-								monthName: d
-									.toLocaleDateString([], { month: "short" })
-									.toUpperCase(),
-								isToday: i === 0,
-							});
-						}
-						return dates.map((d) => (
+					{availableDates.map((dateStr) => {
+						const d = getDayInfo(dateStr);
+						return (
 							<button
-								key={d.offset}
+								key={dateStr}
 								type="button"
-								onClick={() => handleDateTabChange(d.offset)}
+								onClick={() => handleDateTabChange(dateStr)}
 								className={`flex flex-col items-center p-3 px-4 rounded-xl border shrink-0 w-24 snap-center transition-all cursor-pointer select-none outline-none ${
-									dateOffset === d.offset
+									selectedDate === dateStr
 										? "bg-accent/15 border-accent text-accent shadow-lg shadow-accent/5 scale-105"
 										: "bg-foreground/[0.02] border-foreground/5 hover:bg-foreground/[0.04] text-foreground/60"
 								}`}
@@ -661,8 +739,8 @@ export function LiveNhlDashboard() {
 									{d.monthName}
 								</span>
 							</button>
-						));
-					})()}
+						);
+					})}
 				</div>
 			</div>
 
@@ -670,11 +748,20 @@ export function LiveNhlDashboard() {
 			<div className="mb-8 w-full overflow-hidden">
 				<h3 className="text-sm font-bold opacity-40 uppercase tracking-widest mb-3 italic">
 					{(() => {
-						if (dateOffset === 0) return "Today's NHL Matchups";
-						if (dateOffset === -1) return "Yesterday's NHL Matchups";
-						if (dateOffset === 1) return "Tomorrow's NHL Matchups";
-						const d = new Date();
-						d.setDate(d.getDate() + dateOffset);
+						const todayStr = getLocalDateString(new Date());
+						const yesterdayStr = getLocalDateString(
+							new Date(Date.now() - 86400000),
+						);
+						const tomorrowStr = getLocalDateString(
+							new Date(Date.now() + 86400000),
+						);
+
+						if (selectedDate === todayStr) return "Today's NHL Matchups";
+						if (selectedDate === yesterdayStr)
+							return "Yesterday's NHL Matchups";
+						if (selectedDate === tomorrowStr) return "Tomorrow's NHL Matchups";
+
+						const d = parseLocalDateString(selectedDate);
 						return `${d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}'s NHL Matchups`;
 					})()}
 				</h3>
@@ -683,13 +770,22 @@ export function LiveNhlDashboard() {
 						{isLoading
 							? "Loading schedule..."
 							: (() => {
-									if (dateOffset === 0) return "No games scheduled for today.";
-									if (dateOffset === -1)
+									const todayStr = getLocalDateString(new Date());
+									const yesterdayStr = getLocalDateString(
+										new Date(Date.now() - 86400000),
+									);
+									const tomorrowStr = getLocalDateString(
+										new Date(Date.now() + 86400000),
+									);
+
+									if (selectedDate === todayStr)
+										return "No games scheduled for today.";
+									if (selectedDate === yesterdayStr)
 										return "No games scheduled for yesterday.";
-									if (dateOffset === 1)
+									if (selectedDate === tomorrowStr)
 										return "No games scheduled for tomorrow.";
-									const d = new Date();
-									d.setDate(d.getDate() + dateOffset);
+
+									const d = parseLocalDateString(selectedDate);
 									const dateStr = d.toLocaleDateString([], {
 										weekday: "long",
 										month: "short",
