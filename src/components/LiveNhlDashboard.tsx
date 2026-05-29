@@ -715,7 +715,7 @@ export function LiveNhlDashboard() {
 
 			{/* NHL-Style Horizontal Rolling Date Strip */}
 			<div className="w-full overflow-hidden mb-6 border-b border-foreground/5 pb-2">
-				<div className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-thin select-none snap-x snap-mandatory">
+				<div className="flex gap-3 overflow-x-auto pt-2 pb-2 px-2.5 scrollbar-thin select-none snap-x snap-mandatory">
 					{availableDates.map((dateStr) => {
 						const d = getDayInfo(dateStr);
 						return (
@@ -795,7 +795,7 @@ export function LiveNhlDashboard() {
 								})()}
 					</div>
 				) : (
-					<div className="flex gap-4 overflow-x-auto pb-3 w-full snap-x snap-mandatory scroll-smooth">
+					<div className="flex gap-4 overflow-x-auto pb-3 w-full snap-x snap-mandatory scroll-smooth px-2">
 						{games.map((game) => (
 							<button
 								type="button"
