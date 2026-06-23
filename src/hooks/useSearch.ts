@@ -1,6 +1,6 @@
 import Fuse from "fuse.js";
 import { useMemo } from "react";
-import contentData from "../data/content.json";
+import { getAllPosts, getAllProjects } from "./useContent";
 
 export type SearchItem = {
 	slug: string;
@@ -15,12 +15,22 @@ export type SearchItem = {
 
 export function useSearch(query: string) {
 	const searchData: SearchItem[] = useMemo(() => {
-		const blogPosts: SearchItem[] = contentData.blog.map((post) => ({
-			...post,
+		const blogPosts: SearchItem[] = getAllPosts().map((post) => ({
+			slug: post.slug,
+			title: post.title,
+			date: post.date,
+			description: post.description,
+			category: post.category,
+			content: post.content,
 			type: "blog" as const,
 		}));
-		const projects: SearchItem[] = contentData.projects.map((project) => ({
-			...project,
+		const projects: SearchItem[] = getAllProjects().map((project) => ({
+			slug: project.slug,
+			title: project.title,
+			date: project.date,
+			description: project.description,
+			category: project.category,
+			content: project.content,
 			type: "project" as const,
 		}));
 		return [...blogPosts, ...projects];

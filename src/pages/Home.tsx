@@ -3,10 +3,10 @@ import { Link as RouterLink } from "react-router-dom";
 import { GenerativeTopology } from "../components/GenerativeTopology";
 import { Magnetic } from "../components/Magnetic";
 import { MarkdownText } from "../components/MarkdownText";
-import contentData from "../data/content.json";
+import { getAllPosts } from "../hooks/useContent";
 
 export function Home() {
-	const latestPosts = [...contentData.blog]
+	const latestPosts = [...getAllPosts()]
 		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 		.slice(0, 3);
 
