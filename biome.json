@@ -7,8 +7,6 @@
 			"!**/dist",
 			"!**/node_modules",
 			"!**/package-lock.json",
-			"!**/src/data/content.json",
-			"!**/legacy_backup",
 			"!**/public",
 			"!**/*.html",
 			"!**/*.html.bak",
