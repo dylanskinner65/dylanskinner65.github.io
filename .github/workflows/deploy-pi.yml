@@ -61,5 +61,7 @@ jobs:
 
       - name: Recreate container inside the Pod
         run: |
-          podman rm -f website-container 2>/dev/null || true
-          podman run -d --pod website-pod --name website-container personal-website
+          if ! podman pod exists website-pod; then
+            podman pod create --name website-pod -p 8080:8080
+          fi
+          podman run -d --replace --pod website-pod --name website-container personal-website
