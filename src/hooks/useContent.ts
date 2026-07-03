@@ -1,16 +1,18 @@
-import { parse } from "yaml";
+import { blogIndex, projectIndex } from "virtual:content-index";
+import { useEffect, useState } from "react";
 
-// Vite's import.meta.glob allows us to find all .md files in the content directory
-const blogModules = import.meta.glob("../content/blog/*.md", {
+// Frontmatter metadata comes from the build-time index (virtual:content-index,
+// see vite.config.ts) so lists render synchronously. The markdown bodies stay
+// out of the eager bundle: these lazy globs fetch them on demand, keyed by the
+// same relative paths the index stores in each entry's `path` field.
+const blogBodies = import.meta.glob("../content/blog/*.md", {
 	query: "?raw",
 	import: "default",
-	eager: true,
 });
 
-const projectModules = import.meta.glob("../content/projects/*.md", {
+const projectBodies = import.meta.glob("../content/projects/*.md", {
 	query: "?raw",
 	import: "default",
-	eager: true,
 });
 
 export interface ContentMetadata {
@@ -21,65 +23,113 @@ export interface ContentMetadata {
 	category: string;
 	quote?: string;
 	quoteAuthor?: string;
-	content: string;
 }
 
-function parseFrontmatter(fileContent: string) {
-	const FRONTMATTER_REGEX = /^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/;
-	const match = fileContent.match(FRONTMATTER_REGEX);
+export type ContentWithBody = ContentMetadata & { content: string };
 
-	if (!match) {
-		return { data: {}, content: fileContent };
-	}
+const FRONTMATTER_REGEX = /^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/;
 
-	const [_, yamlStr, body] = match;
-
-	try {
-		const data = parse(yamlStr) || {};
-		return { data, content: body };
-	} catch (e) {
-		console.error("Frontmatter parsing failed:", e);
-		return { data: {}, content: body };
-	}
+function stripFrontmatter(raw: string): string {
+	const match = raw.match(FRONTMATTER_REGEX);
+	return match ? match[2] : raw;
 }
 
-let cachedPosts: ContentMetadata[] | null = null;
-let cachedProjects: ContentMetadata[] | null = null;
+const bodyCache = new Map<string, string>();
+
+async function loadBody(
+	entry: { path: string } | undefined,
+	loaders: Record<string, () => Promise<unknown>>,
+): Promise<string | undefined> {
+	if (!entry) return undefined;
+	const cached = bodyCache.get(entry.path);
+	if (cached !== undefined) return cached;
+	const loader = loaders[entry.path];
+	if (!loader) return undefined;
+	const body = stripFrontmatter((await loader()) as string);
+	bodyCache.set(entry.path, body);
+	return body;
+}
 
 // Blog Functions
 export function getAllPosts(): ContentMetadata[] {
-	if (!cachedPosts) {
-		cachedPosts = Object.entries(blogModules).map(([_, content]) => {
-			const { data, content: body } = parseFrontmatter(content as string);
-			return {
-				...(data as Omit<ContentMetadata, "content">),
-				content: body,
-			};
-		});
-	}
-	return cachedPosts;
+	return blogIndex;
 }
 
 export function getPostBySlug(slug: string): ContentMetadata | undefined {
-	const posts = getAllPosts();
-	return posts.find((p) => p.slug === slug);
+	return blogIndex.find((p) => p.slug === slug);
+}
+
+export function loadPostBody(slug: string): Promise<string | undefined> {
+	return loadBody(
+		blogIndex.find((p) => p.slug === slug),
+		blogBodies,
+	);
+}
+
+export function loadAllPostsWithContent(): Promise<ContentWithBody[]> {
+	return Promise.all(
+		blogIndex.map(async (entry) => ({
+			...entry,
+			content: (await loadBody(entry, blogBodies)) ?? "",
+		})),
+	);
 }
 
 // Project Functions
 export function getAllProjects(): ContentMetadata[] {
-	if (!cachedProjects) {
-		cachedProjects = Object.entries(projectModules).map(([_, content]) => {
-			const { data, content: body } = parseFrontmatter(content as string);
-			return {
-				...(data as Omit<ContentMetadata, "content">),
-				content: body,
-			};
-		});
-	}
-	return cachedProjects;
+	return projectIndex;
 }
 
 export function getProjectBySlug(slug: string): ContentMetadata | undefined {
-	const projects = getAllProjects();
-	return projects.find((p) => p.slug === slug);
+	return projectIndex.find((p) => p.slug === slug);
+}
+
+export function loadProjectBody(slug: string): Promise<string | undefined> {
+	return loadBody(
+		projectIndex.find((p) => p.slug === slug),
+		projectBodies,
+	);
+}
+
+export function loadAllProjectsWithContent(): Promise<ContentWithBody[]> {
+	return Promise.all(
+		projectIndex.map(async (entry) => ({
+			...entry,
+			content: (await loadBody(entry, projectBodies)) ?? "",
+		})),
+	);
+}
+
+/**
+ * Returns the markdown body for a post/project, or null while it loads.
+ * Already-fetched bodies resolve synchronously from the module cache so
+ * revisiting a page never flashes an empty article.
+ */
+export function useContentBody(
+	type: "blog" | "project",
+	slug: string | undefined,
+): string | null {
+	const key = `${type}:${slug ?? ""}`;
+	const [loaded, setLoaded] = useState<{ key: string; body: string } | null>(
+		null,
+	);
+
+	useEffect(() => {
+		if (!slug) return;
+		let active = true;
+		const load = type === "blog" ? loadPostBody : loadProjectBody;
+		load(slug).then((body) => {
+			if (active && body !== undefined) {
+				setLoaded({ key: `${type}:${slug}`, body });
+			}
+		});
+		return () => {
+			active = false;
+		};
+	}, [type, slug]);
+
+	if (loaded?.key === key) return loaded.body;
+	const index = type === "blog" ? blogIndex : projectIndex;
+	const entry = index.find((e) => e.slug === slug);
+	return entry ? (bodyCache.get(entry.path) ?? null) : null;
 }

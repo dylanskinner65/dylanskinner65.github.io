@@ -283,6 +283,8 @@ const markdownComponents = {
 
 interface MarkdownPageProps {
 	item: ContentMetadata;
+	/** Markdown body, or null while it is still being fetched. */
+	content: string | null;
 	fallbackExcerpt: string;
 	backLink?: string;
 	backLabel?: string;
@@ -291,6 +293,7 @@ interface MarkdownPageProps {
 
 export function MarkdownPage({
 	item,
+	content,
 	fallbackExcerpt,
 	backLink,
 	backLabel,
@@ -305,6 +308,7 @@ export function MarkdownPage({
 		}
 	}, [location.hash]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `content` is an intentional extra dependency — the hash target only exists in the DOM once the lazily-fetched markdown body has rendered, so scrolling must be retried when it arrives.
 	useLayoutEffect(() => {
 		if (location.hash) {
 			const id = location.hash.replace("#", "");
@@ -321,7 +325,7 @@ export function MarkdownPage({
 			const timeoutId = setTimeout(scrollToElement, 500);
 			return () => clearTimeout(timeoutId);
 		}
-	}, [location.hash]);
+	}, [location.hash, content]);
 
 	return (
 		<div ref={containerRef}>
@@ -337,20 +341,22 @@ export function MarkdownPage({
 				backLabel={backLabel}
 			>
 				{beforeArticle}
-				<article className="prose prose-invert max-w-none">
-					<ReactMarkdown
-						remarkPlugins={[
-							remarkGfm,
-							remarkMath,
-							remarkDirective,
-							remarkDirectiveTransformer,
-						]}
-						rehypePlugins={[rehypeRaw, rehypeKatex]}
-						components={markdownComponents}
-					>
-						{item.content}
-					</ReactMarkdown>
-				</article>
+				{content !== null && (
+					<article className="prose prose-invert max-w-none">
+						<ReactMarkdown
+							remarkPlugins={[
+								remarkGfm,
+								remarkMath,
+								remarkDirective,
+								remarkDirectiveTransformer,
+							]}
+							rehypePlugins={[rehypeRaw, rehypeKatex]}
+							components={markdownComponents}
+						>
+							{content}
+						</ReactMarkdown>
+					</article>
+				)}
 			</BlogPostLayout>
 		</div>
 	);

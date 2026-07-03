@@ -1,7 +1,7 @@
 import { Activity, ArrowRight } from "lucide-react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { MarkdownPage } from "../components/MarkdownPage";
-import { getProjectBySlug } from "../hooks/useContent";
+import { getProjectBySlug, useContentBody } from "../hooks/useContent";
 
 function NhlPredictorCta() {
 	return (
@@ -50,6 +50,7 @@ export function DynamicProject() {
 	const { slug } = useParams();
 	const [searchParams] = useSearchParams();
 	const project = slug ? getProjectBySlug(slug) : undefined;
+	const content = useContentBody("project", slug);
 
 	const fromPage = searchParams.get("fromPage") || "1";
 
@@ -60,6 +61,7 @@ export function DynamicProject() {
 	return (
 		<MarkdownPage
 			item={project}
+			content={content}
 			fallbackExcerpt="Project exploration."
 			backLink={`/projects?page=${fromPage}#${project.slug}`}
 			backLabel="Back to Projects"
