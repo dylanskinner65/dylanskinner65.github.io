@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: website-pod
+spec:
+  restartPolicy: Always
+  containers:
+    - name: website-container
+      image: localhost/personal-website:latest
+      ports:
+        - containerPort: 8080
+          hostPort: 8080
+    - name: cloudflared-tunnel
+      image: docker.io/cloudflare/cloudflared:latest
+      args:
+        - tunnel
+        - --no-autoupdate
+        - run
+        - --token
+        - ${CLOUDFLARE_TUNNEL_TOKEN}
