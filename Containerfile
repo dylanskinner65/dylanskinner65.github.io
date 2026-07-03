@@ -1,4 +1,4 @@
-FROM caddy:2-alpine
+FROM docker.io/library/caddy:2-alpine
 
 # Copy our custom configuration
 COPY Caddyfile /etc/caddy/Caddyfile
