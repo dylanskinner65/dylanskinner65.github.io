@@ -48,6 +48,7 @@ jobs:
           sparse-checkout: |
             Caddyfile
             Containerfile
+            deployment.yaml
           sparse-checkout-cone-mode: false
 
       - name: Download static build artifact
@@ -59,9 +60,7 @@ jobs:
       - name: Build rootless Podman image
         run: podman build -t personal-website -f Containerfile .
 
-      - name: Recreate container inside the Pod
+      - name: Deploy Pod via Play Kube
         run: |
-          if ! podman pod exists website-pod; then
-            podman pod create --name website-pod -p 8080:8080
-          fi
-          podman run -d --replace --pod website-pod --name website-container personal-website
+          export CLOUDFLARE_TUNNEL_TOKEN=$(cat /home/skinner/.cloudflare-token)
+          python3 -c "import os, sys; sys.stdout.write(os.path.expandvars(sys.stdin.read()))" < deployment.yaml | podman play kube --replace -
