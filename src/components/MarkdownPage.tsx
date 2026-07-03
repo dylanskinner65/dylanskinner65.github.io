@@ -7,11 +7,6 @@ import React, {
 } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { Link, useLocation } from "react-router-dom";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-	oneDark,
-	oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkDirective from "remark-directive";
@@ -20,6 +15,11 @@ import remarkMath from "remark-math";
 import { visit } from "unist-util-visit";
 import { useTheme } from "../hooks/ThemeContext";
 import type { ContentMetadata } from "../hooks/useContent";
+import {
+	oneDark,
+	oneLight,
+	SyntaxHighlighter,
+} from "../lib/syntaxHighlighting";
 import { BlogPostLayout } from "./BlogPostLayout";
 import { CodeTabs } from "./CodeTabs";
 
