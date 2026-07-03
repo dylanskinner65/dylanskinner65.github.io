@@ -50,7 +50,7 @@ export function DynamicProject() {
 	const { slug } = useParams();
 	const [searchParams] = useSearchParams();
 	const project = slug ? getProjectBySlug(slug) : undefined;
-	const content = useContentBody("project", slug);
+	const { content, error, retry } = useContentBody("project", slug);
 
 	const fromPage = searchParams.get("fromPage") || "1";
 
@@ -62,6 +62,8 @@ export function DynamicProject() {
 		<MarkdownPage
 			item={project}
 			content={content}
+			contentError={error}
+			onRetryContent={retry}
 			fallbackExcerpt="Project exploration."
 			backLink={`/projects?page=${fromPage}#${project.slug}`}
 			backLabel="Back to Projects"

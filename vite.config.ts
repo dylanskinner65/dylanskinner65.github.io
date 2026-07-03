@@ -54,6 +54,11 @@ function contentIndexPlugin(): Plugin {
 			if (file.includes("/src/content/") && file.endsWith(".md")) {
 				const mod = server.moduleGraph.getModuleById(resolvedVirtualId);
 				if (mod) server.moduleGraph.invalidateModule(mod);
+				// The changed .md file may not be in the module graph at all yet
+				// (bodies load lazily), so tell the client to reload rather than
+				// relying on Vite to propagate an update for it.
+				server.ws.send({ type: "full-reload" });
+				return [];
 			}
 		},
 	};

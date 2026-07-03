@@ -1,4 +1,5 @@
 import type Fuse from "fuse.js";
+import type { FuseResult } from "fuse.js";
 import { useEffect, useMemo, useState } from "react";
 import {
 	loadAllPostsWithContent,
@@ -23,7 +24,7 @@ let indexPromise: Promise<Fuse<SearchItem>> | null = null;
 
 function loadSearchIndex(): Promise<Fuse<SearchItem>> {
 	if (!indexPromise) {
-		indexPromise = (async () => {
+		const promise = (async () => {
 			const [{ default: FuseCtor }, posts, projects] = await Promise.all([
 				import("fuse.js"),
 				loadAllPostsWithContent(),
@@ -62,26 +63,49 @@ function loadSearchIndex(): Promise<Fuse<SearchItem>> {
 				includeMatches: true,
 			});
 		})();
+		// Don't memoize a rejected build (flaky body fetch, stale chunk after a
+		// redeploy): reset so the next palette open / Search visit can retry.
+		promise.catch(() => {
+			indexPromise = null;
+		});
+		indexPromise = promise;
 	}
 	return indexPromise;
 }
 
-export function useSearch(query: string, enabled = true) {
+export interface SearchState {
+	results: FuseResult<SearchItem>[];
+	/** False while the index is still building — distinct from "no matches". */
+	ready: boolean;
+	/** True when the index build failed; retried on the next enable. */
+	failed: boolean;
+}
+
+export function useSearch(query: string, enabled = true): SearchState {
 	const [fuse, setFuse] = useState<Fuse<SearchItem> | null>(null);
+	const [failed, setFailed] = useState(false);
 
 	useEffect(() => {
 		if (!enabled || fuse) return;
 		let active = true;
-		loadSearchIndex().then((instance) => {
-			if (active) setFuse(instance);
-		});
+		setFailed(false);
+		loadSearchIndex().then(
+			(instance) => {
+				if (active) setFuse(instance);
+			},
+			() => {
+				if (active) setFailed(true);
+			},
+		);
 		return () => {
 			active = false;
 		};
 	}, [enabled, fuse]);
 
-	return useMemo(() => {
+	const results = useMemo(() => {
 		if (!query || !fuse) return [];
 		return fuse.search(query);
 	}, [fuse, query]);
+
+	return { results, ready: fuse !== null, failed };
 }

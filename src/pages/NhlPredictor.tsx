@@ -6,10 +6,13 @@ import { isSupabaseConfigured } from "../lib/supabase";
 
 function DashboardUnavailable() {
 	return (
-		<div className="flex items-start gap-3 p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-200">
-			<AlertTriangle size={18} className="text-red-400 mt-0.5 shrink-0" />
+		<div className="flex items-start gap-3 p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-700 dark:text-red-200">
+			<AlertTriangle
+				size={18}
+				className="text-red-500 dark:text-red-400 mt-0.5 shrink-0"
+			/>
 			<div className="space-y-1">
-				<p className="font-bold uppercase tracking-widest text-[10px] text-red-300">
+				<p className="font-bold uppercase tracking-widest text-[10px] text-red-600 dark:text-red-300">
 					Live dashboard unavailable
 				</p>
 				<p>

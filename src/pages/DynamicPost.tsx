@@ -5,7 +5,7 @@ import { getPostBySlug, useContentBody } from "../hooks/useContent";
 export function DynamicPost() {
 	const { slug } = useParams();
 	const post = slug ? getPostBySlug(slug) : undefined;
-	const content = useContentBody("blog", slug);
+	const { content, error, retry } = useContentBody("blog", slug);
 
 	if (!post) {
 		return <Navigate to="/blog" replace />;
@@ -15,6 +15,8 @@ export function DynamicPost() {
 		<MarkdownPage
 			item={post}
 			content={content}
+			contentError={error}
+			onRetryContent={retry}
 			fallbackExcerpt="Technical exploration."
 		/>
 	);

@@ -285,6 +285,9 @@ interface MarkdownPageProps {
 	item: ContentMetadata;
 	/** Markdown body, or null while it is still being fetched. */
 	content: string | null;
+	/** True when the lazy body fetch failed; renders an error state instead. */
+	contentError?: boolean;
+	onRetryContent?: () => void;
 	fallbackExcerpt: string;
 	backLink?: string;
 	backLabel?: string;
@@ -294,6 +297,8 @@ interface MarkdownPageProps {
 export function MarkdownPage({
 	item,
 	content,
+	contentError = false,
+	onRetryContent,
 	fallbackExcerpt,
 	backLink,
 	backLabel,
@@ -341,6 +346,20 @@ export function MarkdownPage({
 				backLabel={backLabel}
 			>
 				{beforeArticle}
+				{contentError && (
+					<div className="not-prose p-8 border border-red-500/20 bg-red-500/10 rounded-lg space-y-4">
+						<p className="italic font-light text-red-700 dark:text-red-200">
+							This article failed to load. Check your connection and try again.
+						</p>
+						<button
+							type="button"
+							onClick={onRetryContent}
+							className="text-[10px] font-black uppercase tracking-widest border-b-2 border-accent hover:text-accent transition-colors pb-1 text-foreground"
+						>
+							Try Again
+						</button>
+					</div>
+				)}
 				{content !== null && (
 					<article className="prose prose-invert max-w-none">
 						<ReactMarkdown

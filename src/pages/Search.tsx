@@ -5,7 +5,7 @@ import { useSearch } from "../hooks/useSearch";
 export function Search() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const query = searchParams.get("q") || "";
-	const results = useSearch(query);
+	const { results, ready, failed } = useSearch(query);
 
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -63,6 +63,18 @@ export function Search() {
 							</div>
 						</RouterLink>
 					))
+				) : query && failed ? (
+					<div className="bg-background p-32 text-center">
+						<p className="text-2xl italic opacity-40 text-foreground">
+							Search is unavailable right now. Reload the page to try again.
+						</p>
+					</div>
+				) : query && !ready ? (
+					<div className="bg-background p-32 text-center">
+						<p className="text-2xl italic opacity-40 text-foreground animate-pulse">
+							Searching…
+						</p>
+					</div>
 				) : query ? (
 					<div className="bg-background p-32 text-center">
 						<p className="text-2xl italic opacity-40 text-foreground">
