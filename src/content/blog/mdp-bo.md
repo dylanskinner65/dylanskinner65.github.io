@@ -11,7 +11,7 @@ category: "Math & ML"
 Reinforcement learning is a type of machine learning that is concerned with how an agent should take actions in an environment in order to maximize some notion of cumulative reward. In this blog post, we will begin a brief introduction to reinforcement learning by talking about the Markov decision process (MDP).
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/mdp_bo/intro_picture.jpg" alt="A man rock climbing." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/mdp_bo/intro_picture.webp" alt="A man rock climbing." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@neom?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">NEOM</a> on <a href="https://unsplash.com/photos/a-man-climbing-up-the-side-of-a-cliff-xhMz5xIbhRg?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a></figcaption>
 </figure>
 

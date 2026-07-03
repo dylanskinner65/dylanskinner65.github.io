@@ -11,7 +11,7 @@ category: "Algorithms & Optimization"
 In the vast world of machine learning, decision trees are like the Swiss Army knives - versatile and surprisingly straightforward. These nifty tools mimic the way humans make decisions, breaking down big problems into smaller, more manageable chunks. In this blog post, we break down how decision trees work for classification, how the Gini index plays a cruitial role in constructing decision trees, and we work through an example of building a decision tree using the Gini index.
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/decision_trees/futuristic_decision_tree.png" alt="Futuristic Decision Tree." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/decision_trees/futuristic_decision_tree.webp" alt="Futuristic Decision Tree." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">We will create a decision tree as cool as this one!</figcaption>
 </figure>
 

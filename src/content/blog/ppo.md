@@ -11,7 +11,7 @@ category: "Math & ML"
 Proximal policy optimization (PPO) is a deep reinforcement learning (rl) algorithm that is *quite* good. In this blog post, we will dive into PPO, specifically breaking down the cost function (which is rather hairy).
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/ppo/river_intro.jpg" alt="A river." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/ppo/river_intro.webp" alt="A river." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@martinsanchez?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Martin Sanchez</a> on <a href="https://unsplash.com/photos/landscape-photography-of-river-between-green-mountains-ycG0A6DlvOk?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a></figcaption>
 </figure>
 
