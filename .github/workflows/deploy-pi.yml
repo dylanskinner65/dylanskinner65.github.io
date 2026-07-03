@@ -63,4 +63,4 @@ jobs:
       - name: Deploy Pod via Play Kube
         run: |
           export CLOUDFLARE_TUNNEL_TOKEN=$(cat /home/skinner/.cloudflare-token)
-          python3 -c "import os, sys; sys.stdout.write(os.path.expandvars(sys.stdin.read()))" < deployment.yaml | podman play kube --replace -
+          python3 -c "import os, sys; sys.stdout.write(os.path.expandvars(sys.stdin.read()))" < deployment.yaml | podman play kube --network=podman --replace -
