@@ -21,7 +21,9 @@ export function CommandPalette() {
 	const [query, setQuery] = useState("");
 	const navigate = useNavigate();
 	const { setTheme, resolvedTheme } = useTheme();
-	const results = useSearch(query);
+	// Only build the (full-corpus) search index once the palette first opens —
+	// building it on mount would cost every page load the markdown fetches.
+	const results = useSearch(query, open);
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
