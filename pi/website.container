@@ -1,0 +1,17 @@
+[Unit]
+Description=Personal website (Caddy)
+
+[Container]
+ContainerName=website
+Image=ghcr.io/dylanskinner65/personal-website:latest
+AutoUpdate=registry
+Network=website.network
+HealthCmd=wget -q --spider http://127.0.0.1:8080/
+HealthInterval=30s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
