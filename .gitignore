@@ -27,3 +27,4 @@ dist-ssr
 .ipynb_checkpoints/
 .superset/
 legacy_backup/
+deploy.sh
