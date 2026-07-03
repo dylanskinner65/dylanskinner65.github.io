@@ -88,7 +88,6 @@ function CopyCodeBlock({
 
 // Custom Remark plugin to transform directives into HTML nodes that react-markdown can handle
 function remarkDirectiveTransformer() {
-	// biome-ignore lint/suspicious/noExplicitAny: AST nodes do not have simple standard type exports in remark
 	return (tree: any) => {
 		visit(tree, (node) => {
 			if (
@@ -217,14 +216,11 @@ export function DynamicProject() {
 						rehypePlugins={[rehypeRaw, rehypeKatex]}
 						components={
 							{
-								// biome-ignore lint/suspicious/noExplicitAny: explicit any for react-markdown children prop type compatibility
 								"code-tabs": (({ children }: any) => {
 									const blocks = (
 										Array.isArray(children) ? children : [children]
 									)
-										// biome-ignore lint/suspicious/noExplicitAny: explicit any for AST children nodes
 										.filter((c: any) => c.type === "pre")
-										// biome-ignore lint/suspicious/noExplicitAny: explicit any for AST pre elements
 										.map((pre: any) => {
 											const codeChild = pre.props.children;
 											const className = codeChild?.props?.className || "";

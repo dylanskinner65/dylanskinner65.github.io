@@ -1,6 +1,26 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+	"files": {
+		"includes": [
+			"**",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/package-lock.json",
+			"!**/src/data/content.json",
+			"!**/legacy_backup",
+			"!**/blog",
+			"!**/projects",
+			"!**/static",
+			"!**/public",
+			"!**/*.html",
+			"!**/*.html.bak",
+			"!**/*.js",
+			"!**/*.cjs",
+			"!**/*.py",
+			"!**/*.json"
+		]
+	},
 	"formatter": { "enabled": true, "indentStyle": "tab" },
 	"linter": {
 		"enabled": true,
@@ -8,12 +28,18 @@
 			"recommended": true,
 			"complexity": {
 				"noImportantStyles": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off"
 			}
 		}
 	},
 	"javascript": { "formatter": { "quoteStyle": "double" } },
 	"css": {
-		"parser": { "allowWrongLineComments": true },
+		"parser": {
+			"allowWrongLineComments": true,
+			"tailwindDirectives": true
+		},
 		"linter": { "enabled": false }
 	}
 }

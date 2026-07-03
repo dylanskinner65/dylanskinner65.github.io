@@ -21,18 +21,14 @@ const fixPath = (src: string) => {
 
 export const renderContent = (html: string) => {
 	const options: HTMLReactParserOptions = {
-		// biome-ignore lint/suspicious/noExplicitAny: complex domNode type from html-react-parser
 		replace: (domNode: any) => {
 			if (domNode.type === "tag" || domNode.name) {
 				// 0. Custom Components: Code Tabs
 				if (domNode.name === "div" && domNode.attribs?.class === "code-tabs") {
 					const blocks = domNode.children
-						// biome-ignore lint/suspicious/noExplicitAny: library type for children
 						.filter((c: any) => c.name === "pre")
-						// biome-ignore lint/suspicious/noExplicitAny: library type for pre node
 						.map((pre: any) => {
 							const codeNode =
-								// biome-ignore lint/suspicious/noExplicitAny: complex nested children
 								pre.children.find((c: any) => c.name === "code") ||
 								pre.children[0];
 							return {
@@ -64,7 +60,6 @@ export const renderContent = (html: string) => {
 					domNode.name === "h3" ||
 					domNode.name === "h4"
 				) {
-					// biome-ignore lint/suspicious/noExplicitAny: dynamic tag name requires any
 					const Tag = domNode.name as any;
 					const classMap: Record<string, string> = {
 						h2: "text-6xl md:text-8xl mt-32 mb-12 italic border-b-2 border-foreground/5 pb-8",
@@ -133,7 +128,6 @@ export const renderContent = (html: string) => {
 				// 5. Code blocks
 				if (domNode.name === "pre") {
 					const codeNode =
-						// biome-ignore lint/suspicious/noExplicitAny: library type for code children
 						domNode.children.find((c: any) => c.name === "code") ||
 						domNode.children[0];
 					const codeText = codeNode?.children?.[0]?.data || "";

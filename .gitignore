@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local and temporary folders
+.ipynb_checkpoints/
+.superset/
+legacy_backup/
+deploy.sh
