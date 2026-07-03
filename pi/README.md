@@ -36,9 +36,12 @@ cp pi/website.network pi/website.container pi/cloudflared.container ~/.config/co
 systemctl --user daemon-reload
 systemctl --user start website.service cloudflared.service
 
-# 4. Verify
+# 4. Verify (the cloudflared image is distroless — test from a throwaway
+#    container on the same network instead of exec'ing into it)
 podman ps                                             # both up, website (healthy)
-podman exec cloudflared wget -qO- http://website:8080 | head -5
+podman run --rm --network website docker.io/library/alpine \
+  wget -qO- http://website:8080 | head -5
+podman logs cloudflared 2>&1 | tail -5                # "Registered tunnel connection"
 ```
 
 Then in Cloudflare Zero Trust → Networks → Tunnels → public hostname for
@@ -49,18 +52,15 @@ localhost, and no host ports are published).
 ## Auto-update loop
 
 ```bash
-systemctl --user edit podman-auto-update.timer
-```
-
-```ini
+mkdir -p ~/.config/systemd/user/podman-auto-update.timer.d
+cat > ~/.config/systemd/user/podman-auto-update.timer.d/override.conf <<'EOF'
 [Timer]
 OnCalendar=
 OnCalendar=*:0/5
 RandomizedDelaySec=0
 Persistent=true
-```
-
-```bash
+EOF
+systemctl --user daemon-reload
 systemctl --user enable --now podman-auto-update.timer
 podman auto-update --dry-run
 ```
