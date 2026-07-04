@@ -21,7 +21,7 @@ function isEditableElement(element: Element | null): boolean {
 	if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
 		return true;
 	}
-	return (element as HTMLElement).isContentEditable;
+	return element instanceof HTMLElement && element.isContentEditable;
 }
 
 export function CommandPalette() {
@@ -52,7 +52,8 @@ export function CommandPalette() {
 			if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
 				e.preventDefault();
 				if (!open) {
-					previouslyFocusedRef.current = document.activeElement as HTMLElement;
+					const el = document.activeElement;
+					previouslyFocusedRef.current = el instanceof HTMLElement ? el : null;
 				}
 				setOpen((open) => !open);
 			}
