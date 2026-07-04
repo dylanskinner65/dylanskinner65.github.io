@@ -198,7 +198,7 @@ export function Home() {
 							>
 								<div className="absolute -inset-4 border border-emerald-900/5 transition-colors group-hover:border-accent/20"></div>
 								<img
-									src="/me.png"
+									src="/me.webp"
 									alt="Dylan Skinner"
 									className="w-full aspect-[3/4] object-cover border-4 border-white shadow-xl sm:shadow-2xl transition-all duration-700"
 								/>

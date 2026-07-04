@@ -11,7 +11,7 @@ category: "Algorithms & Optimization"
 Behind important things like machine learning, finance, and operations research lies an important concept: optimization. Optimization is the process of finding the best solution to a problem from all possible solutions. In this blog post, we will discuss the basics of unconstrained optimization, a fundamental concept in optimization theory. We will specifically discuss a few necessary and sufficient conditions for optimality, and consider a few examples.
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/unconstrained_opt/optimization_image.jpg" alt="An optimized pipe." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/unconstrained_opt/optimization_image.webp" alt="An optimized pipe." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@martinadams?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Martin Adams</a> on <a href="https://unsplash.com/photos/brown-metal-tower-a_PDPUPuNZ8?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a></figcaption>
 </figure>
 

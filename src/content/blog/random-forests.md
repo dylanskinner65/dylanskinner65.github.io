@@ -11,7 +11,7 @@ category: "Algorithms & Optimization"
 Random forests is a powerful machine learning algorithm with a foundation in decision trees. In this blog post, we will discuss how random forests work for classification, and we will work through an example of building a random forest for classification using the Python library `sklearn`.
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/random_forests/forest_image.jpg" alt="Cool forest." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/random_forests/forest_image.webp" alt="Cool forest." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@jplenio?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Johannes Plenio</a> on <a href="https://unsplash.com/photos/green-grass-field-with-trees-during-daytime-Z6E4rJemy24?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a></figcaption>
 </figure>
 

@@ -129,7 +129,7 @@ We can see a high variance of win probability during this game. It is interestin
 To evaluate our simulation's effectiveness at accurately modeling actual hockey games, we combined a dataset with the final event counts for 1500 actual hockey games and for 1500 simulated games. We then performed two experiments. First, We trained a KMeans, Logistic Regression, RandomForest and XGBoost model on this dataset with default parameters, to see if they could classify games as simulated or real. With a 70-30 train-test split, the accuracies on the test set were $47.9\%$, $48.5\%$, $67.5\%$ and $69.3\%$ respectively. Second, we fit and transformed this dataset using PCA, t-SNE and UMAP dimensionality reductions using various perplexity and neighbor hyperparameters to see if these algorithms clustered the synthetic games and actual games in different clusters. As shown in the figure below, the simulated games and actual games are all clustered together. From these two experiments, we conclude that our simulator effectively models live NHL games.
 
 <figure class="flex flex-col items-center my-8">
-    <img src="/projects_files/nhl_predictor/pca_tsne_umap_sim_act.png" alt="PCA, t-SNE, and UMAP clustering of simulated and real NHL games." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/projects_files/nhl_predictor/pca_tsne_umap_sim_act.webp" alt="PCA, t-SNE, and UMAP clustering of simulated and real NHL games." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">A PCA, t-SNA, and UMAP clustering of simulated and real NHL games.</figcaption>
 </figure>
 

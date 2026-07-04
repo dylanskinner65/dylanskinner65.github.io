@@ -17,7 +17,7 @@ $$
 In a previous blog post we discuessed [unconstrained optimization](/blog/unconstrained-opt) and some of the necessary and sufficient conditions for optimality. In this blog post, we will make the optimization a little more complicated by taking about gradient descent, Polyak's heavy ball method, and Nesterov's accelerated gradient descent method. Don't be afraid, though! In the words of one of my college professors, [Dr. Ben Webb](https://science.byu.edu/directory/ben-webb), "All we're doing is going down hill."
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/gradient_descent/initial_mountain.jpg" alt="A nice picture of a mountain." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/gradient_descent/initial_mountain.webp" alt="A nice picture of a mountain." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@sepoys?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Rohit Tandon</a> on <a href="https://unsplash.com/photos/aerial-photography-of-mountain-range-covered-with-snow-under-white-and-blue-sky-at-daytime-9wg5jCEPBsw?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a></figcaption>
 </figure>
 

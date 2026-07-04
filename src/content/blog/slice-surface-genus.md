@@ -20,7 +20,7 @@ Continuing on from my previous [blog post](/blog/braids), this blog post focuses
 In the results to follow, one important idea to understand is that of a *topological surface* (or simply a *surface*). A topological surface is a two-dimensional manifold, intuitively representing a flat, rubbery sheet that can be stretched, bent, and manipulated without tearing or gluing. Surfaces can be *orientable*, which simply means you can distinguish between the 'front' and 'back' of the surface.
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/slice_surface_genus/manifold_examp.png" alt="Example 2d manifold." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" id="figure1" />
+    <img src="/blog_files/slice_surface_genus/manifold_examp.webp" alt="Example 2d manifold." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" id="figure1" />
     <figcaption class="mt-4 text-center italic opacity-60"><strong>Figure 1:</strong> An example of a two-dimensional manifold. I got this image from <a href="https://en.wikipedia.org/wiki/Surface_%28topology%29" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</figcaption>
 </figure>
 

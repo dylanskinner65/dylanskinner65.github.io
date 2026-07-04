@@ -9,7 +9,7 @@ category: "Math & ML"
 ---
 
 <figure class="flex flex-col items-center my-8">
-    <img src="/blog_files/choosing_framework/frameworks_intro.jpg" alt="A circular window with a sky view of a building." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/choosing_framework/frameworks_intro.webp" alt="A circular window with a sky view of a building." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@attentivesoul?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Lisa Forkner</a> on <a href="https://unsplash.com/photos/a-circular-window-with-a-sky-view-of-a-building-xbVyCa1pYoQ?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></figcaption>
 </figure>
 
