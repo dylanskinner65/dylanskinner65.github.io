@@ -3,6 +3,13 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type Theme = "light" | "dark" | "system";
 
+const THEMES: Theme[] = ["light", "dark", "system"];
+
+function readStoredTheme(): Theme {
+	const stored = localStorage.getItem("theme");
+	return THEMES.find((t) => t === stored) ?? "system";
+}
+
 interface ThemeContextType {
 	theme: Theme;
 	setTheme: (theme: Theme) => void;
@@ -17,7 +24,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [theme, setTheme] = useState<Theme>(() => {
 		// Initializing state from localStorage is correct as it's a one-time setup
 		if (typeof window === "undefined") return "system";
-		return (localStorage.getItem("theme") as Theme) || "system";
+		return readStoredTheme();
 	});
 
 	// Calculate resolvedTheme during render rather than using useEffect to update state

@@ -2,8 +2,15 @@ import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MarkdownText } from "../components/MarkdownText";
 import { getAllPosts } from "../hooks/useContent";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function Blog() {
+	useDocumentMeta({
+		title: "Blog | Dylan Skinner",
+		description:
+			"Technical writing on agentic AI systems, machine learning, and 4D topology from Dylan Skinner.",
+	});
+
 	const [currentPage, setCurrentPage] = useState(1);
 	const postsPerPage = 10;
 

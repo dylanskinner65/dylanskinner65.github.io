@@ -11,10 +11,18 @@ import {
 	Search,
 	Sun,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../hooks/ThemeContext";
 import { useSearch } from "../hooks/useSearch";
+
+function isEditableElement(element: Element | null): boolean {
+	if (!element) return false;
+	if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+		return true;
+	}
+	return element instanceof HTMLElement && element.isContentEditable;
+}
 
 export function CommandPalette() {
 	const [open, setOpen] = useState(false);
@@ -24,31 +32,42 @@ export function CommandPalette() {
 	// Only build the (full-corpus) search index once the palette first opens —
 	// building it on mount would cost every page load the markdown fetches.
 	const { results, ready, failed } = useSearch(query, open);
+	const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+	// Restore focus to whatever had it before the palette opened, for every
+	// close path (Escape, backdrop click, running a command, ⌘K toggle). The
+	// capture on open happens synchronously in the keydown handler below,
+	// not here — by the time this effect runs, Command.Input's autoFocus has
+	// already stolen focus, so a passive effect would capture the wrong node.
+	useEffect(() => {
+		if (!open) {
+			previouslyFocusedRef.current?.focus();
+			previouslyFocusedRef.current = null;
+		}
+	}, [open]);
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
 			// Toggle Command Palette
 			if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
 				e.preventDefault();
+				if (!open) {
+					const el = document.activeElement;
+					previouslyFocusedRef.current = el instanceof HTMLElement ? el : null;
+				}
 				setOpen((open) => !open);
 			}
 
 			// Global Quick Actions when palette is NOT open
 			if (!open) {
 				if (e.key.toLowerCase() === "t") {
-					// Check if user is typing in an input
-					if (
-						document.activeElement?.tagName !== "INPUT" &&
-						document.activeElement?.tagName !== "TEXTAREA"
-					) {
+					// Check if user is typing/editing somewhere
+					if (!isEditableElement(document.activeElement)) {
 						setTheme(resolvedTheme === "dark" ? "light" : "dark");
 					}
 				}
 				if (e.key.toLowerCase() === "e") {
-					if (
-						document.activeElement?.tagName !== "INPUT" &&
-						document.activeElement?.tagName !== "TEXTAREA"
-					) {
+					if (!isEditableElement(document.activeElement)) {
 						navigator.clipboard.writeText("DylanSkinner65@gmail.com");
 						// We could add a toast here later
 					}

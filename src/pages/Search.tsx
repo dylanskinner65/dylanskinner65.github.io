@@ -1,8 +1,14 @@
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { MarkdownText } from "../components/MarkdownText";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useSearch } from "../hooks/useSearch";
 
 export function Search() {
+	useDocumentMeta({
+		title: "Search | Dylan Skinner",
+		description: "Search Dylan Skinner's blog posts and projects.",
+	});
+
 	const [searchParams, setSearchParams] = useSearchParams();
 	const query = searchParams.get("q") || "";
 	const { results, ready, failed } = useSearch(query);

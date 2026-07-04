@@ -1,3 +1,4 @@
+import { MotionConfig } from "framer-motion";
 import { lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MainLayout } from "./components/MainLayout";
@@ -27,21 +28,23 @@ const Search = lazy(() =>
 
 function App() {
 	return (
-		<ThemeProvider>
-			<BrowserRouter>
-				<Routes>
-					<Route path="/" element={<MainLayout />}>
-						<Route index element={<Home />} />
-						<Route path="blog" element={<Blog />} />
-						<Route path="blog/:slug" element={<DynamicPost />} />
-						<Route path="projects" element={<Projects />} />
-						<Route path="projects/:slug" element={<DynamicProject />} />
-						<Route path="live-nhl" element={<NhlPredictor />} />
-						<Route path="search" element={<Search />} />
-					</Route>
-				</Routes>
-			</BrowserRouter>
-		</ThemeProvider>
+		<MotionConfig reducedMotion="user">
+			<ThemeProvider>
+				<BrowserRouter>
+					<Routes>
+						<Route path="/" element={<MainLayout />}>
+							<Route index element={<Home />} />
+							<Route path="blog" element={<Blog />} />
+							<Route path="blog/:slug" element={<DynamicPost />} />
+							<Route path="projects" element={<Projects />} />
+							<Route path="projects/:slug" element={<DynamicProject />} />
+							<Route path="live-nhl" element={<NhlPredictor />} />
+							<Route path="search" element={<Search />} />
+						</Route>
+					</Routes>
+				</BrowserRouter>
+			</ThemeProvider>
+		</MotionConfig>
 	);
 }
 

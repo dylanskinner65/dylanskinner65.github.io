@@ -15,18 +15,25 @@ interface CodeBlock {
 
 interface CodeTabsProps {
 	blocks: CodeBlock[];
+	/** Search-param key for this instance's active tab, so multiple tab
+	 * groups on one page don't flip together. Defaults to the classic
+	 * "lang" key used by the single-group case. */
+	paramKey?: string;
 }
 
 const DEFAULT_LANG = "python";
-const QUERY_PARAM = "lang";
+const DEFAULT_QUERY_PARAM = "lang";
 
-export function CodeTabs({ blocks }: CodeTabsProps) {
+export function CodeTabs({
+	blocks,
+	paramKey = DEFAULT_QUERY_PARAM,
+}: CodeTabsProps) {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { resolvedTheme } = useTheme();
 	const [copied, setCopied] = useState(false);
 
 	// 1. READ: Derive active language directly from URL during render
-	const activeLang = searchParams.get(QUERY_PARAM) || DEFAULT_LANG;
+	const activeLang = searchParams.get(paramKey) || DEFAULT_LANG;
 
 	const handleTabClick = useCallback(
 		(lang: string) => {
@@ -34,16 +41,16 @@ export function CodeTabs({ blocks }: CodeTabsProps) {
 			setSearchParams(
 				(prev) => {
 					if (lang === DEFAULT_LANG) {
-						prev.delete(QUERY_PARAM);
+						prev.delete(paramKey);
 					} else {
-						prev.set(QUERY_PARAM, lang);
+						prev.set(paramKey, lang);
 					}
 					return prev;
 				},
 				{ replace: true },
 			);
 		},
-		[setSearchParams],
+		[setSearchParams, paramKey],
 	);
 
 	const activeBlock = blocks.find((b) => b.lang === activeLang) || blocks[0];

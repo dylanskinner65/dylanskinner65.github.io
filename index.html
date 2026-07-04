@@ -2,8 +2,46 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Pre-hydration theme flash guard: mirrors ThemeContext's "theme"
+      // localStorage key + data-theme attribute so dark-mode users don't see
+      // a light flash before React mounts. ThemeContext remains the runtime
+      // source of truth; this only sets the initial paint.
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Dylan Skinner is an AI Engineer and researcher exploring agentic AI systems and 4D topological manifold analysis."
+    />
+    <link rel="canonical" href="https://dylanskinner.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Dylan Skinner | Data Science & Topology" />
+    <meta
+      property="og:description"
+      content="Dylan Skinner is an AI Engineer and researcher exploring agentic AI systems and 4D topological manifold analysis."
+    />
+    <meta property="og:url" content="https://dylanskinner.dev/" />
+    <meta property="og:image" content="https://dylanskinner.dev/me.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dylan Skinner | Data Science & Topology" />
+    <meta
+      name="twitter:description"
+      content="Dylan Skinner is an AI Engineer and researcher exploring agentic AI systems and 4D topological manifold analysis."
+    />
+    <meta name="twitter:image" content="https://dylanskinner.dev/me.webp" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400..900;1,400..900&family=Inter:slnt,wght@-10..0,100..900&display=swap" rel="stylesheet">
