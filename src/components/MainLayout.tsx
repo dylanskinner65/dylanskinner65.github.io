@@ -1,7 +1,18 @@
 import { Search } from "lucide-react";
+import { Suspense } from "react";
 import { NavLink, Outlet, Link as RouterLink } from "react-router-dom";
 import { CommandPalette } from "./CommandPalette";
 import { ThemeToggle } from "./ThemeToggle";
+
+function RouteFallback() {
+	return (
+		<div className="min-h-[60vh] flex items-start pt-8">
+			<span className="text-lg sm:text-xl italic font-light opacity-20 text-foreground animate-pulse">
+				Loading…
+			</span>
+		</div>
+	);
+}
 
 export function MainLayout() {
 	const activeClass =
@@ -97,7 +108,9 @@ export function MainLayout() {
 			</header>
 
 			<main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-16 md:px-24 pb-16 sm:pb-24 md:pb-32">
-				<Outlet />
+				<Suspense fallback={<RouteFallback />}>
+					<Outlet />
+				</Suspense>
 			</main>
 
 			<footer className="w-full border-t border-foreground/5 py-12 sm:py-16 px-4 sm:px-16 md:px-24 bg-background text-foreground">

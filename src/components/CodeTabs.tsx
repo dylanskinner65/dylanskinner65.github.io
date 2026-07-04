@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { useTheme } from "../hooks/ThemeContext";
 import {
 	oneDark,
 	oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useTheme } from "../hooks/ThemeContext";
+	SyntaxHighlighter,
+} from "../lib/syntaxHighlighting";
 
 interface CodeBlock {
 	lang: string;

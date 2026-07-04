@@ -1,13 +1,29 @@
+import { lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MainLayout } from "./components/MainLayout";
 import { ThemeProvider } from "./hooks/ThemeContext";
-import { Blog } from "./pages/Blog";
-import { DynamicPost } from "./pages/DynamicPost";
-import { DynamicProject } from "./pages/DynamicProject";
-import { Home } from "./pages/Home";
-import { NhlPredictor } from "./pages/NhlPredictor";
-import { Projects } from "./pages/Projects";
-import { Search } from "./pages/Search";
+
+const Home = lazy(() =>
+	import("./pages/Home").then((m) => ({ default: m.Home })),
+);
+const Blog = lazy(() =>
+	import("./pages/Blog").then((m) => ({ default: m.Blog })),
+);
+const DynamicPost = lazy(() =>
+	import("./pages/DynamicPost").then((m) => ({ default: m.DynamicPost })),
+);
+const Projects = lazy(() =>
+	import("./pages/Projects").then((m) => ({ default: m.Projects })),
+);
+const DynamicProject = lazy(() =>
+	import("./pages/DynamicProject").then((m) => ({ default: m.DynamicProject })),
+);
+const NhlPredictor = lazy(() =>
+	import("./pages/NhlPredictor").then((m) => ({ default: m.NhlPredictor })),
+);
+const Search = lazy(() =>
+	import("./pages/Search").then((m) => ({ default: m.Search })),
+);
 
 function App() {
 	return (

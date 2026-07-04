@@ -1,7 +1,28 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LiveNhlDashboard } from "../components/LiveNhlDashboard";
+import { isSupabaseConfigured } from "../lib/supabase";
+
+function DashboardUnavailable() {
+	return (
+		<div className="flex items-start gap-3 p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-700 dark:text-red-200">
+			<AlertTriangle
+				size={18}
+				className="text-red-500 dark:text-red-400 mt-0.5 shrink-0"
+			/>
+			<div className="space-y-1">
+				<p className="font-bold uppercase tracking-widest text-[10px] text-red-600 dark:text-red-300">
+					Live dashboard unavailable
+				</p>
+				<p>
+					Supabase credentials are not configured for this deployment, so live
+					NHL data cannot be loaded. The rest of the site works normally.
+				</p>
+			</div>
+		</div>
+	);
+}
 
 export function NhlPredictor() {
 	return (
@@ -53,7 +74,11 @@ export function NhlPredictor() {
 
 			{/* Interactive Dashboard Container (Full Width) */}
 			<section className="w-full">
-				<LiveNhlDashboard />
+				{isSupabaseConfigured() ? (
+					<LiveNhlDashboard />
+				) : (
+					<DashboardUnavailable />
+				)}
 			</section>
 
 			{/* Footer CTA & Navigation Section */}

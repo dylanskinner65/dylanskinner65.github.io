@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Reads Supabase credentials dynamically from Vite environment variables.
 // These variables are loaded locally from `.env.local` and in production
@@ -6,10 +6,23 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseAnonKey) {
-	console.warn(
-		"[SUPABASE] VITE_SUPABASE_ANON_KEY is missing! Direct database queries will fail until the key is provided.",
-	);
+let client: SupabaseClient | null = null;
+
+export function isSupabaseConfigured(): boolean {
+	return Boolean(supabaseUrl && supabaseAnonKey);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+/**
+ * Lazily creates the Supabase client on first use instead of at module load.
+ * Returns null when the environment variables are missing so callers can
+ * surface a user-facing error instead of crashing on createClient(undefined).
+ */
+export function getSupabase(): SupabaseClient | null {
+	if (!isSupabaseConfigured()) {
+		return null;
+	}
+	if (!client) {
+		client = createClient(supabaseUrl, supabaseAnonKey);
+	}
+	return client;
+}

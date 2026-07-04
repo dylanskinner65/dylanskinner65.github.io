@@ -21,7 +21,9 @@ export function CommandPalette() {
 	const [query, setQuery] = useState("");
 	const navigate = useNavigate();
 	const { setTheme, resolvedTheme } = useTheme();
-	const results = useSearch(query);
+	// Only build the (full-corpus) search index once the palette first opens —
+	// building it on mount would cost every page load the markdown fetches.
+	const { results, ready, failed } = useSearch(query, open);
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -100,7 +102,11 @@ export function CommandPalette() {
 
 							<Command.List className="overflow-y-auto overflow-x-hidden p-2 scroll-smooth">
 								<Command.Empty className="px-6 py-12 text-center text-sm text-foreground/40 italic font-serif">
-									No results found for "{query}"
+									{failed
+										? "Search is unavailable right now."
+										: ready
+											? `No results found for "${query}"`
+											: "Loading search index…"}
 								</Command.Empty>
 
 								{query.length > 0 && results.length > 0 && (

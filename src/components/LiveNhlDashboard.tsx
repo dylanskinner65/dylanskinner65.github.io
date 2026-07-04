@@ -19,7 +19,7 @@ import {
 	getProbabilityColor,
 	parseTimeInPeriod,
 } from "../lib/nhlUtils";
-import { supabase } from "../lib/supabase";
+import { getSupabase } from "../lib/supabase";
 import type {
 	Game,
 	GameDetail,
@@ -120,6 +120,11 @@ const getDayInfo = (dateStr: string) => {
 };
 
 export function LiveNhlDashboard() {
+	// Created lazily on first render instead of at module load; null when the
+	// Supabase env vars are missing (NhlPredictor renders an error state instead
+	// of this component in that case, and the fetchers below also guard on it).
+	const supabase = getSupabase();
+
 	// Reads from the securely injected Vite build-time environment variable VITE_NHL_API_HOST.
 	// This environment variable is populated from your GitHub Repository Secrets during deployment,
 	// allowing anyone (including you on your phone) to connect to your live Pi securely
@@ -198,6 +203,9 @@ export function LiveNhlDashboard() {
 	useEffect(() => {
 		const fetchAvailableDates = async () => {
 			try {
+				if (!supabase) {
+					throw new Error("Supabase is not configured");
+				}
 				const { data, error } = await supabase
 					.from("games")
 					.select("game_date")
@@ -239,11 +247,17 @@ export function LiveNhlDashboard() {
 		};
 
 		fetchAvailableDates();
-	}, []);
+	}, [supabase]);
 
 	// Fetch today's schedule from Supabase
 	const fetchSchedule = async (isManual = false, dateStr = selectedDate) => {
 		if (!dateStr) return;
+		if (!supabase) {
+			setErrorMsg(
+				"Live NHL data is unavailable: Supabase credentials are not configured for this deployment.",
+			);
+			return;
+		}
 		if (isManual) setIsLoading(true);
 		try {
 			const bounds = getLocalDateBounds(dateStr);
@@ -339,6 +353,12 @@ export function LiveNhlDashboard() {
 
 	// Fetch full trajectory for the selected game from Supabase
 	const fetchGameDetail = async (gameId: number) => {
+		if (!supabase) {
+			setErrorMsg(
+				"Live NHL data is unavailable: Supabase credentials are not configured for this deployment.",
+			);
+			return;
+		}
 		try {
 			// 1. Fetch the game record from 'games' table
 			const { data: gameRow, error: gameError } = await supabase
