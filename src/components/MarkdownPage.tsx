@@ -1,8 +1,6 @@
 import React, {
-	createContext,
 	type ReactNode,
 	useCallback,
-	useContext,
 	useLayoutEffect,
 	useRef,
 	useState,
@@ -91,6 +89,15 @@ function CopyCodeBlock({
 // Custom Remark plugin to transform directives into HTML nodes that react-markdown can handle
 function remarkDirectiveTransformer() {
 	return (tree: any) => {
+		// Assigns each `code-tabs` directive a document-order search-param key
+		// (lang, lang2, lang3, ...) so multiple tab groups on one page don't
+		// share (and fight over) the same `?lang=` param. Stamped here, at
+		// parse time, rather than via a React counter during render: parsing
+		// runs once per content string with no double-invocation concerns
+		// (unlike StrictMode-doubled render-phase state), so dev and prod
+		// builds are guaranteed to agree on numbering.
+		let codeTabsIndex = 0;
+
 		visit(tree, (node) => {
 			if (
 				node.type === "containerDirective" ||
@@ -102,6 +109,11 @@ function remarkDirectiveTransformer() {
 					const data = node.data;
 					data.hName = node.name;
 					data.hProperties = node.attributes || {};
+					if (node.name === "code-tabs") {
+						data.hProperties.paramkey =
+							codeTabsIndex === 0 ? "lang" : `lang${codeTabsIndex + 1}`;
+						codeTabsIndex += 1;
+					}
 				} else {
 					const prefix =
 						node.type === "containerDirective"
@@ -117,26 +129,8 @@ function remarkDirectiveTransformer() {
 	};
 }
 
-// Assigns each `code-tabs` block on a page a unique search-param key, so
-// multiple tab groups in one document don't share (and fight over) the same
-// `?lang=` param. The ref is reset per MarkdownPage render, before its
-// ReactMarkdown tree renders the code-tabs nodes in document order, then each
-// instance's useState initializer captures its index once on mount.
-const CodeTabsIndexContext = createContext<{ current: number } | null>(null);
-
-function useCodeTabsParamKey(): string {
-	const counterRef = useContext(CodeTabsIndexContext);
-	const [index] = useState(() => {
-		if (!counterRef) return 0;
-		const i = counterRef.current;
-		counterRef.current += 1;
-		return i;
-	});
-	return index === 0 ? "lang" : `lang${index + 1}`;
-}
-
 const markdownComponents = {
-	"code-tabs": (({ children }: any) => {
+	"code-tabs": (({ children, paramkey }: any) => {
 		const blocks = (Array.isArray(children) ? children : [children])
 			.filter((c: any) => c.type === "pre")
 			.map((pre: any) => {
@@ -155,8 +149,7 @@ const markdownComponents = {
 					code: codeChild?.props?.children || "",
 				};
 			});
-		const paramKey = useCodeTabsParamKey();
-		return <CodeTabs blocks={blocks} paramKey={paramKey} />;
+		return <CodeTabs blocks={blocks} paramKey={paramkey || "lang"} />;
 	}) as React.ElementType,
 	h2: ({ children }) => (
 		<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
@@ -329,12 +322,11 @@ export function MarkdownPage({
 	useDocumentMeta({
 		title: `${item.title} | Dylan Skinner`,
 		description: item.description || fallbackExcerpt,
+		type: "article",
 	});
 
 	const location = useLocation();
 	const containerRef = useRef<HTMLDivElement>(null);
-	const codeTabsCounterRef = useRef(0);
-	codeTabsCounterRef.current = 0;
 
 	useLayoutEffect(() => {
 		if (!location.hash) {
@@ -391,20 +383,18 @@ export function MarkdownPage({
 				)}
 				{content !== null && (
 					<article className="prose prose-invert max-w-none">
-						<CodeTabsIndexContext.Provider value={codeTabsCounterRef}>
-							<ReactMarkdown
-								remarkPlugins={[
-									remarkGfm,
-									remarkMath,
-									remarkDirective,
-									remarkDirectiveTransformer,
-								]}
-								rehypePlugins={[rehypeRaw, rehypeKatex]}
-								components={markdownComponents}
-							>
-								{content}
-							</ReactMarkdown>
-						</CodeTabsIndexContext.Provider>
+						<ReactMarkdown
+							remarkPlugins={[
+								remarkGfm,
+								remarkMath,
+								remarkDirective,
+								remarkDirectiveTransformer,
+							]}
+							rehypePlugins={[rehypeRaw, rehypeKatex]}
+							components={markdownComponents}
+						>
+							{content}
+						</ReactMarkdown>
 					</article>
 				)}
 			</BlogPostLayout>
