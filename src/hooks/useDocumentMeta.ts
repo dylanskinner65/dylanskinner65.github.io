@@ -10,6 +10,8 @@ export interface DocumentMeta {
 	title: string;
 	description?: string;
 	image?: string;
+	/** og:type — "website" for section/index pages, "article" for a single post/project. */
+	type?: "website" | "article";
 }
 
 function setMetaContent(selector: string, content: string) {
@@ -28,6 +30,7 @@ export function useDocumentMeta({
 	title,
 	description = DEFAULT_DESCRIPTION,
 	image = DEFAULT_IMAGE,
+	type = "website",
 }: DocumentMeta) {
 	const location = useLocation();
 
@@ -39,6 +42,7 @@ export function useDocumentMeta({
 			: `${SITE_URL}${image}`;
 
 		setMetaContent('meta[name="description"]', description);
+		setMetaContent('meta[property="og:type"]', type);
 		setMetaContent('meta[property="og:title"]', title);
 		setMetaContent('meta[property="og:description"]', description);
 		setMetaContent('meta[property="og:url"]', url);
@@ -51,5 +55,5 @@ export function useDocumentMeta({
 			'link[rel="canonical"]',
 		);
 		if (canonical) canonical.href = url;
-	}, [title, description, image, location.pathname]);
+	}, [title, description, image, type, location.pathname]);
 }
