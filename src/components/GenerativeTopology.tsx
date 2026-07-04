@@ -1,3 +1,4 @@
+import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 // Pre-define 16 vertices of a 4D Hypercube (Tesseract) centered at the origin
@@ -80,30 +81,13 @@ function projectVertices(angles: {
 	});
 }
 
-function usePrefersReducedMotion(): boolean {
-	const [reduced, setReduced] = useState(
-		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-	);
-
-	useEffect(() => {
-		const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-		const handleChange = () => setReduced(mediaQuery.matches);
-		mediaQuery.addEventListener("change", handleChange);
-		return () => mediaQuery.removeEventListener("change", handleChange);
-	}, []);
-
-	return reduced;
-}
-
 export function GenerativeTopology() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
 	const [points, setPoints] = useState<{ x: number; y: number; z: number }[]>(
 		[],
 	);
-	const prefersReducedMotion = usePrefersReducedMotion();
+	const prefersReducedMotion = Boolean(useReducedMotion());
 
 	// Animation state
 	const anglesRef = useRef({ xy: 0, zw: 0, xw: 0, x3d: 0, y3d: 0 });
