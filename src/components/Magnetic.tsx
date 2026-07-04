@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 
 interface MagneticProps {
@@ -9,9 +9,10 @@ interface MagneticProps {
 export function Magnetic({ children, strength = 0.5 }: MagneticProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const [position, setPosition] = useState({ x: 0, y: 0 });
+	const prefersReducedMotion = useReducedMotion();
 
 	const handleMouseMove = (e: React.MouseEvent) => {
-		if (!ref.current) return;
+		if (!ref.current || prefersReducedMotion) return;
 		const { clientX, clientY } = e;
 		const { left, top, width, height } = ref.current.getBoundingClientRect();
 		const centerX = left + width / 2;

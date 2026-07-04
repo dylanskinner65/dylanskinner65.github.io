@@ -26,12 +26,84 @@ for (let i = 0; i < 16; i++) {
 	}
 }
 
+function projectVertices(angles: {
+	xy: number;
+	zw: number;
+	xw: number;
+	x3d: number;
+	y3d: number;
+}) {
+	const { xy, zw, xw, x3d, y3d } = angles;
+
+	return VERTICES_4D.map((vertex) => {
+		const [x, y, z, w] = vertex;
+
+		// Rotation in XY Plane
+		const cosXY = Math.cos(xy);
+		const sinXY = Math.sin(xy);
+		const x1 = x * cosXY - y * sinXY;
+		const y1 = x * sinXY + y * cosXY;
+
+		// Rotation in ZW Plane
+		const cosZW = Math.cos(zw);
+		const sinZW = Math.sin(zw);
+		const z1 = z * cosZW - w * sinZW;
+		const w1 = z * sinZW + w * cosZW;
+
+		// Rotation in XW Plane
+		const cosXW = Math.cos(xw);
+		const sinXW = Math.sin(xw);
+		const x2 = x1 * cosXW - w1 * sinXW;
+		const w2 = x1 * sinXW + w1 * cosXW;
+
+		// 4D Perspective Division (Hyperperspective Projection onto 3D Space)
+		const wDistance = 2.2;
+		const perspectiveScale = 1 / (wDistance - w2);
+		const x3 = x2 * perspectiveScale;
+		const y3 = y1 * perspectiveScale;
+		const z3 = z1 * perspectiveScale;
+
+		// Apply 3D Rotations (Mouse interactions)
+		// Rotate around X-axis
+		const cosX3D = Math.cos(x3d);
+		const sinX3D = Math.sin(x3d);
+		const y4 = y3 * cosX3D - z3 * sinX3D;
+		const z4 = y3 * sinX3D + z3 * cosX3D;
+
+		// Rotate around Y-axis
+		const cosY3D = Math.cos(y3d);
+		const sinY3D = Math.sin(y3d);
+		const x5 = x3 * cosY3D + z4 * sinY3D;
+		const z5 = -x3 * sinY3D + z4 * cosY3D;
+
+		return { x: x5, y: y4, z: z5 };
+	});
+}
+
+function usePrefersReducedMotion(): boolean {
+	const [reduced, setReduced] = useState(
+		() =>
+			typeof window !== "undefined" &&
+			window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+	);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+		const handleChange = () => setReduced(mediaQuery.matches);
+		mediaQuery.addEventListener("change", handleChange);
+		return () => mediaQuery.removeEventListener("change", handleChange);
+	}, []);
+
+	return reduced;
+}
+
 export function GenerativeTopology() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
 	const [points, setPoints] = useState<{ x: number; y: number; z: number }[]>(
 		[],
 	);
+	const prefersReducedMotion = usePrefersReducedMotion();
 
 	// Animation state
 	const anglesRef = useRef({ xy: 0, zw: 0, xw: 0, x3d: 0, y3d: 0 });
@@ -53,6 +125,10 @@ export function GenerativeTopology() {
 		handleResize();
 		window.addEventListener("resize", handleResize);
 
+		if (prefersReducedMotion) {
+			return () => window.removeEventListener("resize", handleResize);
+		}
+
 		// Setup mouse move tracking
 		const handleMouseMove = (e: MouseEvent) => {
 			const cx = window.innerWidth / 2;
@@ -67,10 +143,16 @@ export function GenerativeTopology() {
 			window.removeEventListener("resize", handleResize);
 			window.removeEventListener("mousemove", handleMouseMove);
 		};
-	}, []);
+	}, [prefersReducedMotion]);
 
-	// Mathematical rotation loop
+	// Mathematical rotation loop — skipped under prefers-reduced-motion in
+	// favor of a single static frame at the resting angles.
 	useEffect(() => {
+		if (prefersReducedMotion) {
+			setPoints(projectVertices(anglesRef.current));
+			return;
+		}
+
 		let animationId: number;
 
 		const loop = () => {
@@ -89,60 +171,13 @@ export function GenerativeTopology() {
 			anglesRef.current.x3d = mouseRef.current.y * 0.8;
 			anglesRef.current.y3d = mouseRef.current.x * 0.8;
 
-			const { xy, zw, xw, x3d, y3d } = anglesRef.current;
-
-			// Compute 4D-to-3D projection
-			const projectedPoints = VERTICES_4D.map((vertex) => {
-				const [x, y, z, w] = vertex;
-
-				// Rotation in XY Plane
-				const cosXY = Math.cos(xy);
-				const sinXY = Math.sin(xy);
-				const x1 = x * cosXY - y * sinXY;
-				const y1 = x * sinXY + y * cosXY;
-
-				// Rotation in ZW Plane
-				const cosZW = Math.cos(zw);
-				const sinZW = Math.sin(zw);
-				const z1 = z * cosZW - w * sinZW;
-				const w1 = z * sinZW + w * cosZW;
-
-				// Rotation in XW Plane
-				const cosXW = Math.cos(xw);
-				const sinXW = Math.sin(xw);
-				const x2 = x1 * cosXW - w1 * sinXW;
-				const w2 = x1 * sinXW + w1 * cosXW;
-
-				// 4D Perspective Division (Hyperperspective Projection onto 3D Space)
-				const wDistance = 2.2;
-				const perspectiveScale = 1 / (wDistance - w2);
-				const x3 = x2 * perspectiveScale;
-				const y3 = y1 * perspectiveScale;
-				const z3 = z1 * perspectiveScale;
-
-				// Apply 3D Rotations (Mouse interactions)
-				// Rotate around X-axis
-				const cosX3D = Math.cos(x3d);
-				const sinX3D = Math.sin(x3d);
-				const y4 = y3 * cosX3D - z3 * sinX3D;
-				const z4 = y3 * sinX3D + z3 * cosX3D;
-
-				// Rotate around Y-axis
-				const cosY3D = Math.cos(y3d);
-				const sinY3D = Math.sin(y3d);
-				const x5 = x3 * cosY3D + z4 * sinY3D;
-				const z5 = -x3 * sinY3D + z4 * cosY3D;
-
-				return { x: x5, y: y4, z: z5 };
-			});
-
-			setPoints(projectedPoints);
+			setPoints(projectVertices(anglesRef.current));
 			animationId = requestAnimationFrame(loop);
 		};
 
 		loop();
 		return () => cancelAnimationFrame(animationId);
-	}, []);
+	}, [prefersReducedMotion]);
 
 	// Project 3D points onto responsive 2D screen coordinates
 	const scale = Math.min(dimensions.width, dimensions.height) * 0.35;
