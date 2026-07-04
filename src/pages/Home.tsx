@@ -4,8 +4,15 @@ import { GenerativeTopology } from "../components/GenerativeTopology";
 import { Magnetic } from "../components/Magnetic";
 import { MarkdownText } from "../components/MarkdownText";
 import { getAllPosts } from "../hooks/useContent";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function Home() {
+	useDocumentMeta({
+		title: "Dylan Skinner | Data Science & Topology",
+		description:
+			"Dylan Skinner is an AI Engineer and researcher exploring agentic AI systems and 4D topological manifold analysis.",
+	});
+
 	const latestPosts = [...getAllPosts()]
 		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 		.slice(0, 3);

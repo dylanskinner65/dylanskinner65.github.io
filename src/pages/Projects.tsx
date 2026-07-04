@@ -6,8 +6,15 @@ import {
 } from "react-router-dom";
 import { MarkdownText } from "../components/MarkdownText";
 import { getAllProjects } from "../hooks/useContent";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function Projects() {
+	useDocumentMeta({
+		title: "Projects | Dylan Skinner",
+		description:
+			"A collection of Dylan Skinner's projects spanning agentic AI, machine learning, and 4D topology research.",
+	});
+
 	const location = useLocation();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const itemsPerPage = 6;

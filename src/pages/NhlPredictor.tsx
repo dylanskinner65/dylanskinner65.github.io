@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, ArrowLeft, ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LiveNhlDashboard } from "../components/LiveNhlDashboard";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { isSupabaseConfigured } from "../lib/supabase";
 
 function DashboardUnavailable() {
@@ -25,6 +26,12 @@ function DashboardUnavailable() {
 }
 
 export function NhlPredictor() {
+	useDocumentMeta({
+		title: "Live NHL Predictions | Dylan Skinner",
+		description:
+			"Live NHL game predictions powered by a machine learning model built by Dylan Skinner.",
+	});
+
 	return (
 		<div className="space-y-12 pb-24 selection:bg-accent selection:text-white">
 			{/* Page Header */}

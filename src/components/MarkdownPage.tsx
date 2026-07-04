@@ -1,6 +1,8 @@
 import React, {
+	createContext,
 	type ReactNode,
 	useCallback,
+	useContext,
 	useLayoutEffect,
 	useRef,
 	useState,
@@ -15,6 +17,7 @@ import remarkMath from "remark-math";
 import { visit } from "unist-util-visit";
 import { useTheme } from "../hooks/ThemeContext";
 import type { ContentMetadata } from "../hooks/useContent";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import {
 	oneDark,
 	oneLight,
@@ -114,6 +117,24 @@ function remarkDirectiveTransformer() {
 	};
 }
 
+// Assigns each `code-tabs` block on a page a unique search-param key, so
+// multiple tab groups in one document don't share (and fight over) the same
+// `?lang=` param. The ref is reset per MarkdownPage render, before its
+// ReactMarkdown tree renders the code-tabs nodes in document order, then each
+// instance's useState initializer captures its index once on mount.
+const CodeTabsIndexContext = createContext<{ current: number } | null>(null);
+
+function useCodeTabsParamKey(): string {
+	const counterRef = useContext(CodeTabsIndexContext);
+	const [index] = useState(() => {
+		if (!counterRef) return 0;
+		const i = counterRef.current;
+		counterRef.current += 1;
+		return i;
+	});
+	return index === 0 ? "lang" : `lang${index + 1}`;
+}
+
 const markdownComponents = {
 	"code-tabs": (({ children }: any) => {
 		const blocks = (Array.isArray(children) ? children : [children])
@@ -134,7 +155,8 @@ const markdownComponents = {
 					code: codeChild?.props?.children || "",
 				};
 			});
-		return <CodeTabs blocks={blocks} />;
+		const paramKey = useCodeTabsParamKey();
+		return <CodeTabs blocks={blocks} paramKey={paramKey} />;
 	}) as React.ElementType,
 	h2: ({ children }) => (
 		<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
@@ -304,8 +326,15 @@ export function MarkdownPage({
 	backLabel,
 	beforeArticle,
 }: MarkdownPageProps) {
+	useDocumentMeta({
+		title: `${item.title} | Dylan Skinner`,
+		description: item.description || fallbackExcerpt,
+	});
+
 	const location = useLocation();
 	const containerRef = useRef<HTMLDivElement>(null);
+	const codeTabsCounterRef = useRef(0);
+	codeTabsCounterRef.current = 0;
 
 	useLayoutEffect(() => {
 		if (!location.hash) {
@@ -362,18 +391,20 @@ export function MarkdownPage({
 				)}
 				{content !== null && (
 					<article className="prose prose-invert max-w-none">
-						<ReactMarkdown
-							remarkPlugins={[
-								remarkGfm,
-								remarkMath,
-								remarkDirective,
-								remarkDirectiveTransformer,
-							]}
-							rehypePlugins={[rehypeRaw, rehypeKatex]}
-							components={markdownComponents}
-						>
-							{content}
-						</ReactMarkdown>
+						<CodeTabsIndexContext.Provider value={codeTabsCounterRef}>
+							<ReactMarkdown
+								remarkPlugins={[
+									remarkGfm,
+									remarkMath,
+									remarkDirective,
+									remarkDirectiveTransformer,
+								]}
+								rehypePlugins={[rehypeRaw, rehypeKatex]}
+								components={markdownComponents}
+							>
+								{content}
+							</ReactMarkdown>
+						</CodeTabsIndexContext.Provider>
 					</article>
 				)}
 			</BlogPostLayout>
