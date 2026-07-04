@@ -7,7 +7,7 @@ const THEMES: Theme[] = ["light", "dark", "system"];
 
 function readStoredTheme(): Theme {
 	const stored = localStorage.getItem("theme");
-	return THEMES.includes(stored as Theme) ? (stored as Theme) : "system";
+	return THEMES.find((t) => t === stored) ?? "system";
 }
 
 interface ThemeContextType {
