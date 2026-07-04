@@ -64,7 +64,102 @@ function contentIndexPlugin(): Plugin {
 	};
 }
 
+const SITE_URL = "https://dylanskinner.dev";
+
+const STATIC_ROUTES = [
+	{ path: "/", priority: "1.0" },
+	{ path: "/blog", priority: "0.8" },
+	{ path: "/projects", priority: "0.8" },
+	{ path: "/search", priority: "0.5" },
+	{ path: "/live-nhl", priority: "0.5" },
+];
+
+function buildSitemapXml(
+	blogIndex: { slug: string; date?: string }[],
+	projectIndex: { slug: string; date?: string }[],
+) {
+	const urls: { loc: string; lastmod?: string; priority: string }[] = [
+		...STATIC_ROUTES.map(({ path, priority }) => ({
+			loc: `${SITE_URL}${path}`,
+			priority,
+		})),
+		...blogIndex.map((entry) => ({
+			loc: `${SITE_URL}/blog/${entry.slug}`,
+			lastmod: entry.date,
+			priority: "0.6",
+		})),
+		...projectIndex.map((entry) => ({
+			loc: `${SITE_URL}/projects/${entry.slug}`,
+			lastmod: entry.date,
+			priority: "0.6",
+		})),
+	];
+
+	const body = urls
+		.map(
+			({ loc, lastmod, priority }) =>
+				`  <url>\n    <loc>${loc}</loc>\n${
+					lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""
+				}    <priority>${priority}</priority>\n  </url>`,
+		)
+		.join("\n");
+
+	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+const ROBOTS_TXT = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+
+// Emits sitemap.xml + robots.txt from the same content-directory scan the
+// content-index plugin uses, so slugs/dates never drift between the two.
+function sitemapPlugin(): Plugin {
+	function readIndexes() {
+		return {
+			blogIndex: readContentIndex(
+				resolve(rootDir, "src/content/blog"),
+				"../content/blog",
+			),
+			projectIndex: readContentIndex(
+				resolve(rootDir, "src/content/projects"),
+				"../content/projects",
+			),
+		};
+	}
+
+	return {
+		name: "sitemap",
+		generateBundle() {
+			const { blogIndex, projectIndex } = readIndexes();
+			this.emitFile({
+				type: "asset",
+				fileName: "sitemap.xml",
+				source: buildSitemapXml(blogIndex, projectIndex),
+			});
+			this.emitFile({
+				type: "asset",
+				fileName: "robots.txt",
+				source: ROBOTS_TXT,
+			});
+		},
+		configureServer(server) {
+			server.middlewares.use((req, res, next) => {
+				if (req.url === "/sitemap.xml") {
+					const { blogIndex, projectIndex } = readIndexes();
+					res.setHeader("Content-Type", "application/xml");
+					res.end(buildSitemapXml(blogIndex, projectIndex));
+					return;
+				}
+				if (req.url === "/robots.txt") {
+					res.setHeader("Content-Type", "text/plain");
+					res.end(ROBOTS_TXT);
+					return;
+				}
+				next();
+			});
+		},
+	};
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [react(), contentIndexPlugin()],
+	plugins: [react(), contentIndexPlugin(), sitemapPlugin()],
 });
