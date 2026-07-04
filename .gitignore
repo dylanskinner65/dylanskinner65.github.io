@@ -26,5 +26,3 @@ dist-ssr
 # Local and temporary folders
 .ipynb_checkpoints/
 .superset/
-legacy_backup/
-deploy.sh

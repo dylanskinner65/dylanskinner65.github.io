@@ -145,7 +145,7 @@ And it is that easy! Now, let's do it with a different, more difficult example.
 Consider the following network:
 
 <figure class="flex flex-col items-center my-12">
-    <img src="/blog_files/cvxpy_intro/graph_network.png" alt="Graph network diagram." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <img src="/blog_files/cvxpy_intro/graph_problem.png" alt="Graph network diagram." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
 </figure>
 
 If we represent the edges between the nodes and their associated weights, we have:
