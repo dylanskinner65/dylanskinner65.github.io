@@ -8,6 +8,11 @@ quoteAuthor: "Steve Jobs"
 category: "Math & ML"
 ---
 
+<figure class="flex flex-col items-center my-8">
+    <img src="/blog_files/tools_as_ux/tools_intro.webp" alt="Gold pipes running along a wall." class="w-full max-w-3xl h-auto rounded-none shadow-2xl border border-foreground/5" />
+    <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@victor_g?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Victor</a> on <a href="https://unsplash.com/photos/gold-pipes-UoIiVYka3VY?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></figcaption>
+</figure>
+
 <div class="thesis">
     Tool design is interface design. The difference is that your user isn't a person clicking buttons — it's a model reading text. Everything you know about good UX still applies. You just have a very literal, very fast user who only ever sees the contract.
 </div>
