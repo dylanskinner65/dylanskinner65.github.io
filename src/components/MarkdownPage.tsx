@@ -23,6 +23,7 @@ import {
 } from "../lib/syntaxHighlighting";
 import { BlogPostLayout } from "./BlogPostLayout";
 import { CodeTabs } from "./CodeTabs";
+import { Compare, type CompareKind, type CompareTone } from "./Compare";
 
 function CopyCodeBlock({
 	language,
@@ -166,8 +167,25 @@ function isFencedPreElement(
 	);
 }
 
-const markdownComponents = {
-	"code-tabs": (({ children, paramkey }: any) => {
+interface CodeTabsDirectiveProps {
+	children?: React.ReactNode;
+	paramkey?: string;
+}
+
+interface CompareDirectiveProps {
+	children?: React.ReactNode;
+	leftlabel?: string;
+	lefttone?: CompareTone;
+	rightlabel?: string;
+	righttone?: CompareTone;
+	kind?: CompareKind;
+}
+
+const markdownComponents: Components & {
+	"code-tabs": React.FC<CodeTabsDirectiveProps>;
+	compare: React.FC<CompareDirectiveProps>;
+} = {
+	"code-tabs": ({ children, paramkey }) => {
 		const blocks = (Array.isArray(children) ? children : [children])
 			.filter(isFencedPreElement)
 			.map((pre) => {
@@ -184,7 +202,38 @@ const markdownComponents = {
 			})
 			.filter((block): block is NonNullable<typeof block> => block !== null);
 		return <CodeTabs blocks={blocks} paramKey={paramkey || "lang"} />;
-	}) as React.ElementType,
+	},
+	compare: ({ children, leftlabel, lefttone, rightlabel, righttone, kind }) => {
+		const codeBlocks = (Array.isArray(children) ? children : [children])
+			.filter(isFencedPreElement)
+			.map((pre) =>
+				parseFencedCodeChild(
+					(pre as React.ReactElement<{ children?: React.ReactNode }>).props
+						.children,
+				),
+			)
+			.filter((block): block is NonNullable<typeof block> => block !== null);
+		const [left, right] = codeBlocks;
+		if (!left || !right) return null;
+		return (
+			<Compare
+				left={{
+					label: leftlabel || "",
+					tone: lefttone || "neutral",
+					kind,
+					lang: left.lang,
+					code: left.value,
+				}}
+				right={{
+					label: rightlabel || "",
+					tone: righttone || "neutral",
+					kind,
+					lang: right.lang,
+					code: right.value,
+				}}
+			/>
+		);
+	},
 	h2: ({ children }) => (
 		<h2 className="text-4xl md:text-5xl mt-20 mb-8 italic border-b-2 border-foreground/5 pb-4 text-foreground">
 			{children}
@@ -319,7 +368,7 @@ const markdownComponents = {
 			</Link>
 		);
 	},
-} as Components;
+};
 
 interface MarkdownPageProps {
 	item: ContentMetadata;

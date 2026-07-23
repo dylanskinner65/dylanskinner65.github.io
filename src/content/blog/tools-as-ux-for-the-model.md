@@ -55,22 +55,21 @@ Here are the principles that have the highest leverage. Several are drawn direct
 
 The tool name is the first thing the model reasons about. Names should be unambiguous on their own, without requiring the model to read the full description to disambiguate. When you have many tools, especially across multiple services, namespacing prevents collisions and helps the model group related capabilities.
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 not-prose">
-  <div class="bg-red-500/5 dark:bg-red-500/10 rounded-md border border-red-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-red-800 dark:text-red-400 border-b border-red-500/10">Ambiguous</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">search
+:::compare{leftlabel="Ambiguous" lefttone="bad" rightlabel="Namespaced & specific" righttone="good"}
+```text
+search
 send
 get
-update</pre>
-  </div>
-  <div class="bg-emerald-500/5 dark:bg-emerald-500/10 rounded-md border border-emerald-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-emerald-800 dark:text-emerald-400 border-b border-emerald-500/10">Namespaced &amp; specific</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">linear_search_issues
+update
+```
+
+```text
+linear_search_issues
 slack_send_message
 github_get_pull_request
-datadog_search_logs</pre>
-  </div>
-</div>
+datadog_search_logs
+```
+:::
 
 The names on the right tell the model both what service it is talking to and what the operation does. When an agent has twenty tools available, this is the difference between confident selection and a coin flip.
 
@@ -80,23 +79,22 @@ The instinct when wrapping an existing API is to expose one tool per endpoint. T
 
 The nuance worth holding onto: this is not a rule that granular tools are bad. It is a case for consolidating around tasks *when consolidation removes work the agent would otherwise have to do in context.* A primitive like `list_events` can be genuinely useful on its own — the problem is only when the agent is forced to chain several primitives together, reasoning over each intermediate result, just to accomplish one obvious task.
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 not-prose">
-  <div class="bg-red-500/5 dark:bg-red-500/10 rounded-md border border-red-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-red-800 dark:text-red-400 border-b border-red-500/10">Forces the agent to orchestrate</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">list_users()
+:::compare{leftlabel="Forces the agent to orchestrate" lefttone="bad" rightlabel="Consolidated around the task" righttone="good"}
+```text
+list_users()
 list_events()
-create_event(user_ids, time)</pre>
-  </div>
-  <div class="bg-emerald-500/5 dark:bg-emerald-500/10 rounded-md border border-emerald-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-emerald-800 dark:text-emerald-400 border-b border-emerald-500/10">Consolidated around the task</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">schedule_event(
+create_event(user_ids, time)
+```
+
+```text
+schedule_event(
   participants,
   topic
 )
 # finds common free time
-# and creates the meeting</pre>
-  </div>
-</div>
+# and creates the meeting
+```
+:::
 
 This is the exact example Anthropic uses, and the point is the consolidation, not the deletion of primitives. The task-level tool collapses three calls and the reasoning between them into one; the agent expresses intent ("schedule this meeting") rather than orchestrating primitives. Every step you remove from the agent's plate is a step that can't go wrong and tokens that don't get spent.
 
@@ -112,25 +110,24 @@ A schema that accepts `{ operation: string }` and expects the model to know the 
 
 What a tool returns is as much a part of the interface as what it accepts. The temptation is to return the full API response and let the model sort it out. But the model pays for every token it reads, and internal identifiers, MIME types, and pagination cursors are cognitive noise it has to wade through.
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 not-prose">
-  <div class="bg-red-500/5 dark:bg-red-500/10 rounded-md border border-red-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-red-800 dark:text-red-400 border-b border-red-500/10">Raw dump</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">{
+:::compare{leftlabel="Raw dump" lefttone="bad" rightlabel="Model-friendly" righttone="good"}
+```json
+{
   "user_uuid": "a1b2c3d4-e5f6-7890",
   "avatar_256px_url": "https://...",
   "mime_type": "image/jpeg",
   "created_ts": 1699...
-}</pre>
-  </div>
-  <div class="bg-emerald-500/5 dark:bg-emerald-500/10 rounded-md border border-emerald-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-emerald-800 dark:text-emerald-400 border-b border-emerald-500/10">Model-friendly</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">{
+}
+```
+
+```json
+{
   "name": "John Smith",
   "role": "Product Manager",
   "status": "online"
-}</pre>
-  </div>
-</div>
+}
+```
+:::
 
 Return what the model needs to make its next decision. If it later needs the UUID to make another call, thread that through internally or provide it as a separate, retrievable field — but don't make the model read it every time.
 
@@ -144,19 +141,18 @@ This is the principle most often skipped, and it matters enormously because agen
 
 The MCP spec is deliberate about this. Tool errors should be reported *within the result* — by setting an `isError` flag and including details in the content — rather than thrown as protocol-level failures. The reason is exactly the recursive one: reporting the error in-band means the model sees it and can take corrective action, rather than the whole call blowing up out of the model's view.
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 not-prose">
-  <div class="bg-red-500/5 dark:bg-red-500/10 rounded-md border border-red-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-red-800 dark:text-red-400 border-b border-red-500/10">Dead end</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">Error: 422</pre>
-  </div>
-  <div class="bg-emerald-500/5 dark:bg-emerald-500/10 rounded-md border border-emerald-500/10 overflow-hidden">
-    <span class="text-[10px] font-black tracking-wider uppercase block px-4 py-2 text-emerald-800 dark:text-emerald-400 border-b border-emerald-500/10">Actionable</span>
-    <pre class="p-4 text-xs font-mono leading-relaxed overflow-x-auto m-0 text-foreground/80">Error: 'date' must be in
+:::compare{leftlabel="Dead end" lefttone="bad" rightlabel="Actionable" righttone="good"}
+```text
+Error: 422
+```
+
+```text
+Error: 'date' must be in
 YYYY-MM-DD format. You
 provided '11/23/2025'.
-Try '2025-11-23'.</pre>
-  </div>
-</div>
+Try '2025-11-23'.
+```
+:::
 
 The message on the right tells the model what went wrong, why, and what to do about it. On the next turn, the agent fixes the format and succeeds. The message on the left produces a stuck agent or a hallucinated guess.
 
