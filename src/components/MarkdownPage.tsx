@@ -129,26 +129,60 @@ function remarkDirectiveTransformer() {
 	};
 }
 
+function parseFencedCodeChild(codeChild: React.ReactNode): {
+	lang: string;
+	value: string;
+} | null {
+	if (!React.isValidElement(codeChild)) return null;
+	const { className = "", children } = codeChild.props as {
+		className?: string;
+		children?: React.ReactNode;
+	};
+	const match = /language-(\w+)/.exec(className);
+	const lang = match ? match[1] : className.replace("language-", "") || "text";
+	const value = String(children ?? "").replace(/\n$/, "");
+	return { lang, value };
+}
+
+function langLabel(lang: string): string {
+	if (lang === "python") return "Python";
+	if (lang === "typescript" || lang === "javascript") return "TypeScript";
+	return lang.toUpperCase();
+}
+
+/** Fenced blocks only — inline code is a bare `code` node without a `pre` parent. */
+function MarkdownPre({ children }: { children?: React.ReactNode }) {
+	const parsed = parseFencedCodeChild(children);
+	if (!parsed) return <pre>{children}</pre>;
+	return <CopyCodeBlock language={parsed.lang} value={parsed.value} />;
+}
+
+function isFencedPreElement(
+	child: React.ReactNode,
+): child is React.ReactElement {
+	return (
+		React.isValidElement(child) &&
+		(child.type === "pre" || child.type === MarkdownPre)
+	);
+}
+
 const markdownComponents = {
 	"code-tabs": (({ children, paramkey }: any) => {
 		const blocks = (Array.isArray(children) ? children : [children])
-			.filter((c: any) => c.type === "pre")
-			.map((pre: any) => {
-				const codeChild = pre.props.children;
-				const className = codeChild?.props?.className || "";
-				const lang = className.replace("language-", "") || "text";
-				const label =
-					lang === "python"
-						? "Python"
-						: lang === "typescript" || lang === "javascript"
-							? "TypeScript"
-							: lang.toUpperCase();
+			.filter(isFencedPreElement)
+			.map((pre) => {
+				const parsed = parseFencedCodeChild(
+					(pre as React.ReactElement<{ children?: React.ReactNode }>).props
+						.children,
+				);
+				if (!parsed) return null;
 				return {
-					lang,
-					label,
-					code: codeChild?.props?.children || "",
+					lang: parsed.lang,
+					label: langLabel(parsed.lang),
+					code: parsed.value,
 				};
-			});
+			})
+			.filter((block): block is NonNullable<typeof block> => block !== null);
 		return <CodeTabs blocks={blocks} paramKey={paramkey || "lang"} />;
 	}) as React.ElementType,
 	h2: ({ children }) => (
@@ -229,24 +263,15 @@ const markdownComponents = {
 			{children}
 		</td>
 	),
-	code: ({ inline, className, children, ...props }: any) => {
-		const match = /language-(\w+)/.exec(className || "");
-		const lang = match ? match[1] : "";
-		return !inline ? (
-			<CopyCodeBlock
-				language={lang}
-				value={String(children).replace(/\n$/, "")}
-				{...props}
-			/>
-		) : (
-			<code
-				className={`${className} px-1.5 py-0.5 rounded bg-foreground/10 text-accent font-semibold text-xs md:text-sm`}
-				{...props}
-			>
-				{children}
-			</code>
-		);
-	},
+	pre: MarkdownPre,
+	code: ({ className, children, ...props }: any) => (
+		<code
+			className={`${className} px-1.5 py-0.5 rounded bg-foreground/10 text-accent font-semibold text-xs md:text-sm`}
+			{...props}
+		>
+			{children}
+		</code>
+	),
 	a: ({ href, children, ...props }) => {
 		const isExternal = href?.startsWith("http");
 		if (isExternal) {
