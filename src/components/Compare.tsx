@@ -89,6 +89,16 @@ function ComparePanel({ label, tone, kind = "code", lang, code }: CompareSide) {
 							overflowX: "auto",
 							maxWidth: "100%",
 						}}
+						// The global bare-element `code` rule paints an opaque background that
+						// `not-prose` does not scope away. Left alone, the inline `code` element
+						// renders one background rect per wrapped line, which reads as white
+						// stripes over the tinted panel.
+						// className is restated because supplying codeTagProps replaces the
+						// default `language-*` class the highlighter would otherwise set.
+						codeTagProps={{
+							className: `language-${lang}`,
+							style: { background: "transparent" },
+						}}
 					>
 						{code}
 					</SyntaxHighlighter>
