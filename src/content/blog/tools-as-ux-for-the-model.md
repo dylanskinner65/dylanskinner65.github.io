@@ -13,9 +13,7 @@ category: "Math & ML"
     <figcaption class="mt-4 text-center italic opacity-60">Photo by <a href="https://unsplash.com/@victor_g?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Victor</a> on <a href="https://unsplash.com/photos/gold-pipes-UoIiVYka3VY?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></figcaption>
 </figure>
 
-<div class="thesis">
-    Tool design is interface design. The difference is that your user isn't a person clicking buttons — it's a model reading text. Everything you know about good UX still applies. You just have a very literal, very fast user who only ever sees the contract.
-</div>
+Tool design is interface design. The difference is that your user isn't a person clicking buttons — it's a model reading text. Everything you know about good UX still applies. You just have a very literal, very fast user who only ever sees the contract.
 
 Most engineers think of tools as plumbing. You have a function, you wrap it so the model can call it, you move on. The wrapping is treated as a mechanical translation step: take the API you already have, expose it, done.
 

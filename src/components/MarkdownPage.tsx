@@ -78,6 +78,12 @@ function CopyCodeBlock({
 						overflowX: "auto",
 						maxWidth: "100%",
 					}}
+					// See Compare.tsx: the global `code` background would otherwise stripe
+					// each wrapped line. Invisible against this panel, but kept in sync.
+					codeTagProps={{
+						className: `language-${language}`,
+						style: { background: "transparent" },
+					}}
 					{...props}
 				>
 					{value}
