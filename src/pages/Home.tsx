@@ -89,7 +89,7 @@ export function Home() {
 					</p>
 					<div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black uppercase tracking-widest opacity-60">
 						<a
-							href="/BostonPresentation.pdf"
+							href="/slides/using-deep-rl-to-generate-slice-surfaces.pdf"
 							target="_blank"
 							className="hover:text-accent transition-colors underline decoration-2 underline-offset-4"
 							rel="noreferrer"
@@ -97,7 +97,7 @@ export function Home() {
 							JMM Boston
 						</a>
 						<a
-							href="/San Francisco Presentation.pdf"
+							href="/slides/braid-representations-and-knot-theory.pdf"
 							target="_blank"
 							className="hover:text-accent transition-colors underline decoration-2 underline-offset-4"
 							rel="noreferrer"
@@ -105,7 +105,7 @@ export function Home() {
 							JMM San Fran
 						</a>
 						<a
-							href="/mlops_talk.pdf"
+							href="/slides/theoretical-math-and-deep-rl.pdf"
 							target="_blank"
 							className="hover:text-accent transition-colors underline decoration-2 underline-offset-4"
 							rel="noreferrer"
