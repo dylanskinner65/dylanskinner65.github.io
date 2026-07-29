@@ -23,7 +23,7 @@ export const formatAmericanOdds = (decimal: number | undefined): string => {
  * Parse a standard NHL time string ("MM:SS") into elapsed seconds in the period
  */
 export const parseTimeInPeriod = (timeStr: string): number => {
-	if (!timeStr || !timeStr.includes(":")) return 0;
+	if (!timeStr?.includes(":")) return 0;
 	const parts = timeStr.split(":");
 	return Number.parseInt(parts[0], 10) * 60 + Number.parseInt(parts[1], 10);
 };
