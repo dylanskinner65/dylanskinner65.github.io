@@ -78,6 +78,14 @@ export function MainLayout() {
 							Projects
 						</NavLink>
 						<NavLink
+							to="/talks"
+							className={({ isActive }) =>
+								isActive ? activeClass : inactiveClass
+							}
+						>
+							Talks
+						</NavLink>
+						<NavLink
 							to="/live-nhl"
 							className={({ isActive }) =>
 								isActive ? activeClass : inactiveClass

@@ -364,6 +364,25 @@ const markdownComponents: Components & {
 				</a>
 			);
 		}
+		// Site-relative links to real files under public/ — slide PDFs, figures,
+		// the standalone talk decks. These must stay plain anchors: <Link> would
+		// push them through the router, which matches no route and renders a blank
+		// page until the visitor happens to hard-reload. Routes never have a file
+		// extension, so that's the discriminator.
+		const path = href?.split(/[?#]/)[0] ?? "";
+		if (/\.[a-z0-9]+$/i.test(path)) {
+			return (
+				<a
+					href={href}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-accent font-bold border-b-2 border-accent/20 hover:border-accent transition-colors"
+					{...props}
+				>
+					{children}
+				</a>
+			);
+		}
 		return (
 			<Link
 				to={href || "#"}

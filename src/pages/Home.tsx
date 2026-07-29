@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { GenerativeTopology } from "../components/GenerativeTopology";
 import { Magnetic } from "../components/Magnetic";
 import { MarkdownText } from "../components/MarkdownText";
-import { getAllPosts } from "../hooks/useContent";
+import { getAllPosts, getAllTalks } from "../hooks/useContent";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export function Home() {
@@ -19,6 +19,9 @@ export function Home() {
 
 	const featured = latestPosts[0];
 	const others = latestPosts.slice(1);
+	const latestTalks = [...getAllTalks()]
+		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.slice(0, 3);
 
 	const springConfig = { stiffness: 300, damping: 20 };
 
@@ -362,6 +365,54 @@ export function Home() {
 							</RouterLink>
 						))}
 					</div>
+				</div>
+			</section>
+
+			{/* Talks */}
+			<section
+				id="talks"
+				className="pb-16 sm:pb-32 drafting-marker drafting-marker-tr drafting-marker-bl"
+			>
+				<div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-12 sm:mb-24 border-b-2 border-foreground/5 pb-4 sm:pb-8 gap-4 relative">
+					{/* Massive Watermark Numeral */}
+					<span className="absolute -top-12 -left-6 text-[8rem] sm:text-[12rem] md:text-[16rem] font-sans font-black opacity-[0.02] dark:opacity-[0.01] select-none pointer-events-none">
+						03
+					</span>
+					<h2 className="text-4xl sm:text-5xl md:text-7xl font-serif italic leading-none text-foreground text-pretty relative z-10">
+						Talks.
+					</h2>
+					<RouterLink
+						to="/talks"
+						className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:text-accent opacity-40 hover:opacity-100 transition-all text-foreground text-pretty z-10"
+					>
+						View All Talks →
+					</RouterLink>
+				</div>
+
+				<div className="flex flex-col gap-px bg-foreground/10 border border-foreground/5 shadow-xl sm:shadow-2xl overflow-hidden">
+					{latestTalks.map((talk) => (
+						<RouterLink
+							key={talk.slug}
+							to={`/talks/${talk.slug}`}
+							className="bg-background p-8 sm:p-16 flex flex-col justify-between group hover:bg-accent-soft transition-colors"
+						>
+							<div>
+								<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-accent mb-2 sm:mb-4 block italic">
+									{talk.date.toUpperCase()}
+									{talk.venue ? ` — ${talk.venue}` : ""}
+								</span>
+								<h3 className="text-3xl sm:text-4xl md:text-5xl italic group-hover:text-accent transition-colors mb-2 sm:mb-4 text-foreground text-pretty">
+									<MarkdownText content={talk.title} />
+								</h3>
+								<p className="text-sm sm:text-base md:text-lg font-light italic opacity-50 line-clamp-2 text-foreground text-pretty">
+									<MarkdownText content={talk.description} />
+								</p>
+							</div>
+							<span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-accent mt-6 sm:mt-8 opacity-0 group-hover:opacity-100 transition-all">
+								Open Talk →
+							</span>
+						</RouterLink>
+					))}
 				</div>
 			</section>
 		</div>

@@ -19,6 +19,12 @@ const Projects = lazy(() =>
 const DynamicProject = lazy(() =>
 	import("./pages/DynamicProject").then((m) => ({ default: m.DynamicProject })),
 );
+const Talks = lazy(() =>
+	import("./pages/Talks").then((m) => ({ default: m.Talks })),
+);
+const DynamicTalk = lazy(() =>
+	import("./pages/DynamicTalk").then((m) => ({ default: m.DynamicTalk })),
+);
 const NhlPredictor = lazy(() =>
 	import("./pages/NhlPredictor").then((m) => ({ default: m.NhlPredictor })),
 );
@@ -38,6 +44,8 @@ function App() {
 							<Route path="blog/:slug" element={<DynamicPost />} />
 							<Route path="projects" element={<Projects />} />
 							<Route path="projects/:slug" element={<DynamicProject />} />
+							<Route path="talks" element={<Talks />} />
+							<Route path="talks/:slug" element={<DynamicTalk />} />
 							<Route path="live-nhl" element={<NhlPredictor />} />
 							<Route path="search" element={<Search />} />
 						</Route>
