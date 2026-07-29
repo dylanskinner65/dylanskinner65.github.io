@@ -4,7 +4,7 @@ title: "Building Effective Agents"
 date: "2026-07-28"
 venue: "Local AI meetup"
 description: "What it actually takes to build agents that work in production — the loop, the framework decision, tool design, prompting, and how you'd know whether any of it worked."
-deck: "/decks/building-effective-agents/"
+deck: "/decks/building-effective-agents.html"
 category: "Talks"
 ---
 
@@ -28,7 +28,7 @@ Agents are simpler than they look and harder than they seem. This talk walks thr
 
 ## The deck
 
-The slides are [here](/decks/building-effective-agents/), interactive — arrow keys or space to advance. Best on a desktop; it's a fixed 16:9 stage.
+The slides are [here](/decks/building-effective-agents.html), interactive — arrow keys or space to advance. Best on a desktop; it's a fixed 16:9 stage.
 
 ## Further reading
 
