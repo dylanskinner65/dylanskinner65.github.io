@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
 	loadAllPostsWithContent,
 	loadAllProjectsWithContent,
+	loadAllTalksWithContent,
 } from "./useContent";
 
 export type SearchItem = {
@@ -11,7 +12,7 @@ export type SearchItem = {
 	title: string;
 	date: string;
 	description: string;
-	type: "blog" | "project";
+	type: "blog" | "project" | "talk";
 	category?: string;
 	tags?: string[];
 	content: string;
@@ -25,11 +26,14 @@ let indexPromise: Promise<Fuse<SearchItem>> | null = null;
 function loadSearchIndex(): Promise<Fuse<SearchItem>> {
 	if (!indexPromise) {
 		const promise = (async () => {
-			const [{ default: FuseCtor }, posts, projects] = await Promise.all([
-				import("fuse.js"),
-				loadAllPostsWithContent(),
-				loadAllProjectsWithContent(),
-			]);
+			const [{ default: FuseCtor }, posts, projects, talks] = await Promise.all(
+				[
+					import("fuse.js"),
+					loadAllPostsWithContent(),
+					loadAllProjectsWithContent(),
+					loadAllTalksWithContent(),
+				],
+			);
 			const searchData: SearchItem[] = [
 				...posts.map((post) => ({
 					slug: post.slug,
@@ -48,6 +52,15 @@ function loadSearchIndex(): Promise<Fuse<SearchItem>> {
 					category: project.category,
 					content: project.content,
 					type: "project" as const,
+				})),
+				...talks.map((talk) => ({
+					slug: talk.slug,
+					title: talk.title,
+					date: talk.date,
+					description: talk.description,
+					category: talk.category,
+					content: talk.content,
+					type: "talk" as const,
 				})),
 			];
 			return new FuseCtor(searchData, {

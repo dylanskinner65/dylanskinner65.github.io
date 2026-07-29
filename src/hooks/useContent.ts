@@ -1,4 +1,4 @@
-import { blogIndex, projectIndex } from "virtual:content-index";
+import { blogIndex, projectIndex, talkIndex } from "virtual:content-index";
 import { useCallback, useEffect, useState } from "react";
 
 // Frontmatter metadata comes from the build-time index (virtual:content-index,
@@ -15,6 +15,11 @@ const projectBodies = import.meta.glob<string>("../content/projects/*.md", {
 	import: "default",
 });
 
+const talkBodies = import.meta.glob<string>("../content/talks/*.md", {
+	query: "?raw",
+	import: "default",
+});
+
 export interface ContentMetadata {
 	slug: string;
 	title: string;
@@ -23,6 +28,12 @@ export interface ContentMetadata {
 	category: string;
 	quote?: string;
 	quoteAuthor?: string;
+	/** Talks only: where it was given. */
+	venue?: string;
+	/** Talks only: path to the standalone slide deck under /decks. */
+	deck?: string;
+	/** Talks only: path to a slides PDF under /public. */
+	slides?: string;
 }
 
 export type ContentWithBody = ContentMetadata & { content: string };
@@ -100,6 +111,31 @@ export function loadAllProjectsWithContent(): Promise<ContentWithBody[]> {
 	);
 }
 
+// Talk Functions
+export function getAllTalks(): ContentMetadata[] {
+	return talkIndex;
+}
+
+export function getTalkBySlug(slug: string): ContentMetadata | undefined {
+	return talkIndex.find((t) => t.slug === slug);
+}
+
+export function loadTalkBody(slug: string): Promise<string | undefined> {
+	return loadBody(
+		talkIndex.find((t) => t.slug === slug),
+		talkBodies,
+	);
+}
+
+export function loadAllTalksWithContent(): Promise<ContentWithBody[]> {
+	return Promise.all(
+		talkIndex.map(async (entry) => ({
+			...entry,
+			content: (await loadBody(entry, talkBodies)) ?? "",
+		})),
+	);
+}
+
 export interface ContentBodyState {
 	/** Markdown body, or null while loading (or after a failed load). */
 	content: string | null;
@@ -115,7 +151,7 @@ export interface ContentBodyState {
  * as `error` with a `retry` instead of leaving the article blank forever.
  */
 export function useContentBody(
-	type: "blog" | "project",
+	type: "blog" | "project" | "talk",
 	slug: string | undefined,
 ): ContentBodyState {
 	const key = `${type}:${slug ?? ""}`;
@@ -130,7 +166,12 @@ export function useContentBody(
 	useEffect(() => {
 		if (!slug) return;
 		let active = true;
-		const load = type === "blog" ? loadPostBody : loadProjectBody;
+		const load =
+			type === "blog"
+				? loadPostBody
+				: type === "talk"
+					? loadTalkBody
+					: loadProjectBody;
 		load(slug).then(
 			(body) => {
 				if (active && body !== undefined) {
@@ -160,7 +201,8 @@ export function useContentBody(
 			retry,
 		};
 	}
-	const index = type === "blog" ? blogIndex : projectIndex;
+	const index =
+		type === "blog" ? blogIndex : type === "talk" ? talkIndex : projectIndex;
 	const entry = index.find((e) => e.slug === slug);
 	return {
 		content: entry ? (bodyCache.get(entry.path) ?? null) : null,

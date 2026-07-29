@@ -45,9 +45,14 @@ function contentIndexPlugin(): Plugin {
 				resolve(rootDir, "src/content/projects"),
 				"../content/projects",
 			);
+			const talkIndex = readContentIndex(
+				resolve(rootDir, "src/content/talks"),
+				"../content/talks",
+			);
 			return [
 				`export const blogIndex = ${JSON.stringify(blogIndex)};`,
 				`export const projectIndex = ${JSON.stringify(projectIndex)};`,
+				`export const talkIndex = ${JSON.stringify(talkIndex)};`,
 			].join("\n");
 		},
 		handleHotUpdate({ file, server }) {
@@ -70,6 +75,7 @@ const STATIC_ROUTES = [
 	{ path: "/", priority: "1.0" },
 	{ path: "/blog", priority: "0.8" },
 	{ path: "/projects", priority: "0.8" },
+	{ path: "/talks", priority: "0.8" },
 	{ path: "/search", priority: "0.5" },
 	{ path: "/live-nhl", priority: "0.5" },
 ];
@@ -77,6 +83,7 @@ const STATIC_ROUTES = [
 function buildSitemapXml(
 	blogIndex: { slug: string; date?: string }[],
 	projectIndex: { slug: string; date?: string }[],
+	talkIndex: { slug: string; date?: string }[],
 ) {
 	const urls: { loc: string; lastmod?: string; priority: string }[] = [
 		...STATIC_ROUTES.map(({ path, priority }) => ({
@@ -90,6 +97,11 @@ function buildSitemapXml(
 		})),
 		...projectIndex.map((entry) => ({
 			loc: `${SITE_URL}/projects/${entry.slug}`,
+			lastmod: entry.date,
+			priority: "0.6",
+		})),
+		...talkIndex.map((entry) => ({
+			loc: `${SITE_URL}/talks/${entry.slug}`,
 			lastmod: entry.date,
 			priority: "0.6",
 		})),
@@ -122,17 +134,21 @@ function sitemapPlugin(): Plugin {
 				resolve(rootDir, "src/content/projects"),
 				"../content/projects",
 			),
+			talkIndex: readContentIndex(
+				resolve(rootDir, "src/content/talks"),
+				"../content/talks",
+			),
 		};
 	}
 
 	return {
 		name: "sitemap",
 		generateBundle() {
-			const { blogIndex, projectIndex } = readIndexes();
+			const { blogIndex, projectIndex, talkIndex } = readIndexes();
 			this.emitFile({
 				type: "asset",
 				fileName: "sitemap.xml",
-				source: buildSitemapXml(blogIndex, projectIndex),
+				source: buildSitemapXml(blogIndex, projectIndex, talkIndex),
 			});
 			this.emitFile({
 				type: "asset",
@@ -143,9 +159,9 @@ function sitemapPlugin(): Plugin {
 		configureServer(server) {
 			server.middlewares.use((req, res, next) => {
 				if (req.url === "/sitemap.xml") {
-					const { blogIndex, projectIndex } = readIndexes();
+					const { blogIndex, projectIndex, talkIndex } = readIndexes();
 					res.setHeader("Content-Type", "application/xml");
-					res.end(buildSitemapXml(blogIndex, projectIndex));
+					res.end(buildSitemapXml(blogIndex, projectIndex, talkIndex));
 					return;
 				}
 				if (req.url === "/robots.txt") {

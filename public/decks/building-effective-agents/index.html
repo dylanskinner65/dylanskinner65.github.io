@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Building Effective Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+:root{--text:#f1efe8;--text-muted:#b4b2a9;--bg:#171614;--surface:#211f1d;--border:#3a3937;--accent:#5ec9a4;--good:#97c459;--bad:#f09595;--mono:'Fira Code',ui-monospace,monospace}
+@media (prefers-color-scheme:light){:root{--text:#3a3937;--text-muted:#5f5e5a;--bg:#faf9f5;--surface:#f1efe8;--border:#d8d5cc;--accent:#0f6e56;--good:#639922;--bad:#e24b4a}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:#000;color:var(--text);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+#stage{position:absolute;top:50%;left:50%;width:1920px;height:1080px;transform-origin:center center;background:var(--bg);overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:92px 112px}
+.slide.active{display:flex}
+.slide.center{align-items:center;justify-content:center;text-align:center}
+h1{font-size:104px;font-weight:500;line-height:1.06;margin:0;letter-spacing:-.02em}
+.th{height:140px;flex:0 0 140px;display:flex;align-items:flex-end;margin-bottom:52px}
+h2{font-size:54px;font-weight:500;line-height:1.2;margin:0;max-width:36ch;letter-spacing:-.01em}
+.tp{color:var(--text-muted)}
+.body{flex:1;min-height:0}
+.step{opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .3s ease}
+.step.shown{opacity:1;transform:none}
+.b{position:relative;padding-left:62px;margin-bottom:42px;font-size:40px;line-height:1.36;max-width:66ch}
+.b:before{content:"";position:absolute;left:0;top:.66em;width:34px;height:2px;background:var(--accent)}
+.b2{position:relative;padding-left:62px;margin:-18px 0 40px 62px;font-size:31px;line-height:1.42;max-width:64ch;color:var(--text-muted)}
+.b2:before{content:"";position:absolute;left:0;top:.72em;width:22px;height:1px;background:var(--text-muted)}
+.acc{font-weight:500;color:var(--text)}
+.mono{font-family:var(--mono)}
+.sub{font-size:29px;line-height:1.5;color:var(--text-muted);margin-top:38px;max-width:78ch}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:34px;min-width:0}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px;font-family:var(--mono);font-size:20px;line-height:1.55}
+.cmp>div{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;min-width:0;white-space:pre;overflow:hidden}
+.cmp>div.l{border-color:var(--bad)}
+.cmp>div.r{border-color:var(--good);white-space:pre-wrap}
+.cl{font-size:23px;font-weight:500;margin-bottom:12px}
+.cc{display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:19px;color:var(--text-muted);margin-top:9px}
+.tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px}
+.tri pre{margin:0;font-family:var(--mono);font-size:15px;line-height:1.5;white-space:pre;overflow:hidden;color:var(--text-muted)}
+.tri .cap{font-size:20px;line-height:1.4;margin-top:16px}
+.tri .nm{font-family:var(--mono);font-size:17px;color:var(--text-muted);margin-bottom:12px}
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:25px}
+.tbl th{text-align:left;font-weight:500;font-size:21px;color:var(--text-muted);padding:0 14px 16px;border-bottom:1px solid var(--border)}
+.tbl td{padding:19px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.32}
+.tbl td:first-child{font-weight:500}
+.tbl tr:last-child td{border-bottom:none}
+.qa{width:100%;border-collapse:collapse;table-layout:fixed}
+.qa td{padding:20px 16px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.36}
+.qa td:first-child{font-size:27px;font-weight:500;width:33%}
+.qa td:last-child{font-size:25px;color:var(--text-muted);font-family:var(--mono)}
+.qa tr:last-child td{border-bottom:none}
+.fn{font-size:21px;line-height:1.45;color:var(--text-muted);margin-top:auto;max-width:92ch}
+#ctr{position:absolute;bottom:34px;right:44px;font-family:var(--mono);font-size:20px;color:var(--text-muted);z-index:5}
+#bar{position:absolute;top:0;left:0;height:5px;background:var(--accent);z-index:5;transition:width .3s}
+svg text{font-family:'DM Sans',system-ui,sans-serif}
+</style></head><body>
+
+<div id="stage">
+
+<section class="slide center">
+  <h1>Building Effective Agents</h1>
+  <div class="mono" style="font-size:30px;color:var(--text-muted);margin-top:48px">Dylan Skinner</div>
+  <div class="mono" style="font-size:21px;color:var(--text-muted);margin-top:64px">&rarr; or space to advance &nbsp;&middot;&nbsp; 19 slides</div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Introduction &mdash;</span> Who am I?</h2></div>
+  <div class="body">
+    <div class="step" style="font-size:38px;line-height:1.45;max-width:34ch">I'm an AI engineer at <span class="acc">SchoolAI</span>, and I wrote the agent SDK that our experiences run on.</div>
+    <div class="step" style="font-size:38px;line-height:1.45;max-width:34ch;margin-top:44px;color:var(--text-muted)">Today I want to share some of what I learned building agents in production.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Introduction &mdash;</span> Four questions to answer</h2></div>
+  <div class="body">
+    <div class="b step">What is an agent, actually?</div>
+    <div class="b step">Do I need a framework?</div>
+    <div class="b step">How do I give it tools?</div>
+    <div class="b step">How do I tell it what to do?</div>
+    <div class="step sub">And underneath all four: <span class="acc">how would I know if any of it worked?</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">The Agent Loop &mdash;</span> A model in a loop with tools</h2></div>
+  <div class="body">
+    <div class="step" style="display:flex;justify-content:center">
+      <svg viewBox="0 0 600 235" style="width:1160px;height:auto">
+        <defs><marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="var(--text-muted)"/></marker></defs>
+        <g stroke="var(--border)" stroke-width="1.5" fill="var(--surface)">
+          <rect x="225" y="10" width="150" height="56" rx="6"/>
+          <rect x="50" y="126" width="122" height="56" rx="6"/>
+          <rect x="50" y="10" width="122" height="56" rx="6"/>
+        </g>
+        <rect x="428" y="126" width="122" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+        <path d="M 300 102 L 398 154 L 300 206 L 202 154 Z" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <g fill="var(--text)" font-size="16" text-anchor="middle" dominant-baseline="central">
+          <text x="300" y="38">Call the model</text>
+          <text x="111" y="154">Execute tools</text>
+          <text x="111" y="28">Append results</text>
+          <text x="111" y="48">to history</text>
+          <text x="300" y="145">Tool calls in</text>
+          <text x="300" y="165">the response?</text>
+          <text x="489" y="154">Done</text>
+        </g>
+        <g stroke="var(--text-muted)" stroke-width="1.5" fill="none" marker-end="url(#ah)">
+          <line x1="300" y1="66" x2="300" y2="98"/>
+          <line x1="202" y1="154" x2="176" y2="154"/>
+          <line x1="111" y1="126" x2="111" y2="70"/>
+          <line x1="172" y1="38" x2="221" y2="38"/>
+          <line x1="398" y1="154" x2="424" y2="154"/>
+        </g>
+        <g fill="var(--text-muted)" font-size="13" text-anchor="middle" dominant-baseline="central">
+          <text x="189" y="141">yes</text>
+          <text x="411" y="141">no</text>
+        </g>
+      </svg>
+    </div>
+    <div class="step sub">The model isn't running the loop. <span class="acc">Your code is.</span> The model is a stateless function that turns one sequence of text into another.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">The Agent Loop &mdash;</span> The loop, in code</h2></div>
+  <div class="body">
+    <div class="step card mono" style="font-size:25px;line-height:1.65;white-space:pre;overflow:hidden;color:var(--text-muted)">messages = [{"role": "user", "content": prompt}]
+
+for _ in range(max_iters):
+    response = client.chat(messages, tools=tools)
+    messages.append(response.message)
+
+    <span style="color:var(--text)">if not response.tool_calls:
+        break</span>
+
+    for call in response.tool_calls:
+        result = dispatch(call)
+        messages.append(tool_result(call.id, result))</div>
+    <div class="step sub">Twelve lines here, about thirty with the tool definitions and setup. Everything else in this talk is a decision about some part of it.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">The Agent Loop &mdash;</span> What writing it yourself reveals</h2></div>
+  <div class="body">
+    <div class="b step">The model proposes, we execute. Every safety boundary lives in that gap.</div>
+    <div class="b step">"Done" is a decision <span class="acc">we</span> made, not something the model told us.</div>
+    <div class="b step">State lives in the message history &mdash; which is what makes it debuggable.</div>
+    <div class="step sub">The loop took an afternoon. <span class="acc">Everything around it took months.</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Frameworks &mdash;</span> Two lists people conflate</h2></div>
+  <div class="body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px">
+      <div class="card step">
+        <div style="font-size:21px;font-weight:500;color:var(--text-muted);margin-bottom:22px">What Frameworks Provide</div>
+        <div style="font-size:29px;line-height:1.8">The agent loop<br>Tool registration<br>Retries &amp; error handling<br>Observability<br>Multi-agent routing<br>State management</div>
+        <div style="font-size:21px;color:var(--text-muted);margin-top:24px">Go down this list and ask: do we already have this?</div>
+      </div>
+      <div class="card step">
+        <div style="font-size:21px;font-weight:500;color:var(--text-muted);margin-bottom:22px">What You Choose On</div>
+        <div style="font-size:29px;line-height:1.8"><span class="acc">Language</span><br>Model lock-in vs. agnostic<br>Maturity &amp; community<br>Minimal vs. batteries-included</div>
+        <div style="font-size:21px;color:var(--text-muted);margin-top:24px">Use these to rule candidates out before you build anything</div>
+      </div>
+    </div>
+    <div class="step sub">Every framework lists the languages it supports. <span class="acc">Ask which one they actually invest in.</span> LangGraph's Python SDK was ahead of its TypeScript one. Vercel's has no Python at all.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Frameworks &mdash;</span> How the major frameworks compare</h2></div>
+  <div class="body">
+    <table class="tbl step">
+      <thead><tr>
+        <th style="width:20%">Framework</th>
+        <th style="width:21%">Language</th>
+        <th style="width:16%">Models</th>
+        <th style="width:27%">Shape</th>
+        <th style="width:16%">How I Know</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Claude Agent SDK</td><td>Python + TS</td><td>Claude only</td><td>Clean first-party primitives</td><td style="color:var(--text-muted)">full POC</td></tr>
+        <tr><td>OpenAI Agents SDK</td><td>Python + TS</td><td>Agnostic, 100+</td><td>Minimal: agents, handoffs, guardrails, tracing</td><td style="color:var(--text-muted)">assessed</td></tr>
+        <tr><td>Mastra</td><td>TS-native, Python secondary</td><td>Agnostic</td><td>Batteries-included: workflows, memory, RAG</td><td style="color:var(--text-muted)">full POC</td></tr>
+        <tr><td>LangGraph</td><td>Python + TS, TS lagged at eval</td><td>Agnostic</td><td>Graph / state machine, checkpointing</td><td style="color:var(--text-muted)">full POC</td></tr>
+        <tr><td>Vercel AI SDK</td><td>TS only</td><td>Agnostic</td><td>UI and streaming first</td><td style="color:var(--text-muted)">assessed</td></tr>
+        <tr><td>Roll your own</td><td>Anything</td><td>Anything</td><td>Exactly the six rows you actually lack</td><td style="color:var(--text-muted)">what we shipped</td></tr>
+      </tbody>
+    </table>
+    <div class="step sub"><span class="acc">Don't pick from this table.</span> Count how many of the six rows you're missing. Missing five? Take a framework. Missing one? Write it.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Frameworks &mdash;</span> We deleted ours</h2></div>
+  <div class="body">
+    <div class="b step">We ran real proof-of-concepts and picked LangGraph. Two finalists, both passed, no decisive reason between them.</div>
+    <div class="b step">During beta &mdash; <span class="acc">before any production traffic</span> &mdash; I hit a bug in its TypeScript tool-calling loop.</div>
+    <div class="b step">So I audited what it was still giving us. Observability: already ours. Routing: already ours.</div>
+    <div class="b step">The loop was the only thing left. I rewrote it, dropped the dependency, and the system got <span class="acc">simpler</span>.</div>
+    <div class="step sub">The framework didn't change. Our infrastructure had. Which means "we evaluated this already" expires &mdash; re-run the audit.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Tools &mdash;</span> Your user is the model</h2></div>
+  <div class="body">
+    <div style="display:grid;grid-template-columns:1.02fr 1fr;gap:46px;align-items:start">
+      <div>
+        <div class="b step" style="font-size:31px;margin-bottom:30px;max-width:none;padding-left:46px">Tool design is interface design. Everything you know about UX still applies.</div>
+        <div class="b step" style="font-size:31px;margin-bottom:30px;max-width:none;padding-left:46px">The model never sees your implementation. The MCP spec makes the contract explicit: it sees <span class="acc">three fields</span>.</div>
+        <div class="b step" style="font-size:31px;margin-bottom:30px;max-width:none;padding-left:46px">Name is the button label. Description is the tooltip. Schema is the form. What you return is the screen after submit.</div>
+      </div>
+      <div class="step">
+        <div class="card mono" style="font-size:17px;line-height:1.6;white-space:pre;overflow:hidden;color:var(--text-muted)">{
+  <span style="color:var(--text)">"name"</span>: "get_issue",
+  <span style="color:var(--text)">"description"</span>: "Retrieve detailed information about an
+     issue by ID, including attachments, git branch name,
+     and active Triage Intelligence suggestions when the
+     issue is in triage",
+  <span style="color:var(--text)">"inputSchema"</span>: {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Issue ID or identifier (e.g., LIN-123)"
+      },
+      "includeRelations": {
+        "type": "boolean", "default": false,
+        "description": "Include blocking/related relations"
+      },
+      "includeReleases": { "type": "boolean", "default": false }
+    },
+    "required": ["id"]
+  }
+}</div>
+        <div style="font-size:19px;color:var(--text-muted);margin-top:14px">Linear's official MCP server, abridged.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Tools &mdash;</span> Three definitions worth stealing from</h2></div>
+  <div class="body">
+    <div class="tri">
+      <div class="step">
+        <div class="card"><div class="nm">linear &middot; get_issue</div><pre>{
+  "id": {
+    "type": "string",
+    "description":
+      "Issue ID or identifier
+       (e.g., LIN-123)"
+  },
+  "includeRelations": {
+    "type": "boolean",
+    "default": false
+  }
+}</pre></div>
+        <div class="cap">Takes the ID a <span class="acc">human</span> would type. Extra data is opt-in, so the response stays small by default.</div>
+      </div>
+      <div class="step">
+        <div class="card"><div class="nm">slack &middot; send_message</div><pre>"description":
+  "Sends a message to a
+   Slack channel or user.
+   ...
+   Use slack_search_channels
+   to find channel IDs.
+   If user has not reviewed
+   the message, use
+   slack_send_message_draft
+   instead."</pre></div>
+        <div class="cap">The description <span class="acc">names its own siblings</span> &mdash; where to get an ID, and when to use the other tool instead.</div>
+      </div>
+      <div class="step">
+        <div class="card"><div class="nm">playwright &middot; browser_click</div><pre>"element": {
+  "description":
+    "Human-readable element
+     description used to
+     obtain permission to
+     interact with it"
+},
+"button": {
+  "enum": ["left","right",
+           "middle"]
+}</pre></div>
+        <div class="cap">An enum instead of free text &mdash; and a parameter that exists <span class="acc">only</span> so a human can approve the action.</div>
+      </div>
+    </div>
+    <div class="fn">All three abridged from live MCP servers. None of them are exotic &mdash; they just do the ordinary things well.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Tools &mdash;</span> Three before and afters</h2></div>
+  <div class="body">
+    <div class="step" style="margin-bottom:26px">
+      <div class="cl">Naming &mdash; can the model tell them apart without reading the docs?</div>
+      <div class="cmp">
+        <div class="l">search
+send
+get</div>
+        <div class="r">linear_search_issues
+slack_send_message
+github_get_pull_request</div>
+      </div>
+      <div class="cc"><div>With twenty tools, this is a coin flip.</div><div>Service and operation are both obvious.</div></div>
+    </div>
+    <div class="step" style="margin-bottom:26px">
+      <div class="cl">Abstraction &mdash; who does the orchestrating, you or the agent?</div>
+      <div class="cmp">
+        <div class="l">list_users()
+list_events()
+create_event(ids, time)</div>
+        <div class="r">schedule_event(
+  participants, topic
+)</div>
+      </div>
+      <div class="cc"><div>Three calls, and reasoning between each one.</div><div>One call. The agent states intent, not steps.</div></div>
+    </div>
+    <div class="step">
+      <div class="cl">Errors &mdash; is this feedback, or a dead end?</div>
+      <div class="cmp">
+        <div class="l">Error: 422</div>
+        <div class="r">'date' must be YYYY-MM-DD.
+You sent '11/23/2025'. Try '2025-11-23'.</div>
+      </div>
+      <div class="cc"><div>The agent stalls or hallucinates a guess.</div><div>The agent fixes it on the next turn.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Tools &mdash;</span> Overlap costs more than count</h2></div>
+  <div class="body">
+    <div class="b step">Read only your tool names and descriptions. <span class="acc">Could you pick the right one?</span> If not, the model can't either.</div>
+    <div class="step" style="margin-bottom:34px">
+      <div class="cmp">
+        <div class="l">search_orders(query)
+find_orders(query)</div>
+        <div class="r">list_issues(filters)  &rarr; many
+get_issue(id)         &rarr; one</div>
+      </div>
+      <div class="cc"><div>Overlapping. Both plausible, so the model picks inconsistently.</div><div>Adjacent, but the boundary is obvious from the shape.</div></div>
+    </div>
+    <div class="step sub">Some teams run fifteen or more distinct tools without trouble; others struggle with fewer than ten overlapping ones. <span class="acc">Overlap is the expensive part, not the count.</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Prompting &mdash;</span> A prompt is a policy, not a request</h2></div>
+  <div class="body">
+    <div class="step card" style="font-size:32px;line-height:1.85">What is my scope, and what is out of scope?<br>When am I done?<br>What do I do when I'm uncertain?<br>What am I never allowed to do?</div>
+    <div class="step sub">These get answered at turn thirty whether you wrote them down or not. If you didn't, the model improvises an answer.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Prompting &mdash;</span> One agent, four answers</h2></div>
+  <div class="body">
+    <div style="font-size:27px;color:var(--text-muted);margin-bottom:26px">A support triage agent: reads an incoming ticket, tags it, and either drafts a reply or escalates.</div>
+    <table class="qa">
+      <tr class="step"><td>What's my scope?</td><td>"You triage inbound support tickets. You do not issue refunds, change billing, or modify accounts."</td></tr>
+      <tr class="step"><td>When am I done?</td><td>"Done means the ticket has a tag, a priority, and either a draft reply or an escalation note."</td></tr>
+      <tr class="step"><td>What if I'm uncertain?</td><td>"If you can't tell the product area, search past tickets. If it's still unclear, tag it needs-human and stop."</td></tr>
+      <tr class="step"><td>What can I never do?</td><td>"Never send a reply without a draft step. Never close a ticket."</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Prompting &mdash;</span> Finding the right altitude</h2></div>
+  <div class="body">
+    <div class="step sub" style="margin-top:0;margin-bottom:38px">Anthropic's word for how specific your instructions are. Fly too low and you see every rock but no route; too high and you see the country but no detail.</div>
+    <div class="b step"><strong style="font-weight:500">Too low</strong> &mdash; "if the ticket says refund, and the order is under 30 days, and it isn't flagged, then&hellip;" times twelve. The thirteenth case has no principle to fall back on.</div>
+    <div class="b step"><strong style="font-weight:500">Right</strong> &mdash; "Prefer resolving for the customer. Escalate anything you can't verify." Handles the case you never wrote down.</div>
+    <div class="b step"><strong style="font-weight:500">Too high</strong> &mdash; "Use good judgment." Whose judgment? It has never seen your refund policy.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Prompting &mdash;</span> Two principles people skip</h2></div>
+  <div class="body">
+    <div class="b step"><span class="acc">Say what to do when uncertain.</span> An agent facing ambiguity will do <em>something</em>. If you didn't say what, it improvises.</div>
+    <div class="b2 step">"You must always call a tool" gets you null arguments and invented inputs &mdash; so any mandate needs an escape hatch: "if you don't have enough information, ask for what you need."</div>
+    <div class="b step"><span class="acc">Don't say it in both places.</span> The tool description owns how to call it. The prompt owns strategy across tools.</div>
+    <div class="step sub">The failure I see constantly: incident, add a rule, repeat. Six months later <span class="acc">the prompt is a bug tracker.</span> Minimal doesn't mean short.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Evals &mdash;</span> You can't eyeball this</h2></div>
+  <div class="body">
+    <div class="step sub" style="margin-top:0;margin-bottom:34px">An eval is a fixed set of <span class="acc">your</span> real tasks with known-good outcomes, scored the same way every time.</div>
+    <table class="tbl step" style="margin-bottom:34px">
+      <thead><tr><th style="width:38%">Reliability per turn</th><th>A 13-step task completes correctly</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">90%</td><td>25% of the time</td></tr>
+        <tr><td class="mono">93%</td><td>39% of the time</td></tr>
+        <tr><td class="mono">95%</td><td>51% of the time</td></tr>
+      </tbody>
+    </table>
+    <div class="b step" style="font-size:34px;margin-bottom:26px">Three points of per-turn reliability nearly <span class="acc">doubles</span> your completion rate.</div>
+    <div class="b step" style="font-size:34px;margin-bottom:0">Three points is invisible across five transcripts. It is very visible to someone running the agent a thousand times a day.</div>
+    <div class="fn">For scale: OpenAI reports close to +20% on their own internal SWE-bench Verified set from three added prompt sentences, about +4% from one of them, and about +2% from passing tool schemas through the API instead of the prompt text. A different benchmark from yours &mdash; but it tells you the size of effect you're hunting.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="th"><h2><span class="tp">Takeaways &mdash;</span> Three things to try</h2></div>
+  <div class="body">
+    <div class="b step" style="font-size:36px;margin-bottom:32px">Audit your tool names and descriptions. Could <em>you</em> pick right from the names alone?</div>
+    <div class="b step" style="font-size:36px;margin-bottom:32px">Write down what your agent should do when it's uncertain.</div>
+    <div class="b step" style="font-size:36px;margin-bottom:32px">Turn your last production failure into one eval case. One input, one known-good outcome.</div>
+    <div class="step" style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:34px">
+      <div>
+        <div style="background:#fff;border-radius:8px;padding:9px;width:138px;height:138px">
+          <svg viewBox="0 0 37 37" style="width:120px;height:120px;display:block"><path d="M2 2h7v1h-7zM10 2h2v1h-2zM14 2h3v1h-3zM18 2h3v1h-3zM23 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h2v1h-2zM14 3h3v1h-3zM18 3h1v1h-1zM21 3h2v1h-2zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM15 4h2v1h-2zM22 4h4v1h-4zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM11 5h4v1h-4zM16 5h1v1h-1zM18 5h8v1h-8zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM13 6h1v1h-1zM15 6h1v1h-1zM17 6h5v1h-5zM23 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h1v1h-1zM13 7h1v1h-1zM15 7h5v1h-5zM23 7h3v1h-3zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM12 9h1v1h-1zM15 9h1v1h-1zM17 9h2v1h-2zM20 9h2v1h-2zM24 9h3v1h-3zM2 10h1v1h-1zM5 10h6v1h-6zM13 10h2v1h-2zM16 10h1v1h-1zM18 10h2v1h-2zM26 10h2v1h-2zM30 10h1v1h-1zM32 10h3v1h-3zM3 11h2v1h-2zM9 11h2v1h-2zM12 11h6v1h-6zM19 11h7v1h-7zM30 11h3v1h-3zM4 12h1v1h-1zM6 12h1v1h-1zM8 12h2v1h-2zM15 12h1v1h-1zM17 12h3v1h-3zM22 12h4v1h-4zM28 12h1v1h-1zM30 12h5v1h-5zM3 13h2v1h-2zM9 13h3v1h-3zM15 13h1v1h-1zM17 13h1v1h-1zM19 13h1v1h-1zM21 13h1v1h-1zM25 13h2v1h-2zM28 13h2v1h-2zM32 13h2v1h-2zM5 14h2v1h-2zM8 14h1v1h-1zM10 14h1v1h-1zM12 14h1v1h-1zM15 14h1v1h-1zM18 14h1v1h-1zM21 14h2v1h-2zM25 14h1v1h-1zM28 14h1v1h-1zM34 14h1v1h-1zM3 15h2v1h-2zM6 15h1v1h-1zM10 15h2v1h-2zM14 15h1v1h-1zM16 15h1v1h-1zM20 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM29 15h1v1h-1zM31 15h1v1h-1zM2 16h2v1h-2zM6 16h1v1h-1zM8 16h1v1h-1zM12 16h1v1h-1zM14 16h2v1h-2zM17 16h2v1h-2zM21 16h2v1h-2zM24 16h1v1h-1zM28 16h1v1h-1zM30 16h1v1h-1zM7 17h1v1h-1zM9 17h1v1h-1zM11 17h1v1h-1zM13 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM22 17h1v1h-1zM27 17h1v1h-1zM30 17h3v1h-3zM34 17h1v1h-1zM2 18h2v1h-2zM7 18h2v1h-2zM11 18h1v1h-1zM15 18h1v1h-1zM17 18h1v1h-1zM21 18h1v1h-1zM24 18h7v1h-7zM5 19h1v1h-1zM9 19h3v1h-3zM14 19h1v1h-1zM17 19h1v1h-1zM21 19h2v1h-2zM24 19h1v1h-1zM28 19h1v1h-1zM30 19h1v1h-1zM32 19h1v1h-1zM34 19h1v1h-1zM3 20h1v1h-1zM5 20h1v1h-1zM8 20h4v1h-4zM15 20h5v1h-5zM21 20h1v1h-1zM23 20h4v1h-4zM28 20h2v1h-2zM31 20h2v1h-2zM34 20h1v1h-1zM2 21h3v1h-3zM6 21h2v1h-2zM9 21h2v1h-2zM12 21h4v1h-4zM18 21h1v1h-1zM20 21h2v1h-2zM24 21h1v1h-1zM28 21h1v1h-1zM30 21h3v1h-3zM3 22h1v1h-1zM6 22h1v1h-1zM8 22h1v1h-1zM10 22h1v1h-1zM12 22h2v1h-2zM15 22h1v1h-1zM18 22h2v1h-2zM21 22h1v1h-1zM24 22h2v1h-2zM27 22h1v1h-1zM29 22h1v1h-1zM31 22h1v1h-1zM2 23h1v1h-1zM5 23h1v1h-1zM7 23h1v1h-1zM9 23h5v1h-5zM18 23h1v1h-1zM20 23h2v1h-2zM23 23h3v1h-3zM29 23h4v1h-4zM2 24h1v1h-1zM4 24h1v1h-1zM6 24h5v1h-5zM13 24h5v1h-5zM22 24h2v1h-2zM25 24h4v1h-4zM31 24h4v1h-4zM2 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM13 25h4v1h-4zM18 25h3v1h-3zM26 25h1v1h-1zM29 25h1v1h-1zM32 25h1v1h-1zM34 25h1v1h-1zM2 26h2v1h-2zM5 26h1v1h-1zM8 26h1v1h-1zM10 26h1v1h-1zM12 26h1v1h-1zM14 26h5v1h-5zM20 26h1v1h-1zM22 26h1v1h-1zM26 26h5v1h-5zM33 26h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM15 27h6v1h-6zM23 27h1v1h-1zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h2v1h-2zM2 28h7v1h-7zM10 28h1v1h-1zM12 28h2v1h-2zM17 28h3v1h-3zM21 28h1v1h-1zM23 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h2v1h-2zM17 29h2v1h-2zM21 29h1v1h-1zM25 29h2v1h-2zM30 29h5v1h-5zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h3v1h-3zM14 30h2v1h-2zM17 30h2v1h-2zM21 30h2v1h-2zM24 30h7v1h-7zM34 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h2v1h-2zM17 31h1v1h-1zM20 31h4v1h-4zM26 31h2v1h-2zM29 31h1v1h-1zM31 31h4v1h-4zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM11 32h4v1h-4zM17 32h1v1h-1zM21 32h1v1h-1zM25 32h1v1h-1zM29 32h2v1h-2zM33 32h2v1h-2zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h2v1h-2zM14 33h1v1h-1zM16 33h3v1h-3zM29 33h2v1h-2zM32 33h3v1h-3zM2 34h7v1h-7zM10 34h2v1h-2zM14 34h1v1h-1zM16 34h1v1h-1zM18 34h2v1h-2zM21 34h1v1h-1zM25 34h2v1h-2zM29 34h2v1h-2z" fill="#000"/></svg>
+        </div>
+        <div style="font-size:21px;font-weight:500;margin-top:14px">Agents Are Just a While Loop</div>
+        <div style="font-size:18px;color:var(--text-muted);margin-top:5px;line-height:1.35">What an agent actually is, in 30 lines.</div>
+      </div>
+      <div>
+        <div style="background:#fff;border-radius:8px;padding:9px;width:138px;height:138px">
+          <svg viewBox="0 0 37 37" style="width:120px;height:120px;display:block"><path d="M2 2h7v1h-7zM10 2h1v1h-1zM13 2h1v1h-1zM15 2h1v1h-1zM20 2h6v1h-6zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h2v1h-2zM13 3h1v1h-1zM15 3h1v1h-1zM18 3h3v1h-3zM22 3h1v1h-1zM24 3h2v1h-2zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM22 4h1v1h-1zM25 4h2v1h-2zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM13 5h1v1h-1zM16 5h4v1h-4zM21 5h1v1h-1zM24 5h3v1h-3zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h1v1h-1zM13 6h1v1h-1zM15 6h2v1h-2zM19 6h3v1h-3zM26 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM13 7h1v1h-1zM16 7h1v1h-1zM20 7h5v1h-5zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h1v1h-1zM19 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM2 10h1v1h-1zM4 10h2v1h-2zM7 10h3v1h-3zM12 10h1v1h-1zM16 10h1v1h-1zM18 10h3v1h-3zM23 10h1v1h-1zM28 10h1v1h-1zM31 10h1v1h-1zM33 10h2v1h-2zM3 11h2v1h-2zM11 11h2v1h-2zM18 11h1v1h-1zM20 11h2v1h-2zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM3 12h1v1h-1zM6 12h3v1h-3zM10 12h1v1h-1zM12 12h2v1h-2zM16 12h1v1h-1zM18 12h1v1h-1zM20 12h1v1h-1zM22 12h6v1h-6zM29 12h3v1h-3zM33 12h2v1h-2zM3 13h3v1h-3zM7 13h1v1h-1zM9 13h1v1h-1zM13 13h1v1h-1zM15 13h3v1h-3zM20 13h1v1h-1zM24 13h1v1h-1zM29 13h1v1h-1zM31 13h1v1h-1zM34 13h1v1h-1zM5 14h1v1h-1zM8 14h5v1h-5zM19 14h1v1h-1zM24 14h1v1h-1zM26 14h2v1h-2zM29 14h3v1h-3zM33 14h2v1h-2zM2 15h1v1h-1zM7 15h1v1h-1zM10 15h2v1h-2zM13 15h3v1h-3zM18 15h2v1h-2zM21 15h1v1h-1zM23 15h2v1h-2zM26 15h1v1h-1zM32 15h2v1h-2zM5 16h7v1h-7zM13 16h2v1h-2zM17 16h2v1h-2zM20 16h5v1h-5zM26 16h1v1h-1zM28 16h2v1h-2zM31 16h2v1h-2zM5 17h1v1h-1zM9 17h3v1h-3zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM23 17h2v1h-2zM26 17h3v1h-3zM31 17h2v1h-2zM2 18h4v1h-4zM8 18h1v1h-1zM11 18h1v1h-1zM13 18h2v1h-2zM17 18h1v1h-1zM20 18h1v1h-1zM23 18h3v1h-3zM27 18h2v1h-2zM30 18h1v1h-1zM32 18h1v1h-1zM3 19h5v1h-5zM9 19h1v1h-1zM12 19h1v1h-1zM14 19h2v1h-2zM17 19h1v1h-1zM19 19h2v1h-2zM22 19h1v1h-1zM24 19h5v1h-5zM30 19h2v1h-2zM33 19h2v1h-2zM3 20h1v1h-1zM7 20h3v1h-3zM12 20h1v1h-1zM16 20h2v1h-2zM19 20h1v1h-1zM22 20h3v1h-3zM26 20h1v1h-1zM29 20h2v1h-2zM32 20h2v1h-2zM4 21h1v1h-1zM7 21h1v1h-1zM10 21h3v1h-3zM14 21h1v1h-1zM18 21h3v1h-3zM25 21h4v1h-4zM30 21h1v1h-1zM34 21h1v1h-1zM8 22h3v1h-3zM13 22h9v1h-9zM23 22h3v1h-3zM31 22h4v1h-4zM2 23h1v1h-1zM4 23h1v1h-1zM6 23h2v1h-2zM9 23h3v1h-3zM17 23h1v1h-1zM21 23h2v1h-2zM25 23h1v1h-1zM28 23h1v1h-1zM32 23h1v1h-1zM34 23h1v1h-1zM6 24h1v1h-1zM8 24h2v1h-2zM11 24h2v1h-2zM14 24h3v1h-3zM20 24h1v1h-1zM22 24h1v1h-1zM25 24h4v1h-4zM30 24h1v1h-1zM32 24h3v1h-3zM3 25h5v1h-5zM9 25h3v1h-3zM14 25h2v1h-2zM18 25h1v1h-1zM26 25h2v1h-2zM29 25h1v1h-1zM31 25h1v1h-1zM2 26h1v1h-1zM5 26h4v1h-4zM12 26h1v1h-1zM14 26h2v1h-2zM17 26h1v1h-1zM19 26h2v1h-2zM24 26h7v1h-7zM34 26h1v1h-1zM10 27h1v1h-1zM14 27h2v1h-2zM17 27h3v1h-3zM21 27h1v1h-1zM23 27h1v1h-1zM25 27h2v1h-2zM30 27h2v1h-2zM2 28h7v1h-7zM10 28h2v1h-2zM16 28h1v1h-1zM18 28h2v1h-2zM21 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h1v1h-1zM13 29h1v1h-1zM16 29h1v1h-1zM20 29h7v1h-7zM30 29h5v1h-5zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM12 30h4v1h-4zM20 30h2v1h-2zM23 30h8v1h-8zM32 30h1v1h-1zM34 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h2v1h-2zM14 31h3v1h-3zM18 31h2v1h-2zM22 31h4v1h-4zM29 31h1v1h-1zM32 31h1v1h-1zM34 31h1v1h-1zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h2v1h-2zM17 32h3v1h-3zM24 32h1v1h-1zM27 32h3v1h-3zM31 32h2v1h-2zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM13 33h5v1h-5zM19 33h3v1h-3zM25 33h3v1h-3zM29 33h2v1h-2zM34 33h1v1h-1zM2 34h7v1h-7zM10 34h3v1h-3zM14 34h2v1h-2zM17 34h5v1h-5zM23 34h1v1h-1zM27 34h2v1h-2zM30 34h1v1h-1zM32 34h1v1h-1z" fill="#000"/></svg>
+        </div>
+        <div style="font-size:21px;font-weight:500;margin-top:14px">Choosing an Agent Framework</div>
+        <div style="font-size:18px;color:var(--text-muted);margin-top:5px;line-height:1.35">When to adopt one — and when to remove it.</div>
+      </div>
+      <div>
+        <div style="background:#fff;border-radius:8px;padding:9px;width:138px;height:138px">
+          <svg viewBox="0 0 37 37" style="width:120px;height:120px;display:block"><path d="M2 2h7v1h-7zM10 2h6v1h-6zM20 2h6v1h-6zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM13 3h3v1h-3zM18 3h3v1h-3zM22 3h2v1h-2zM25 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM11 4h2v1h-2zM17 4h1v1h-1zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM16 5h4v1h-4zM21 5h1v1h-1zM25 5h1v1h-1zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM14 6h3v1h-3zM19 6h1v1h-1zM21 6h1v1h-1zM26 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM12 7h1v1h-1zM16 7h1v1h-1zM20 7h5v1h-5zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h3v1h-3zM14 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM26 9h1v1h-1zM2 10h1v1h-1zM4 10h2v1h-2zM7 10h3v1h-3zM11 10h2v1h-2zM16 10h1v1h-1zM18 10h3v1h-3zM23 10h1v1h-1zM25 10h1v1h-1zM28 10h1v1h-1zM31 10h1v1h-1zM33 10h2v1h-2zM3 11h1v1h-1zM7 11h1v1h-1zM9 11h2v1h-2zM12 11h1v1h-1zM14 11h1v1h-1zM16 11h1v1h-1zM18 11h1v1h-1zM20 11h2v1h-2zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM2 12h1v1h-1zM5 12h1v1h-1zM8 12h2v1h-2zM11 12h3v1h-3zM16 12h1v1h-1zM18 12h3v1h-3zM22 12h1v1h-1zM24 12h4v1h-4zM29 12h3v1h-3zM33 12h2v1h-2zM2 13h6v1h-6zM10 13h1v1h-1zM12 13h1v1h-1zM14 13h4v1h-4zM20 13h1v1h-1zM29 13h1v1h-1zM31 13h1v1h-1zM34 13h1v1h-1zM2 14h1v1h-1zM8 14h1v1h-1zM11 14h2v1h-2zM14 14h1v1h-1zM19 14h1v1h-1zM24 14h1v1h-1zM26 14h2v1h-2zM29 14h3v1h-3zM33 14h2v1h-2zM5 15h1v1h-1zM7 15h1v1h-1zM9 15h1v1h-1zM11 15h1v1h-1zM18 15h2v1h-2zM21 15h1v1h-1zM23 15h2v1h-2zM26 15h2v1h-2zM32 15h2v1h-2zM2 16h2v1h-2zM5 16h1v1h-1zM8 16h2v1h-2zM11 16h1v1h-1zM13 16h1v1h-1zM15 16h4v1h-4zM20 16h5v1h-5zM28 16h2v1h-2zM2 17h6v1h-6zM9 17h1v1h-1zM12 17h1v1h-1zM18 17h1v1h-1zM22 17h4v1h-4zM27 17h3v1h-3zM31 17h2v1h-2zM3 18h1v1h-1zM5 18h4v1h-4zM11 18h1v1h-1zM14 18h1v1h-1zM17 18h1v1h-1zM20 18h2v1h-2zM23 18h3v1h-3zM27 18h2v1h-2zM30 18h1v1h-1zM32 18h1v1h-1zM4 19h1v1h-1zM6 19h1v1h-1zM9 19h4v1h-4zM17 19h1v1h-1zM19 19h2v1h-2zM22 19h1v1h-1zM24 19h5v1h-5zM30 19h2v1h-2zM33 19h2v1h-2zM3 20h2v1h-2zM6 20h4v1h-4zM12 20h1v1h-1zM16 20h2v1h-2zM22 20h3v1h-3zM26 20h2v1h-2zM29 20h2v1h-2zM32 20h2v1h-2zM2 21h4v1h-4zM9 21h3v1h-3zM15 21h2v1h-2zM18 21h2v1h-2zM25 21h4v1h-4zM30 21h1v1h-1zM33 21h1v1h-1zM4 22h2v1h-2zM8 22h1v1h-1zM11 22h2v1h-2zM14 22h1v1h-1zM17 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM25 22h1v1h-1zM29 22h1v1h-1zM31 22h2v1h-2zM34 22h1v1h-1zM2 23h1v1h-1zM5 23h1v1h-1zM7 23h1v1h-1zM10 23h2v1h-2zM13 23h1v1h-1zM15 23h3v1h-3zM20 23h3v1h-3zM25 23h1v1h-1zM27 23h2v1h-2zM32 23h1v1h-1zM34 23h1v1h-1zM8 24h1v1h-1zM13 24h1v1h-1zM15 24h2v1h-2zM18 24h1v1h-1zM20 24h1v1h-1zM25 24h5v1h-5zM32 24h3v1h-3zM3 25h1v1h-1zM6 25h1v1h-1zM10 25h1v1h-1zM13 25h3v1h-3zM18 25h1v1h-1zM21 25h2v1h-2zM26 25h2v1h-2zM30 25h1v1h-1zM34 25h1v1h-1zM2 26h1v1h-1zM4 26h2v1h-2zM8 26h2v1h-2zM12 26h1v1h-1zM14 26h4v1h-4zM19 26h3v1h-3zM24 26h7v1h-7zM33 26h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM15 27h5v1h-5zM21 27h1v1h-1zM23 27h1v1h-1zM25 27h2v1h-2zM30 27h2v1h-2zM2 28h7v1h-7zM10 28h3v1h-3zM18 28h1v1h-1zM21 28h1v1h-1zM24 28h3v1h-3zM28 28h1v1h-1zM30 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h1v1h-1zM13 29h1v1h-1zM16 29h1v1h-1zM20 29h4v1h-4zM25 29h2v1h-2zM30 29h3v1h-3zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM11 30h1v1h-1zM16 30h1v1h-1zM19 30h1v1h-1zM21 30h10v1h-10zM32 30h3v1h-3zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h1v1h-1zM13 31h2v1h-2zM19 31h1v1h-1zM23 31h3v1h-3zM29 31h1v1h-1zM31 31h2v1h-2zM34 31h1v1h-1zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h1v1h-1zM12 32h2v1h-2zM19 32h1v1h-1zM22 32h1v1h-1zM24 32h1v1h-1zM27 32h3v1h-3zM31 32h2v1h-2zM2 33h1v1h-1zM8 33h1v1h-1zM12 33h1v1h-1zM15 33h6v1h-6zM25 33h2v1h-2zM29 33h2v1h-2zM34 33h1v1h-1zM2 34h7v1h-7zM10 34h1v1h-1zM16 34h6v1h-6zM23 34h1v1h-1zM27 34h1v1h-1zM30 34h1v1h-1zM32 34h1v1h-1z" fill="#000"/></svg>
+        </div>
+        <div style="font-size:21px;font-weight:500;margin-top:14px">Tools as UX for the Model</div>
+        <div style="font-size:18px;color:var(--text-muted);margin-top:5px;line-height:1.35">Designing what the model actually sees.</div>
+      </div>
+      <div>
+        <div style="background:#fff;border-radius:8px;padding:9px;width:138px;height:138px">
+          <svg viewBox="0 0 37 37" style="width:120px;height:120px;display:block"><path d="M2 2h7v1h-7zM11 2h1v1h-1zM13 2h2v1h-2zM20 2h6v1h-6zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h3v1h-3zM17 3h2v1h-2zM20 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h1v1h-1zM14 4h1v1h-1zM16 4h1v1h-1zM18 4h1v1h-1zM21 4h5v1h-5zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM14 5h1v1h-1zM17 5h1v1h-1zM20 5h2v1h-2zM24 5h3v1h-3zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h1v1h-1zM13 6h6v1h-6zM22 6h2v1h-2zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h2v1h-2zM13 7h4v1h-4zM21 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h4v1h-4zM16 9h1v1h-1zM18 9h1v1h-1zM20 9h5v1h-5zM26 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM13 10h1v1h-1zM15 10h2v1h-2zM19 10h1v1h-1zM21 10h1v1h-1zM24 10h1v1h-1zM26 10h1v1h-1zM28 10h5v1h-5zM2 11h1v1h-1zM4 11h1v1h-1zM6 11h1v1h-1zM9 11h2v1h-2zM12 11h5v1h-5zM18 11h4v1h-4zM23 11h1v1h-1zM25 11h1v1h-1zM28 11h2v1h-2zM31 11h2v1h-2zM34 11h1v1h-1zM2 12h2v1h-2zM6 12h3v1h-3zM10 12h1v1h-1zM13 12h7v1h-7zM23 12h2v1h-2zM27 12h1v1h-1zM30 12h1v1h-1zM32 12h2v1h-2zM2 13h1v1h-1zM5 13h2v1h-2zM10 13h1v1h-1zM13 13h3v1h-3zM18 13h4v1h-4zM23 13h2v1h-2zM26 13h3v1h-3zM30 13h5v1h-5zM3 14h4v1h-4zM8 14h1v1h-1zM13 14h1v1h-1zM16 14h1v1h-1zM18 14h1v1h-1zM22 14h1v1h-1zM24 14h1v1h-1zM26 14h1v1h-1zM29 14h3v1h-3zM33 14h2v1h-2zM5 15h1v1h-1zM10 15h1v1h-1zM12 15h4v1h-4zM17 15h1v1h-1zM20 15h1v1h-1zM25 15h1v1h-1zM28 15h1v1h-1zM31 15h1v1h-1zM33 15h2v1h-2zM2 16h1v1h-1zM4 16h1v1h-1zM6 16h1v1h-1zM8 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM16 16h3v1h-3zM22 16h1v1h-1zM27 16h7v1h-7zM5 17h1v1h-1zM10 17h1v1h-1zM13 17h1v1h-1zM17 17h1v1h-1zM23 17h2v1h-2zM27 17h2v1h-2zM30 17h3v1h-3zM3 18h1v1h-1zM5 18h1v1h-1zM8 18h1v1h-1zM12 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM22 18h1v1h-1zM24 18h4v1h-4zM29 18h3v1h-3zM34 18h1v1h-1zM3 19h4v1h-4zM9 19h2v1h-2zM13 19h1v1h-1zM16 19h1v1h-1zM18 19h1v1h-1zM21 19h2v1h-2zM25 19h1v1h-1zM28 19h2v1h-2zM31 19h2v1h-2zM34 19h1v1h-1zM2 20h1v1h-1zM6 20h1v1h-1zM8 20h1v1h-1zM10 20h3v1h-3zM17 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM24 20h1v1h-1zM26 20h5v1h-5zM32 20h2v1h-2zM5 21h2v1h-2zM10 21h2v1h-2zM14 21h1v1h-1zM17 21h2v1h-2zM22 21h2v1h-2zM27 21h1v1h-1zM29 21h4v1h-4zM34 21h1v1h-1zM2 22h2v1h-2zM6 22h1v1h-1zM8 22h2v1h-2zM13 22h1v1h-1zM15 22h1v1h-1zM20 22h1v1h-1zM24 22h4v1h-4zM29 22h3v1h-3zM2 23h4v1h-4zM9 23h2v1h-2zM15 23h1v1h-1zM17 23h2v1h-2zM22 23h1v1h-1zM24 23h3v1h-3zM28 23h1v1h-1zM32 23h1v1h-1zM34 23h1v1h-1zM2 24h1v1h-1zM4 24h2v1h-2zM8 24h1v1h-1zM11 24h4v1h-4zM19 24h1v1h-1zM21 24h1v1h-1zM23 24h1v1h-1zM26 24h2v1h-2zM32 24h2v1h-2zM2 25h1v1h-1zM5 25h2v1h-2zM11 25h1v1h-1zM13 25h1v1h-1zM15 25h2v1h-2zM18 25h1v1h-1zM20 25h6v1h-6zM29 25h4v1h-4zM2 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM8 26h3v1h-3zM14 26h1v1h-1zM19 26h3v1h-3zM24 26h8v1h-8zM10 27h4v1h-4zM15 27h2v1h-2zM18 27h6v1h-6zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h3v1h-3zM2 28h7v1h-7zM12 28h1v1h-1zM16 28h2v1h-2zM19 28h1v1h-1zM23 28h4v1h-4zM28 28h1v1h-1zM30 28h1v1h-1zM32 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM10 29h1v1h-1zM14 29h1v1h-1zM19 29h5v1h-5zM25 29h2v1h-2zM30 29h3v1h-3zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM17 30h2v1h-2zM21 30h1v1h-1zM23 30h1v1h-1zM26 30h6v1h-6zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM10 31h1v1h-1zM14 31h4v1h-4zM19 31h2v1h-2zM25 31h3v1h-3zM30 31h5v1h-5zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM10 32h1v1h-1zM14 32h1v1h-1zM17 32h3v1h-3zM24 32h1v1h-1zM27 32h3v1h-3zM32 32h1v1h-1zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM13 33h1v1h-1zM16 33h2v1h-2zM23 33h1v1h-1zM30 33h3v1h-3zM2 34h7v1h-7zM10 34h2v1h-2zM14 34h4v1h-4zM19 34h1v1h-1zM24 34h4v1h-4zM29 34h1v1h-1zM33 34h1v1h-1z" fill="#000"/></svg>
+        </div>
+        <div style="font-size:21px;font-weight:500;margin-top:14px">Prompting an Agent</div>
+        <div style="font-size:18px;color:var(--text-muted);margin-top:5px;line-height:1.35">Writing the policy it runs on.</div>
+      </div>
+  </div>
+</section>
+
+<div id="bar"></div><div id="ctr"></div>
+</div>
+
+<script>
+(function(){
+  var st=document.getElementById('stage');
+  var ss=[].slice.call(st.querySelectorAll('.slide')),si=0,ki=0;
+  var bar=document.getElementById('bar'),ctr=document.getElementById('ctr');
+  function fit(){
+    var s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+    st.style.transform='translate(-50%,-50%) scale('+s+')';
+  }
+  function steps(i){return [].slice.call(ss[i].querySelectorAll('.step'));}
+  function draw(){
+    ss.forEach(function(s,i){s.classList.toggle('active',i===si);});
+    steps(si).forEach(function(el,i){el.classList.toggle('shown',i<ki);});
+    bar.style.width=((si+1)/ss.length*100)+'%';
+    ctr.textContent=(si+1)+' / '+ss.length;
+  }
+  function next(){
+    if(ki<steps(si).length){ki++;}
+    else if(si<ss.length-1){si++;ki=0;}
+    else{return;}
+    draw();
+  }
+  function prev(){
+    if(ki>0){ki--;}
+    else if(si>0){si--;ki=steps(si).length;}
+    else{return;}
+    draw();
+  }
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','ArrowDown',' ','PageDown','Enter'].indexOf(e.key)>-1){e.preventDefault();next();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].indexOf(e.key)>-1){e.preventDefault();prev();}
+    else if(e.key==='Home'){e.preventDefault();si=0;ki=0;draw();}
+    else if(e.key==='End'){e.preventDefault();si=ss.length-1;ki=steps(si).length;draw();}
+  });
+  document.addEventListener('click',function(e){if(e.clientX<window.innerWidth*0.15){prev();}else{next();}});
+
+  window.addEventListener('resize',fit);
+  fit();draw();
+})();
+</script>
+</body></html>
