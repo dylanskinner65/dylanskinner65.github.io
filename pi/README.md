@@ -1,13 +1,15 @@
 # Raspberry Pi deployment
 
-The site deploys **pull-based**: CI builds a `linux/arm64` image and pushes it to
-GHCR (`ghcr.io/dylanskinner65/personal-website`); the Pi polls the registry with
+The site deploys **pull-based**: CI builds a multi-arch (`linux/amd64` +
+`linux/arm64`) image and pushes it to GHCR (`ghcr.io/dylanskinner65/personal-website`).
+It now runs on the home server (`skinner-server`, an Intel NUC); the arm64 build is
+kept so a Raspberry Pi can still run it. The host polls the registry with
 `podman-auto-update` and restarts the container when a new digest lands. No
 self-hosted runner, no inbound access — the Pi only makes outbound connections
 (GHCR pulls + the Cloudflare tunnel).
 
 ```
-push to main → Actions builds arm64 image → GHCR
+push to main → Actions builds amd64 + arm64 image → GHCR
                                               ↑ pull (every 5 min)
 Pi: podman-auto-update.timer → website.container (Caddy, healthchecked)
     cloudflared.container ← Cloudflare edge ← visitor
